@@ -1,0 +1,10 @@
+# Temporary / generator scripts
+create_files.sh
+
+# OS metadata & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.tmp
