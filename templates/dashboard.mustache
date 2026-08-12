@@ -1,4 +1,11 @@
 <div class="academic-timetabler-dashboard">
+    <div class="mb-4">
+        <a href="{{index_url}}" class="btn btn-primary me-2">Overview</a>
+        <a href="{{rooms_url}}" class="btn btn-outline-primary me-2">Manage Rooms</a>
+        <a href="{{slots_url}}" class="btn btn-outline-primary me-2">Manage Time Slots</a>
+        <a href="{{schedules_url}}" class="btn btn-outline-primary me-2">View Timetables</a>
+    </div>
+
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="mb-0 text-muted">Dashboard & License Status</h4>
         {{#is_enterprise}}
@@ -9,12 +16,67 @@
         {{/is_enterprise}}
     </div>
 
-    <div class="alert {{#is_enterprise}}alert-success{{/is_enterprise}}{{^is_enterprise}}alert-info{{/is_enterprise}}" role="alert">
-        <strong>{{#str}}license_status, local_academic_timetabler{{/str}}:</strong> {{tier_notice}}
-        {{^is_enterprise}}
-            <div class="mt-2">
-                <a href="{{settings_url}}" class="btn btn-sm btn-primary">Enter License Key</a>
+    <div id="license-notice-alert" class="alert alert-dismissible fade show {{#is_enterprise}}alert-success{{/is_enterprise}}{{^is_enterprise}}alert-info{{/is_enterprise}}" role="alert">
+        <div class="d-flex flex-wrap justify-content-between align-items-center">
+            <div class="mb-2 mb-md-0">
+                <strong>{{#str}}license_status, local_academic_timetabler{{/str}}:</strong> {{tier_notice}}
             </div>
-        {{/is_enterprise}}
+            {{^is_enterprise}}
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{{settings_url}}" class="btn btn-sm btn-primary me-1 mb-1">
+                        Enter License Key
+                    </a>
+                    <a href="{{buy_url}}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-success me-1 mb-1">
+                        {{#str}}buy_enterprise_license, local_academic_timetabler{{/str}} &rarr;
+                    </a>
+                    <button type="button" id="btn-continue-community" class="btn btn-sm btn-outline-secondary mb-1" onclick="document.getElementById('license-notice-alert').style.display='none';">
+                        {{#str}}continue_community_edition, local_academic_timetabler{{/str}} &times;
+                    </button>
+                </div>
+            {{/is_enterprise}}
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-4 mb-3">
+            <div class="card border-left-primary shadow-sm h-100 py-2">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Courses Target</div>
+                    <div class="h5 mb-2 font-weight-bold text-gray-800">{{course_count}} / {{max_courses_label}}</div>
+                    <span class="text-muted small">Auto-synced from Moodle</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-left-success shadow-sm h-100 py-2">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Configured Venues</div>
+                    <div class="h5 mb-2 font-weight-bold text-gray-800">{{room_count}} Rooms</div>
+                    <a href="{{rooms_url}}" class="btn btn-sm btn-outline-success">Manage Rooms &rarr;</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-left-info shadow-sm h-100 py-2">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Generated Schedules</div>
+                    <div class="h5 mb-2 font-weight-bold text-gray-800">{{schedule_count}} Entries</div>
+                    <a href="{{schedules_url}}" class="btn btn-sm btn-outline-info">View Timetables &rarr;</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mt-3">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Timetable Generation Engine</h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">Run the automated CSP scheduling solver to assign conflict-free time slots and rooms across all courses.</p>
+            <div class="d-flex gap-2">
+                <a href="{{slots_url}}" class="btn btn-outline-secondary me-2">Configure Time Slots</a>
+                <a href="{{tasks_url}}" class="btn btn-primary">Run Timetable Generator Task &rarr;</a>
+            </div>
+        </div>
     </div>
 </div>
