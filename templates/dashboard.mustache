@@ -1,19 +1,19 @@
 <div class="academic-timetabler-dashboard">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>{{#str}}pluginname, local_academic_timetabler{{/str}}</h2>
+        <h4 class="mb-0 text-muted">Dashboard & License Status</h4>
         {{#is_enterprise}}
-            <span class="badge badge-success bg-success text-white p-2">{{tier_name}}</span>
+            <span class="badge badge-success bg-success text-white px-3 py-2 fs-6">{{tier_name}}</span>
         {{/is_enterprise}}
         {{^is_enterprise}}
-            <span class="badge badge-warning bg-warning text-dark p-2">{{tier_name}}</span>
+            <span class="badge badge-warning bg-warning text-dark px-3 py-2 fs-6">{{tier_name}}</span>
         {{/is_enterprise}}
     </div>
 
-    <div class="alert {{#is_enterprise}}alert-success{{/is_enterprise}}{{^is_enterprise}}alert-info{{/is_enterprise}} role="alert">
+    <div class="alert {{#is_enterprise}}alert-success{{/is_enterprise}}{{^is_enterprise}}alert-info{{/is_enterprise}}" role="alert">
         <strong>{{#str}}license_status, local_academic_timetabler{{/str}}:</strong> {{tier_notice}}
         {{^is_enterprise}}
             <div class="mt-2">
-                <a href="{{settings_url}}" class="btn btn-sm btn-outline-primary">Enter License Key</a>
+                <a href="{{settings_url}}" class="btn btn-sm btn-primary">Enter License Key</a>
             </div>
         {{/is_enterprise}}
     </div>

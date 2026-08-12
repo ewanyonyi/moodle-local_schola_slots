@@ -90,6 +90,41 @@ EXIT;
    mkdir -p ~/dev/moodle/local/academic_timetabler
    ```
 
+3. **Run Non-Interactive Automated Moodle CLI Installation:**
+   ```bash
+   cd ~/dev/moodle
+   php admin/cli/install.php \
+     --lang=en \
+     --wwwroot=http://localhost \
+     --dataroot=/home/ewanyonyi/dev/moodledata \
+     --dbtype=mariadb \
+     --dbhost=localhost \
+     --dbname=moodle \
+     --dbuser=moodleuser \
+     --dbpass='Password123!' \
+     --fullname="Moodle Dev Site" \
+     --shortname="moodle-dev" \
+     --adminuser=admin \
+     --adminpass='AdminPass123!' \
+     --adminemail=admin@example.com \
+     --non-interactive \
+     --agree-license
+   chmod 644 ~/dev/moodle/config.php
+   ```
+
+> [!TIP]
+> **If `config.php` already exists**:
+> If `config.php` was already created (either via web installer or prior configuration), use `install_database.php` to populate database tables directly without recreating `config.php`:
+> ```bash
+> cd ~/dev/moodle
+> php admin/cli/install_database.php \
+>   --agree-license \
+>   --fullname="Moodle Dev Site" \
+>   --shortname="moodle-dev" \
+>   --adminpass='AdminPass123!' \
+>   --adminemail=admin@example.com
+> ```
+
 ---
 
 ### 4. Configure Apache Virtual Host for `~/dev/moodle`
@@ -99,13 +134,13 @@ EXIT;
    sudo nano /etc/apache2/sites-available/moodle-dev.conf
    ```
 
-2. **Insert Virtual Host Block:**
+2. **Insert Virtual Host Block (HTTP & HTTPS Support):**
    ```apache
    <VirtualHost *:80>
        ServerName localhost
-       DocumentRoot /home/ewanyonyi/dev/moodle
+       DocumentRoot /home/ewanyonyi/dev/moodle/public
 
-       <Directory /home/ewanyonyi/dev/moodle>
+       <Directory /home/ewanyonyi/dev/moodle/public>
            Options Indexes FollowSymLinks
            AllowOverride All
            Require all granted
@@ -114,19 +149,54 @@ EXIT;
        ErrorLog ${APACHE_LOG_DIR}/moodle_error.log
        CustomLog ${APACHE_LOG_DIR}/moodle_access.log combined
    </VirtualHost>
+
+   <IfModule mod_ssl.c>
+   <VirtualHost *:443>
+       ServerName localhost
+       DocumentRoot /home/ewanyonyi/dev/moodle/public
+
+       <Directory /home/ewanyonyi/dev/moodle/public>
+           Options Indexes FollowSymLinks
+           AllowOverride All
+           Require all granted
+       </Directory>
+
+       SSLEngine on
+       SSLCertificateFile /etc/ssl/certs/ssl-cert-snakeoil.pem
+       SSLCertificateKeyFile /etc/ssl/private/ssl-cert-snakeoil.key
+
+       ErrorLog ${APACHE_LOG_DIR}/moodle_error.log
+       CustomLog ${APACHE_LOG_DIR}/moodle_access.log combined
+   </VirtualHost>
+   </IfModule>
    ```
 
 3. **Set Permissions & Enable Virtual Host:**
    ```bash
-   # Grant directory traversal to Apache (www-data)
+   # Grant directory traversal & file permissions to Apache (www-data)
    chmod 755 /home/ewanyonyi
    chmod 755 /home/ewanyonyi/dev
+   chmod 644 ~/dev/moodle/config.php
    chmod -R 777 ~/dev/moodledata
 
-   # Enable Virtual Host
+   # Enable SSL module & Virtual Host
+   sudo a2enmod ssl
    sudo a2ensite moodle-dev.conf
    sudo systemctl restart apache2
    ```
+
+> [!NOTE]
+> **Troubleshooting HTTP 500 Errors & Connection Refused (`https://localhost`)**:
+> - **HTTP 500 (`config.php` Permission Denied)**: Check `/var/log/apache2/moodle_error.log`. Ensure read permissions are granted to Apache (`www-data`):
+>   ```bash
+>   chmod 644 ~/dev/moodle/config.php
+>   ```
+> - **`ERR_CONNECTION_REFUSED` (`https://localhost`)**: Modern browsers auto-redirect `localhost` to `https://`. Ensure you use `http://localhost` or enable SSL support in Apache:
+>   ```bash
+>   sudo a2enmod ssl
+>   sudo a2ensite default-ssl
+>   sudo systemctl restart apache2
+>   ```
 
 ---
 

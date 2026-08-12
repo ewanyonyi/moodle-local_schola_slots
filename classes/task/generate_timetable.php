@@ -16,19 +16,28 @@
 
 namespace local_academic_timetabler\task;
 
-use core\task\adhoc_task;
+use core\task\scheduled_task;
 use local_academic_timetabler\algorithm\solver;
 use local_academic_timetabler\licensing\license_manager;
 
 /**
- * Adhoc task runner for timetabling generation.
+ * Scheduled task runner for timetabling generation.
  *
  * @package     local_academic_timetabler
  * @copyright   2026 Emanuel Dickson Wanyonyi <wanyonyi.d.emanuel@gmail.com>
  * @author      Emanuel Dickson Wanyonyi <wanyonyi.d.emanuel@gmail.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class generate_timetable extends adhoc_task {
+class generate_timetable extends scheduled_task {
+    /**
+     * Get task name for administrative display.
+     *
+     * @return string Human-readable task name.
+     */
+    public function get_name() {
+        return get_string('pluginname', 'local_academic_timetabler');
+    }
+
     /**
      * Execute timetable solver task.
      *
