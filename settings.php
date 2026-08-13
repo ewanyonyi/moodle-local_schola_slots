@@ -25,103 +25,105 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-/**
- * Custom admin setting element to render commercial pricing plans HTML cleanly without escaping.
- */
-class local_academic_timetabler_admin_setting_pricing extends admin_setting {
-    public function __construct() {
-        $this->nosave = true;
-        parent::__construct('local_academic_timetabler/commercial_plans', '', '', '');
-    }
+if (!class_exists('local_academic_timetabler_admin_setting_pricing')) {
+    /**
+     * Custom admin setting element to render commercial pricing plans HTML cleanly without escaping.
+     */
+    class local_academic_timetabler_admin_setting_pricing extends admin_setting {
+        public function __construct() {
+            $this->nosave = true;
+            parent::__construct('local_academic_timetabler/commercial_plans', '', '', '');
+        }
 
-    public function get_setting() {
-        return true;
-    }
+        public function get_setting() {
+            return true;
+        }
 
-    public function get_defaultsetting() {
-        return true;
-    }
+        public function get_defaultsetting() {
+            return true;
+        }
 
-    public function write_setting($data) {
-        return '';
-    }
+        public function write_setting($data) {
+            return '';
+        }
 
-    public function output_html($data, $query = '') {
-        return '
-        <div class="mt-4 p-4 bg-white border rounded shadow-sm mb-4">
-            <h4 class="font-weight-bold text-dark mb-1">Commercial Licensing & Enterprise Tiers</h4>
-            <p class="text-muted small mb-4">Choose the right capacity for your institution. All commercial plans include LemonSqueezy license keys and automated updates.</p>
-            
-            <div class="row row-cols-1 row-cols-md-3 g-4">
-                <!-- Tier 1: Starter / High School -->
-                <div class="col">
-                    <div class="card h-100 border p-4 d-flex flex-column rounded-3 bg-light">
-                        <div class="mb-3">
-                            <span class="badge bg-secondary text-white font-weight-bold px-3 py-1">High School / Department</span>
-                            <h4 class="font-weight-bold text-dark mt-2 mb-1">Starter Edition</h4>
-                            <div class="text-muted small">Ideal for small institutes & high schools</div>
+        public function output_html($data, $query = '') {
+            return '
+            <div class="mt-4 p-4 bg-white border rounded shadow-sm mb-4">
+                <h4 class="font-weight-bold text-dark mb-1">Commercial Licensing & Enterprise Tiers</h4>
+                <p class="text-muted small mb-4">Choose the right capacity for your institution. All commercial plans include LemonSqueezy license keys and automated updates.</p>
+                
+                <div class="row row-cols-1 row-cols-md-3 g-4">
+                    <!-- Tier 1: Starter / High School -->
+                    <div class="col">
+                        <div class="card h-100 border p-4 d-flex flex-column rounded-3 bg-light">
+                            <div class="mb-3">
+                                <span class="badge bg-secondary text-white font-weight-bold px-3 py-1">High School / Department</span>
+                                <h4 class="font-weight-bold text-dark mt-2 mb-1">Starter Edition</h4>
+                                <div class="text-muted small">Ideal for small institutes & high schools</div>
+                            </div>
+                            <div class="my-3 fs-2 font-weight-bold text-dark">$199 <span class="fs-6 text-muted font-weight-normal">/ year</span></div>
+                            <ul class="list-unstyled my-3 flex-grow-1 small">
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Up to 100 Active Courses</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Up to 50 Campus Rooms</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Master Course Timetable Solver</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Institutional Schedule Profiles</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Standard Email Support</li>
+                            </ul>
+                            <div class="pt-3 border-top mt-auto">
+                                <a href="https://lemonsqueezy.com" target="_blank" class="btn btn-outline-primary w-100 font-weight-bold py-2">Get Starter Plan &rarr;</a>
+                            </div>
                         </div>
-                        <div class="my-3 fs-2 font-weight-bold text-dark">$199 <span class="fs-6 text-muted font-weight-normal">/ year</span></div>
-                        <ul class="list-unstyled my-3 flex-grow-1 small">
-                            <li class="py-1"><i class="fa fa-check text-success me-2"></i> Up to 100 Active Courses</li>
-                            <li class="py-1"><i class="fa fa-check text-success me-2"></i> Up to 50 Campus Rooms</li>
-                            <li class="py-1"><i class="fa fa-check text-success me-2"></i> Master Course Timetable Solver</li>
-                            <li class="py-1"><i class="fa fa-check text-success me-2"></i> Institutional Schedule Profiles</li>
-                            <li class="py-1"><i class="fa fa-check text-success me-2"></i> Standard Email Support</li>
-                        </ul>
-                        <div class="pt-3 border-top mt-auto">
-                            <a href="https://lemonsqueezy.com" target="_blank" class="btn btn-outline-primary w-100 font-weight-bold py-2">Get Starter Plan &rarr;</a>
+                    </div>
+
+                    <!-- Tier 2: Pro / University (Popular) -->
+                    <div class="col">
+                        <div class="card h-100 border border-2 border-primary p-4 d-flex flex-column rounded-3 position-relative shadow-sm bg-white">
+                            <span class="position-absolute top-0 end-0 translate-middle-y me-3 badge bg-primary text-white font-weight-bold px-3 py-2 rounded-pill shadow-sm">MOST POPULAR</span>
+                            <div class="mb-3">
+                                <span class="badge bg-primary text-white font-weight-bold px-3 py-1">University / College</span>
+                                <h4 class="font-weight-bold text-dark mt-2 mb-1">Pro University</h4>
+                                <div class="text-muted small">Complete scheduling for higher education</div>
+                            </div>
+                            <div class="my-3 fs-2 font-weight-bold text-primary">$499 <span class="fs-6 text-muted font-weight-normal">/ year</span></div>
+                            <ul class="list-unstyled my-3 flex-grow-1 small">
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> <strong>UNLIMITED</strong> Active Courses</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> <strong>UNLIMITED</strong> Campus Rooms & Venues</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Combined Course & Exam Solver</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Background Adhoc Task Solver</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Custom Break Windows & Rules</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Priority Ticket Support</li>
+                            </ul>
+                            <div class="pt-3 border-top mt-auto">
+                                <a href="https://lemonsqueezy.com" target="_blank" class="btn btn-primary w-100 font-weight-bold py-2 shadow-sm">Get Pro University &rarr;</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tier 3: Enterprise Multi-Site -->
+                    <div class="col">
+                        <div class="card h-100 border p-4 d-flex flex-column rounded-3 bg-light">
+                            <div class="mb-3">
+                                <span class="badge bg-dark text-white font-weight-bold px-3 py-1">Multi-Site System</span>
+                                <h4 class="font-weight-bold text-dark mt-2 mb-1">Enterprise System</h4>
+                                <div class="text-muted small">For multi-campus university networks</div>
+                            </div>
+                            <div class="my-3 fs-2 font-weight-bold text-dark">$1,499 <span class="fs-6 text-muted font-weight-normal">/ year</span></div>
+                            <ul class="list-unstyled my-3 flex-grow-1 small">
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> <strong>Multi-Site / Multi-Moodle</strong> Deployment</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Custom Solver Constraint Engineering</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Dedicated Technical Onboarding SLA</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Direct SIS/ERP Integration Support</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> 1-on-1 Admin Training Session</li>
+                            </ul>
+                            <div class="pt-3 border-top mt-auto">
+                                <a href="https://lemonsqueezy.com" target="_blank" class="btn btn-outline-dark w-100 font-weight-bold py-2">Contact Enterprise &rarr;</a>
+                            </div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Tier 2: Pro / University (Popular) -->
-                <div class="col">
-                    <div class="card h-100 border border-2 border-primary p-4 d-flex flex-column rounded-3 position-relative shadow-sm bg-white">
-                        <span class="position-absolute top-0 end-0 translate-middle-y me-3 badge bg-primary text-white font-weight-bold px-3 py-2 rounded-pill shadow-sm">MOST POPULAR</span>
-                        <div class="mb-3">
-                            <span class="badge bg-primary text-white font-weight-bold px-3 py-1">University / College</span>
-                            <h4 class="font-weight-bold text-dark mt-2 mb-1">Pro University</h4>
-                            <div class="text-muted small">Complete scheduling for higher education</div>
-                        </div>
-                        <div class="my-3 fs-2 font-weight-bold text-primary">$499 <span class="fs-6 text-muted font-weight-normal">/ year</span></div>
-                        <ul class="list-unstyled my-3 flex-grow-1 small">
-                            <li class="py-1"><i class="fa fa-check text-success me-2"></i> <strong>UNLIMITED</strong> Active Courses</li>
-                            <li class="py-1"><i class="fa fa-check text-success me-2"></i> <strong>UNLIMITED</strong> Campus Rooms & Venues</li>
-                            <li class="py-1"><i class="fa fa-check text-success me-2"></i> Combined Course & Exam Solver</li>
-                            <li class="py-1"><i class="fa fa-check text-success me-2"></i> Background Adhoc Task Solver</li>
-                            <li class="py-1"><i class="fa fa-check text-success me-2"></i> Custom Break Windows & Rules</li>
-                            <li class="py-1"><i class="fa fa-check text-success me-2"></i> Priority Ticket Support</li>
-                        </ul>
-                        <div class="pt-3 border-top mt-auto">
-                            <a href="https://lemonsqueezy.com" target="_blank" class="btn btn-primary w-100 font-weight-bold py-2 shadow-sm">Get Pro University &rarr;</a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tier 3: Enterprise Multi-Site -->
-                <div class="col">
-                    <div class="card h-100 border p-4 d-flex flex-column rounded-3 bg-light">
-                        <div class="mb-3">
-                            <span class="badge bg-dark text-white font-weight-bold px-3 py-1">Multi-Site System</span>
-                            <h4 class="font-weight-bold text-dark mt-2 mb-1">Enterprise System</h4>
-                            <div class="text-muted small">For multi-campus university networks</div>
-                        </div>
-                        <div class="my-3 fs-2 font-weight-bold text-dark">$1,499 <span class="fs-6 text-muted font-weight-normal">/ year</span></div>
-                        <ul class="list-unstyled my-3 flex-grow-1 small">
-                            <li class="py-1"><i class="fa fa-check text-success me-2"></i> <strong>Multi-Site / Multi-Moodle</strong> Deployment</li>
-                            <li class="py-1"><i class="fa fa-check text-success me-2"></i> Custom Solver Constraint Engineering</li>
-                            <li class="py-1"><i class="fa fa-check text-success me-2"></i> Dedicated Technical Onboarding SLA</li>
-                            <li class="py-1"><i class="fa fa-check text-success me-2"></i> Direct SIS/ERP Integration Support</li>
-                            <li class="py-1"><i class="fa fa-check text-success me-2"></i> 1-on-1 Admin Training Session</li>
-                        </ul>
-                        <div class="pt-3 border-top mt-auto">
-                            <a href="https://lemonsqueezy.com" target="_blank" class="btn btn-outline-dark w-100 font-weight-bold py-2">Contact Enterprise &rarr;</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>';
+            </div>';
+        }
     }
 }
 
