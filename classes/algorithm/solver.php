@@ -86,6 +86,38 @@ class solver {
         }
     }
 
+    /** @var string Slot type to filter for generation (class or exam). */
+    private string $slottype = 'class';
+
+    /**
+     * Set target slot type for schedule generation.
+     *
+     * @param string $type Slot type (class or exam).
+     * @return void
+     */
+    public function set_slot_type(string $type): void {
+        $this->slottype = $type;
+    }
+
+    /**
+     * Load existing schedule assignments as hard conflict blockouts.
+     *
+     * @param array $existingschedules Array of existing schedule records.
+     * @return void
+     */
+    public function load_existing_schedules(array $existingschedules): void {
+        foreach ($existingschedules as $s) {
+            $key = 'existing_' . $s->id;
+            $this->solution['classes'][$key] = [
+                'course_id' => $s->courseid,
+                'slot_id'   => $s->slotid,
+                'room_id'   => $s->roomid,
+                'teacher_id'=> $s->teacherid,
+                'note'      => 'Existing Blockout'
+            ];
+        }
+    }
+
     /**
      * Solve schedule for all loaded courses.
      *
@@ -110,7 +142,14 @@ class solver {
         }
 
         $course = $courselist[$index];
-        $classslots = array_values(array_filter($this->slots, fn($s) => $s->type === 'class'));
+        $targettype = $this->slottype;
+        $classslots = array_values(array_filter($this->slots, function($s) use ($targettype) {
+            if ($s->type === $targettype) {
+                return true;
+            }
+            // Fallback if no specific exam slots configured
+            return ($targettype === 'exam' && $s->type === 'class');
+        }));
 
         $strategy = get_config('local_academic_timetabler', 'day_distribution') ?: 'balanced';
 

@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Main admin dashboard view for local_academic_timetabler.
+ * Main admin dashboard and timetable generation view for local_academic_timetabler.
  *
  * @package     local_academic_timetabler
  * @copyright   2026 Emanuel Dickson Wanyonyi <wanyonyi.d.emanuel@gmail.com>
@@ -40,8 +40,19 @@ if ($action === 'generate' && confirm_sesskey()) {
     \core_php_time_limit::raise(600);
     raise_memory_limit(MEMORY_EXTRA);
 
-    // Exclude Site Home course (id = 1)
-    $courses = $DB->get_records_select('course', 'id > 1 AND visible = 1', null, 'id ASC');
+    $scheduletype = optional_param('scheduletype', 'class', PARAM_ALPHA);
+    $categoryid   = optional_param('categoryid', 0, PARAM_INT);
+    $genmode      = optional_param('mode', 'overwrite', PARAM_ALPHA);
+
+    // Build course query based on category scope
+    $params = [];
+    $select = 'id > 1 AND visible = 1';
+    if ($categoryid > 0) {
+        $select .= ' AND category = :categoryid';
+        $params['categoryid'] = $categoryid;
+    }
+
+    $courses = $DB->get_records_select('course', $select, $params, 'id ASC');
     $slots   = $DB->get_records('local_att_slots');
     $rooms   = $DB->get_records('local_att_rooms');
 
@@ -63,6 +74,15 @@ if ($action === 'generate' && confirm_sesskey()) {
         );
     }
 
+    if (empty($courses)) {
+        redirect(
+            new moodle_url('/local/academic_timetabler/index.php'),
+            'No active courses found in the selected department category.',
+            null,
+            \core\output\notification::NOTIFY_WARNING
+        );
+    }
+
     // Community edition limit handling: cap courses to limit if on community tier
     $tier = \local_academic_timetabler\licensing\license_manager::get_tier();
     if ($tier === \local_academic_timetabler\licensing\license_manager::TIER_COMMUNITY) {
@@ -71,17 +91,41 @@ if ($action === 'generate' && confirm_sesskey()) {
 
     try {
         $solver = new \local_academic_timetabler\algorithm\solver($slots, $rooms);
+        $solver->set_slot_type($scheduletype);
         $solver->load_courses($courses);
+
+        if ($genmode === 'append') {
+            // Load ALL existing schedule entries as hard occupied blockouts
+            $existingschedules = $DB->get_records('local_att_schedules');
+            $solver->load_existing_schedules($existingschedules);
+        } else {
+            // Overwrite mode: Delete matching schedule type / category entries
+            if ($categoryid > 0) {
+                $catcourseids = array_keys($courses);
+                if (!empty($catcourseids)) {
+                    list($insql, $inparams) = $DB->get_in_or_equal($catcourseids, SQL_PARAMS_NAMED);
+                    $inparams['stype'] = $scheduletype;
+                    $DB->delete_records_select('local_att_schedules', "schedule_type = :stype AND courseid {$insql}", $inparams);
+                }
+            } else {
+                $DB->delete_records('local_att_schedules', ['schedule_type' => $scheduletype]);
+            }
+
+            // Load remaining non-deleted schedules (e.g. Class schedules when generating Exams) as occupied blockouts
+            $othersexisting = $DB->get_records_select('local_att_schedules', 'schedule_type != :stype', ['stype' => $scheduletype]);
+            $solver->load_existing_schedules($othersexisting);
+        }
 
         if ($solver->solve_all()) {
             $solution = $solver->get_solution();
-            $DB->delete_records('local_att_schedules');
-
             $count = 0;
             foreach ($solution['classes'] ?? [] as $assignedkey => $sched) {
+                if (strpos((string)$assignedkey, 'existing_') === 0) {
+                    continue; // Skip loaded blockout entries
+                }
                 $courseid = $sched['course_id'] ?? (int)$assignedkey;
                 $DB->insert_record('local_att_schedules', (object)[
-                    'schedule_type' => 'class',
+                    'schedule_type' => $scheduletype,
                     'courseid'     => $courseid,
                     'roomid'       => $sched['room_id'],
                     'slotid'       => $sched['slot_id'],
@@ -89,9 +133,10 @@ if ($action === 'generate' && confirm_sesskey()) {
                 ]);
                 $count++;
             }
+            $label = ($scheduletype === 'exam') ? 'Examination' : 'Class';
             redirect(
-                new moodle_url('/local/academic_timetabler/schedules.php'),
-                "Timetable generated successfully! {$count} course sessions assigned conflict-free.",
+                new moodle_url('/local/academic_timetabler/schedules.php', ['type' => $scheduletype, 'categoryid' => $categoryid]),
+                "{$label} Timetable generated successfully! {$count} course sessions assigned conflict-free.",
                 null,
                 \core\output\notification::NOTIFY_SUCCESS
             );
@@ -116,4 +161,56 @@ if ($action === 'generate' && confirm_sesskey()) {
 echo $OUTPUT->header();
 $output = $PAGE->get_renderer('local_academic_timetabler');
 echo $output->render_dashboard([]);
+
+// -------------------------------------------------------------------
+// Multi-Timetable Generator Options Card
+// -------------------------------------------------------------------
+echo html_writer::start_div('card border border-secondary-subtle shadow-sm my-4');
+echo html_writer::div(html_writer::tag('h5', 'Generate Institutional & Departmental Timetables', ['class' => 'mb-0 text-dark font-weight-bold']), 'card-header bg-light');
+echo html_writer::start_div('card-body');
+
+echo html_writer::start_tag('form', ['method' => 'post', 'action' => (new moodle_url('/local/academic_timetabler/index.php'))->out(false)]);
+echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
+echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'generate']);
+
+// Fetch course categories (departments)
+$categories = $DB->get_records_menu('course_categories', null, 'name ASC', 'id, name');
+$catoptions = [0 => '-- Entire Institution (All Departments) --'] + $categories;
+
+$typeoptions = [
+    'class' => 'Regular Semester Class Schedule',
+    'exam'  => 'Examination Schedule',
+];
+
+$modeoptions = [
+    'overwrite' => 'Overwrite Existing Timetables of Selected Type',
+    'append'    => 'Append Mode (Preserve Existing Timetables & Schedule Around Them)',
+];
+
+echo html_writer::start_div('row g-3');
+echo html_writer::start_div('col-md-4');
+echo html_writer::tag('label', 'Timetable Type', ['class' => 'form-label font-weight-bold']);
+echo html_writer::select($typeoptions, 'scheduletype', 'class', false, ['class' => 'form-select']);
+echo html_writer::end_div();
+
+echo html_writer::start_div('col-md-4');
+echo html_writer::tag('label', 'Department / Course Category Scope', ['class' => 'form-label font-weight-bold']);
+echo html_writer::select($catoptions, 'categoryid', 0, false, ['class' => 'form-select']);
+echo html_writer::end_div();
+
+echo html_writer::start_div('col-md-4');
+echo html_writer::tag('label', 'Generation & Conflict Mode', ['class' => 'form-label font-weight-bold']);
+echo html_writer::select($modeoptions, 'mode', 'overwrite', false, ['class' => 'form-select']);
+echo html_writer::end_div();
+echo html_writer::end_div();
+
+echo html_writer::start_div('mt-3 d-flex align-items-center justify-content-between');
+echo html_writer::tag('button', 'Run Solver & Generate Timetable', ['type' => 'submit', 'class' => 'btn btn-success font-weight-bold px-4 shadow-sm']);
+echo html_writer::tag('small', 'Cross-schedule conflict prevention will automatically preserve occupied venues and instructors.', ['class' => 'text-muted']);
+echo html_writer::end_div();
+
+echo html_writer::end_tag('form');
+echo html_writer::end_div();
+echo html_writer::end_div();
+
 echo $OUTPUT->footer();

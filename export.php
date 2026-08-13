@@ -15,7 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Export and printable view script for local_academic_timetabler.
+ * Export and Print engine for local_academic_timetabler.
+ * Supports CSV file download and print-ready HTML/PDF views.
  *
  * @package     local_academic_timetabler
  * @copyright   2026 Emanuel Dickson Wanyonyi <wanyonyi.d.emanuel@gmail.com>
@@ -25,15 +26,17 @@
 
 require_once(__DIR__ . '/../../config.php');
 
-if (!defined('CLI_SCRIPT') || !CLI_SCRIPT) {
-    require_login();
+require_login();
+if (class_exists('context_system')) {
     $context = context_system::instance();
     require_capability('local/academic_timetabler:manage', $context);
 }
 
-$action = optional_param('action', 'print', PARAM_ALPHA);
-$roomid = optional_param('roomid', 0, PARAM_INT);
-$teacherid = optional_param('teacherid', 0, PARAM_INT);
+$action       = optional_param('action', 'print', PARAM_ALPHA);
+$roomid       = optional_param('roomid', 0, PARAM_INT);
+$teacherid    = optional_param('teacherid', 0, PARAM_INT);
+$scheduletype = optional_param('type', 'all', PARAM_ALPHA);
+$categoryid   = optional_param('categoryid', 0, PARAM_INT);
 
 global $DB;
 
@@ -42,130 +45,16 @@ $days = [
     4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday',
 ];
 
-// -------------------------------------------------------------------
-// Action: CSV Export
-// -------------------------------------------------------------------
-if ($action === 'csv') {
-    $where = [];
-    $params = [];
-    if ($roomid > 0) {
-        $where[] = 's.roomid = :roomid';
-        $params['roomid'] = $roomid;
-    }
-    if ($teacherid > 0) {
-        $where[] = 's.teacherid = :teacherid';
-        $params['teacherid'] = $teacherid;
-    }
-    $wherestr = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
-
-    $sql = "SELECT s.id, s.schedule_type, c.shortname AS coursecode, c.fullname AS coursename,
-                   r.name AS roomname, sl.dayofweek, sl.starttime, sl.endtime,
-                   u.firstname, u.lastname
-              FROM {local_att_schedules} s
-              JOIN {course} c ON c.id = s.courseid
-              JOIN {local_att_rooms} r ON r.id = s.roomid
-              JOIN {local_att_slots} sl ON sl.id = s.slotid
-              LEFT JOIN {user} u ON u.id = s.teacherid
-              {$wherestr}
-          ORDER BY sl.dayofweek ASC, sl.starttime ASC, r.name ASC";
-
-    $schedules = $DB->get_records_sql($sql, $params);
-
-    $filename = 'academic_timetable_' . date('Y-m-d_His') . '.csv';
-    header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename="' . $filename . '"');
-
-    $output = fopen('php://output', 'w');
-    fputcsv($output, [
-        'Schedule ID',
-        'Course Code',
-        'Course Full Name',
-        'Room / Venue',
-        'Day of Week',
-        'Start Time',
-        'End Time',
-        'Instructor',
-        'Schedule Type'
-    ]);
-
-    foreach ($schedules as $s) {
-        $dayname = $days[$s->dayofweek] ?? 'Day ' . $s->dayofweek;
-        $teacher = (!empty($s->firstname) || !empty($s->lastname)) ? fullname($s) : 'Unassigned';
-        fputcsv($output, [
-            $s->id,
-            $s->coursecode,
-            $s->coursename,
-            $s->roomname,
-            $dayname,
-            $s->starttime,
-            $s->endtime,
-            $teacher,
-            strtoupper($s->schedule_type),
-        ]);
-    }
-    fclose($output);
-    exit(0);
-}
-
-// -------------------------------------------------------------------
-// Action: Print / PDF View Page
-// -------------------------------------------------------------------
-$PAGE->set_url(new moodle_url('/local/academic_timetabler/export.php', ['action' => 'print']));
-$PAGE->set_context($context);
-$PAGE->set_title('Printable Academic Timetable');
-$PAGE->set_pagelayout('embedded'); // Clean embedded layout without site headers/footers
-
-echo $OUTPUT->header();
-?>
-<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; background: #fff; margin: 20px; }
-        .print-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 20px; }
-        .print-title { font-size: 24px; font-weight: 700; color: #0f172a; margin: 0; }
-        .print-meta { font-size: 13px; color: #64748b; text-align: right; }
-        .table-printable { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
-        .table-printable th { background-color: #f1f5f9; color: #334155; text-align: left; padding: 10px; border: 1px solid #cbd5e1; font-weight: 600; }
-        .table-printable td { padding: 9px 10px; border: 1px solid #cbd5e1; }
-        .table-printable tr:nth-child(even) { background-color: #f8fafc; }
-        .badge-type { display: inline-block; padding: 2px 8px; font-size: 11px; font-weight: 600; border-radius: 4px; background: #e2e8f0; color: #334155; }
-        .no-print { margin-bottom: 20px; display: flex; gap: 10px; }
-        @media print {
-            .no-print { display: none !important; }
-            body { margin: 0; }
-            @page { size: landscape; margin: 10mm; }
-        }
-    </style>
-</head>
-<body>
-
-<div class="no-print">
-    <button onclick="window.print();" class="btn btn-primary font-weight-bold">
-        Print / Save as PDF
-    </button>
-    <a href="<?php echo (new moodle_url('/local/academic_timetabler/export.php', ['action' => 'csv']))->out(false); ?>" class="btn btn-success font-weight-bold">
-        Export to CSV
-    </a>
-    <button onclick="window.close();" class="btn btn-outline-secondary">
-        Close Window
-    </button>
-</div>
-
-<div class="print-header">
-    <div>
-        <h1 class="print-title">Institutional Master Academic Timetable</h1>
-        <span style="font-size: 14px; color: #475569;">Official Published Course Schedule & Venue Allocations</span>
-    </div>
-    <div class="print-meta">
-        <div><strong>Generated:</strong> <?php echo userdate(time(), '%B %d, %Y - %H:%M'); ?></div>
-        <div><strong>Institution:</strong> <?php echo s($SITE->fullname); ?></div>
-    </div>
-</div>
-
-<?php
 $where = [];
 $params = [];
+if ($scheduletype !== 'all') {
+    $where[] = 's.schedule_type = :stype';
+    $params['stype'] = $scheduletype;
+}
+if ($categoryid > 0) {
+    $where[] = 'c.category = :categoryid';
+    $params['categoryid'] = $categoryid;
+}
 if ($roomid > 0) {
     $where[] = 's.roomid = :roomid';
     $params['roomid'] = $roomid;
@@ -189,39 +78,155 @@ $sql = "SELECT s.id, s.schedule_type, c.shortname AS coursecode, c.fullname AS c
 
 $schedules = $DB->get_records_sql($sql, $params);
 
-if (empty($schedules)) {
-    echo '<div class="alert alert-info">No schedule entries found for export.</div>';
-} else {
-    echo '<table class="table-printable">';
-    echo '<thead><tr>';
-    echo '<th>ID</th><th>Course Code & Title</th><th>Assigned Venue</th><th>Day & Time Window</th><th>Instructor / Lecturer</th><th>Type</th>';
-    echo '</tr></thead><tbody>';
+// -------------------------------------------------------------------
+// Action: CSV Export
+// -------------------------------------------------------------------
+if ($action === 'csv') {
+    $filename = 'academic_timetable_' . date('Ymd_His') . '.csv';
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+
+    $output = fopen('php://output', 'w');
+    fputcsv($output, ['Schedule ID', 'Schedule Type', 'Course Code', 'Course Name', 'Venue / Room', 'Day of Week', 'Start Time', 'End Time', 'Instructor']);
 
     foreach ($schedules as $s) {
-        $dayname = $days[$s->dayofweek] ?? 'Day ' . $s->dayofweek;
+        $dayname = $days[$s->dayofweek] ?? ('Day ' . $s->dayofweek);
         $teacher = (!empty($s->firstname) || !empty($s->lastname)) ? fullname($s) : 'Unassigned';
-        echo '<tr>';
-        echo '<td>' . $s->id . '</td>';
-        echo '<td><strong>' . s($s->coursecode) . '</strong><br><small style="color:#64748b;">' . s($s->coursename) . '</small></td>';
-        echo '<td>' . s($s->roomname) . '</td>';
-        echo '<td><strong>' . $dayname . '</strong> (' . s($s->starttime) . ' - ' . s($s->endtime) . ')</td>';
-        echo '<td>' . s($teacher) . '</td>';
-        echo '<td><span class="badge-type">' . strtoupper($s->schedule_type) . '</span></td>';
-        echo '</tr>';
+        fputcsv($output, [
+            $s->id,
+            strtoupper($s->schedule_type),
+            $s->coursecode,
+            $s->coursename,
+            $s->roomname,
+            $dayname,
+            $s->starttime,
+            $s->endtime,
+            $teacher,
+        ]);
     }
-    echo '</tbody></table>';
+    fclose($output);
+    exit;
 }
-?>
 
-<script>
-    // Auto trigger print dialog if requested
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('autoprint') === '1') {
-        window.addEventListener('load', () => window.print());
+// -------------------------------------------------------------------
+// Action: Print / PDF HTML View
+// -------------------------------------------------------------------
+$autoprint = optional_param('autoprint', 0, PARAM_INT);
+$site = get_site();
+$currentstrategy = get_config('local_academic_timetabler', 'day_distribution') ?: 'balanced';
+$maxday = ($currentstrategy === 'mon_to_sat') ? 6 : 5;
+$matrixdays = array_slice($days, 0, $maxday, true);
+
+// Extract unique time windows
+$timeblocks = [];
+foreach ($schedules as $s) {
+    $window = s($s->starttime) . ' - ' . s($s->endtime);
+    if (!in_array($window, $timeblocks)) {
+        $timeblocks[] = $window;
     }
-</script>
+}
+sort($timeblocks);
+
+// Group matrix entries
+$matrix = [];
+foreach ($schedules as $s) {
+    $window = s($s->starttime) . ' - ' . s($s->endtime);
+    $matrix[$window][$s->dayofweek][] = $s;
+}
+
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Academic Timetable - <?php echo s($site->fullname); ?></title>
+    <link rel="stylesheet" href="<?php echo (new moodle_url('/theme/styles.php/boost/1/all'))->out(false); ?>">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #fff; color: #000; padding: 20px; }
+        .header-print { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        .header-print h2 { margin: 0; font-size: 24px; font-weight: bold; }
+        .header-print p { margin: 5px 0 0; color: #555; font-size: 14px; }
+        .table-matrix { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 11px; }
+        .table-matrix th, .table-matrix td { border: 1px solid #666; padding: 6px; text-align: center; vertical-align: top; }
+        .table-matrix th { background-color: #f2f2f2; font-size: 12px; font-weight: bold; }
+        .cell-entry { background: #fafafa; border: 1px solid #ccc; border-radius: 4px; padding: 4px; margin-bottom: 4px; text-align: left; }
+        .cell-entry strong { color: #000; display: block; font-size: 11px; }
+        .cell-entry small { color: #444; display: block; }
+        @media print {
+            .no-print { display: none !important; }
+            body { padding: 0; margin: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="no-print mb-4 d-flex gap-2">
+    <button onclick="window.print();" class="btn btn-primary font-weight-bold">
+        Print / Save as PDF
+    </button>
+    <a href="<?php echo (new moodle_url('/local/academic_timetabler/export.php', ['action' => 'csv', 'type' => $scheduletype, 'categoryid' => $categoryid]))->out(false); ?>" class="btn btn-success font-weight-bold">
+        Export to CSV
+    </a>
+    <button onclick="window.close();" class="btn btn-outline-secondary">
+        Close Window
+    </button>
+</div>
+
+<div class="header-print">
+    <h2><?php echo s($site->fullname); ?></h2>
+    <p><strong>Official Academic Schedule Profile: <?php echo strtoupper($scheduletype); ?></strong> | Generated on <?php echo date('F j, Y, g:i a'); ?></p>
+</div>
+
+<?php if (empty($schedules)): ?>
+    <div class="alert alert-warning text-center">No schedule allocations found matching the selected criteria.</div>
+<?php else: ?>
+    <table class="table-matrix">
+        <thead>
+            <tr>
+                <th style="width: 12%;">Time Window</th>
+                <?php foreach ($matrixdays as $dayname): ?>
+                    <th><?php echo s($dayname); ?></th>
+                <?php endforeach; ?>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($timeblocks as $timeblock): ?>
+                <tr>
+                    <td style="background:#f9f9f9; font-weight:bold;"><?php echo s($timeblock); ?></td>
+                    <?php foreach (array_keys($matrixdays) as $day): ?>
+                        <td>
+                            <?php 
+                            $entries = $matrix[$timeblock][$day] ?? [];
+                            if (empty($entries)): 
+                                echo '&mdash;';
+                            else:
+                                foreach ($entries as $e):
+                                    $teacher = (!empty($e->firstname) || !empty($e->lastname)) ? fullname($e) : 'Unassigned';
+                                    ?>
+                                    <div class="cell-entry">
+                                        <strong><?php echo s($e->coursecode); ?></strong>
+                                        <small>📍 <?php echo s($e->roomname); ?></small>
+                                        <small>👨‍🏫 <?php echo s($teacher); ?></small>
+                                    </div>
+                                    <?php
+                                endforeach;
+                            endif;
+                            ?>
+                        </td>
+                    <?php endforeach; ?>
+                </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+<?php endif; ?>
+
+<?php if ($autoprint): ?>
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            window.print();
+        });
+    </script>
+<?php endif; ?>
 
 </body>
 </html>
-<?php
-echo $OUTPUT->footer();

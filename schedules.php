@@ -16,6 +16,7 @@
 
 /**
  * View, edit, delete and export generated timetables for local_academic_timetabler.
+ * Supports multi-timetable profiles (Class vs Exam schedules) and departmental filtering.
  *
  * @package     local_academic_timetabler
  * @copyright   2026 Emanuel Dickson Wanyonyi <wanyonyi.d.emanuel@gmail.com>
@@ -29,14 +30,17 @@ require_login();
 $context = context_system::instance();
 require_capability('local/academic_timetabler:manage', $context);
 
-$view = optional_param('view', 'grid', PARAM_ALPHA); // 'grid' or 'table'
-$action = optional_param('action', '', PARAM_ALPHA);
-$id = optional_param('id', 0, PARAM_INT);
-$roomid = optional_param('roomid', 0, PARAM_INT);
-$teacherid = optional_param('teacherid', 0, PARAM_INT);
+$view         = optional_param('view', 'grid', PARAM_ALPHA); // 'grid' or 'table'
+$action       = optional_param('action', '', PARAM_ALPHA);
+$id           = optional_param('id', 0, PARAM_INT);
+$roomid       = optional_param('roomid', 0, PARAM_INT);
+$teacherid    = optional_param('teacherid', 0, PARAM_INT);
+$scheduletype = optional_param('type', 'all', PARAM_ALPHA); // 'all', 'class', 'exam'
+$categoryid   = optional_param('categoryid', 0, PARAM_INT);
 
 $url = new moodle_url('/local/academic_timetabler/schedules.php', [
     'view' => $view, 'roomid' => $roomid, 'teacherid' => $teacherid,
+    'type' => $scheduletype, 'categoryid' => $categoryid,
 ]);
 $PAGE->set_url($url);
 $PAGE->set_context($context);
@@ -47,8 +51,13 @@ $PAGE->set_heading(get_string('manage_schedules', 'local_academic_timetabler'));
 // Action: Clear All Timetables
 // -------------------------------------------------------------------
 if ($action === 'clearall' && confirm_sesskey()) {
-    $DB->delete_records('local_att_schedules');
-    redirect($url, 'All generated timetables cleared successfully.');
+    if ($scheduletype !== 'all') {
+        $DB->delete_records('local_att_schedules', ['schedule_type' => $scheduletype]);
+        redirect($url, strtoupper($scheduletype) . ' timetables cleared successfully.');
+    } else {
+        $DB->delete_records('local_att_schedules');
+        redirect($url, 'All generated timetables cleared successfully.');
+    }
 }
 
 // -------------------------------------------------------------------
@@ -136,10 +145,11 @@ echo html_writer::link($navurls['slots'], 'Manage Time Slots', ['class' => 'btn 
 echo html_writer::link($navurls['schedules'], 'View Timetables', ['class' => 'btn btn-primary me-2']);
 echo html_writer::link($generateurl, 'Generate Timetable', ['class' => 'btn btn-success font-weight-bold shadow-sm me-2']);
 
-$clearurl = new moodle_url($url, ['action' => 'clearall', 'sesskey' => sesskey()]);
-echo html_writer::link($clearurl, 'Clear All Timetables', [
+$clearurl = new moodle_url($url, ['action' => 'clearall', 'type' => $scheduletype, 'sesskey' => sesskey()]);
+$cleartitle = ($scheduletype !== 'all') ? 'Clear ' . strtoupper($scheduletype) . ' Timetables' : 'Clear All Timetables';
+echo html_writer::link($clearurl, $cleartitle, [
     'class' => 'btn btn-outline-danger font-weight-bold shadow-sm',
-    'onclick' => 'return confirm("Are you sure you want to delete ALL generated schedule entries?");',
+    'onclick' => 'return confirm("Are you sure you want to delete selected generated schedule entries?");',
 ]);
 echo html_writer::end_div();
 
@@ -172,11 +182,11 @@ if ($editschedule) {
     }
 
     // Slot options
-    $allslots = $DB->get_records('local_att_slots', ['type' => 'class'], 'dayofweek ASC, starttime ASC');
+    $allslots = $DB->get_records('local_att_slots', null, 'dayofweek ASC, starttime ASC');
     $slotopts = [];
     foreach ($allslots as $sl) {
         $dname = $days[$sl->dayofweek] ?? 'Day ' . $sl->dayofweek;
-        $slotopts[$sl->id] = $dname . ' (' . $sl->starttime . ' - ' . $sl->endtime . ')';
+        $slotopts[$sl->id] = $dname . ' (' . $sl->starttime . ' - ' . $sl->endtime . ') [' . strtoupper($sl->type) . ']';
     }
 
     // Teacher options: Enrolled course teachers + all active institutional faculty members
@@ -224,7 +234,7 @@ if ($editschedule) {
     echo html_writer::end_div();
 }
 
-// Fetch rooms and teachers for dropdown filters
+// Fetch options for filter dropdowns
 $allrooms = $DB->get_records('local_att_rooms', null, 'name ASC');
 $roomoptions = [0 => '-- All Campus Venues --'];
 foreach ($allrooms as $r) {
@@ -240,23 +250,48 @@ foreach ($allteachers as $t) {
     $teacheroptions[$t->id] = fullname($t);
 }
 
+// Categories / Departments filter options
+$categories = $DB->get_records_menu('course_categories', null, 'name ASC', 'id, name');
+$catoptions = [0 => '-- All Departments --'] + $categories;
+
+// Type filter options
+$typefilteroptions = [
+    'all'   => 'Profile: All Timetables',
+    'class' => 'Profile: Class Timetables Only',
+    'exam'  => 'Profile: Exam Timetables Only',
+];
+
 // Strategy options
 $currentstrategy = get_config('local_academic_timetabler', 'day_distribution') ?: 'balanced';
 $strategyoptions = [
-    'balanced' => 'Strategy: Balanced 5-Day (Mon-Fri)',
+    'balanced'   => 'Strategy: Balanced 5-Day (Mon-Fri)',
     'mon_to_sat' => 'Strategy: 6-Day Schedule (Mon-Sat)',
     'mon_to_thu' => 'Strategy: 4-Day Compact (Mon-Thu)',
-    'frontload' => 'Strategy: Sequential Frontload',
+    'frontload'   => 'Strategy: Sequential Frontload',
 ];
+
+// Summary counts
+$classcount = $DB->count_records('local_att_schedules', ['schedule_type' => 'class']);
+$examcount  = $DB->count_records('local_att_schedules', ['schedule_type' => 'exam']);
+$totalcount = $classcount + $examcount;
+
+// -------------------------------------------------------------------
+// Summary Count Badges
+// -------------------------------------------------------------------
+echo html_writer::start_div('d-flex gap-3 align-items-center mb-3 flex-wrap');
+echo html_writer::div("Total Allocations: <strong>{$totalcount}</strong>", 'badge bg-dark text-white p-2 fs-6');
+echo html_writer::div("Class Schedules: <strong>{$classcount}</strong>", 'badge bg-primary text-white p-2 fs-6');
+echo html_writer::div("Exam Schedules: <strong>{$examcount}</strong>", 'badge bg-warning text-dark p-2 fs-6');
+echo html_writer::end_div();
 
 // -------------------------------------------------------------------
 // Export & View Control Toolbar
 // -------------------------------------------------------------------
 $csvexporturl = new moodle_url('/local/academic_timetabler/export.php', [
-    'action' => 'csv', 'roomid' => $roomid, 'teacherid' => $teacherid,
+    'action' => 'csv', 'roomid' => $roomid, 'teacherid' => $teacherid, 'type' => $scheduletype, 'categoryid' => $categoryid,
 ]);
 $pdfexporturl = new moodle_url('/local/academic_timetabler/export.php', [
-    'action' => 'print', 'roomid' => $roomid, 'teacherid' => $teacherid, 'autoprint' => 1,
+    'action' => 'print', 'roomid' => $roomid, 'teacherid' => $teacherid, 'type' => $scheduletype, 'categoryid' => $categoryid, 'autoprint' => 1,
 ]);
 
 echo html_writer::start_div('card shadow-sm mb-4');
@@ -283,13 +318,16 @@ echo html_writer::link(new moodle_url($url, ['view' => 'grid']), 'Weekly Matrix'
 echo html_writer::link(new moodle_url($url, ['view' => 'table']), 'Master List', ['class' => "btn btn-sm {$tableactive}"]);
 echo html_writer::end_div();
 
-// Right side: Filter Controls
+// Right side: Filter Controls (Type, Department, Room, Teacher)
 echo html_writer::start_tag('form', ['method' => 'get', 'action' => $url->out(false), 'class' => 'd-flex gap-2 align-items-center flex-wrap']);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'view', 'value' => $view]);
+echo html_writer::select($typefilteroptions, 'type', $scheduletype, false, ['class' => 'form-select form-select-sm', 'onchange' => 'this.form.submit()']);
+echo html_writer::select($catoptions, 'categoryid', $categoryid, false, ['class' => 'form-select form-select-sm', 'onchange' => 'this.form.submit()']);
 echo html_writer::select($roomoptions, 'roomid', $roomid, false, ['class' => 'form-select form-select-sm', 'onchange' => 'this.form.submit()']);
 echo html_writer::select($teacheroptions, 'teacherid', $teacherid, false, ['class' => 'form-select form-select-sm', 'onchange' => 'this.form.submit()']);
-if ($roomid > 0 || $teacherid > 0) {
-    echo html_writer::link(new moodle_url($url, ['roomid' => 0, 'teacherid' => 0]), 'Reset Filters', ['class' => 'btn btn-sm btn-outline-secondary']);
+
+if ($roomid > 0 || $teacherid > 0 || $categoryid > 0 || $scheduletype !== 'all') {
+    echo html_writer::link(new moodle_url($url, ['roomid' => 0, 'teacherid' => 0, 'categoryid' => 0, 'type' => 'all']), 'Reset Filters', ['class' => 'btn btn-sm btn-outline-secondary']);
 }
 echo html_writer::end_tag('form');
 
@@ -301,6 +339,15 @@ echo html_writer::end_div();
 // -------------------------------------------------------------------
 $where = [];
 $params = [];
+
+if ($scheduletype !== 'all') {
+    $where[] = 's.schedule_type = :stype';
+    $params['stype'] = $scheduletype;
+}
+if ($categoryid > 0) {
+    $where[] = 'c.category = :categoryid';
+    $params['categoryid'] = $categoryid;
+}
 if ($roomid > 0) {
     $where[] = 's.roomid = :roomid';
     $params['roomid'] = $roomid;
@@ -378,9 +425,10 @@ if (empty($schedules)) {
                     $teacher = (!empty($entry->firstname) || !empty($entry->lastname)) ? fullname($entry) : 'Unassigned';
                     $editurl = new moodle_url($url, ['action' => 'edit', 'id' => $entry->id]);
                     $delurl = new moodle_url($url, ['action' => 'delete', 'id' => $entry->id, 'sesskey' => sesskey()]);
+                    $typebadge = ($entry->schedule_type === 'exam') ? '<span class="badge bg-warning text-dark me-1">EXAM</span>' : '';
 
                     echo html_writer::start_div('bg-white border rounded shadow-sm p-2 mb-2 text-start', ['style' => 'border-color: #cbd5e1 !important;']);
-                    echo html_writer::div(s($entry->coursecode), '', ['style' => 'color: #0f172a; font-weight: 700; font-size: 13px;']);
+                    echo html_writer::div($typebadge . s($entry->coursecode), '', ['style' => 'color: #0f172a; font-weight: 700; font-size: 13px;']);
                     echo html_writer::div(s($entry->roomname), 'mt-1', ['style' => 'color: #334155; font-weight: 600; font-size: 12px;']);
                     echo html_writer::div(s($teacher), '', ['style' => 'color: #475569; font-size: 12px;']);
 
@@ -426,13 +474,15 @@ if (empty($schedules)) {
             'onclick' => 'return confirm("Are you sure you want to delete this schedule allocation?");',
         ]);
 
+        $typecls = ($sched->schedule_type === 'exam') ? 'bg-warning text-dark' : 'bg-secondary text-white';
+
         $table->data[] = [
             $sched->id,
             '<strong>' . s($sched->coursecode) . '</strong> - ' . s($sched->coursename),
             s($sched->roomname),
             '<strong>' . $dayname . '</strong> (' . s($sched->starttime) . ' - ' . s($sched->endtime) . ')',
             s($teacher),
-            '<span class="badge bg-secondary text-white">' . strtoupper($sched->schedule_type) . '</span>',
+            '<span class="badge ' . $typecls . '">' . strtoupper($sched->schedule_type) . '</span>',
             $editbtn . $delbtn,
         ];
     }
