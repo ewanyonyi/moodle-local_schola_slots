@@ -32,5 +32,30 @@
 function xmldb_local_academic_timetabler_upgrade($oldversion) {
     global $DB;
     $dbman = $DB->get_manager();
+
+    if ($oldversion < 2026081300) {
+        // Define table local_att_templates to be created.
+        $table = new xmldb_table('local_att_templates');
+
+        // Adding fields to table local_att_templates.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('name', XMLDB_TYPE_CHAR, '100', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('description', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('slots_json', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+
+        // Adding keys to table local_att_templates.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+
+        // Conditionally launch create table for local_att_templates.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Academic timetabler savepoint reached.
+        upgrade_plugin_savepoint(true, 2026081300, 'local', 'academic_timetabler');
+    }
+
     return true;
 }

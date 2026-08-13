@@ -16,7 +16,7 @@
 
 /**
  * Manage weekly time slots for local_academic_timetabler.
- * Supports functional slot types (class, lab, break, exam) and batch setup tools.
+ * Supports functional slot types (class, lab, break, exam), custom templates, and batch setup tools.
  *
  * @package     local_academic_timetabler
  * @copyright   2026 Emanuel Dickson Wanyonyi <wanyonyi.d.emanuel@gmail.com>
@@ -56,10 +56,48 @@ if ($action === 'clearall' && confirm_sesskey()) {
 }
 
 // -------------------------------------------------------------------
-// Action: Batch Generator Tool
+// Action: Save Current Active Slots as New Template
+// -------------------------------------------------------------------
+if ($action === 'savetemplate' && confirm_sesskey()) {
+    $templatename = optional_param('template_name', '', PARAM_TEXT);
+    $templatedesc = optional_param('template_desc', '', PARAM_TEXT);
+
+    $activeslots = $DB->get_records('local_att_slots', null, 'dayofweek ASC, starttime ASC');
+    if (empty($activeslots)) {
+        redirect($url, 'Cannot save template: No active time slots configured yet.', null, \core\output\notification::NOTIFY_ERROR);
+    }
+
+    if (!empty($templatename)) {
+        $slotsarray = [];
+        foreach ($activeslots as $s) {
+            $slotsarray[] = [
+                'dayofweek' => (int)$s->dayofweek,
+                'starttime' => $s->starttime,
+                'endtime'   => $s->endtime,
+                'type'      => $s->type,
+            ];
+        }
+
+        $now = time();
+        $record = (object)[
+            'name'         => $templatename,
+            'description'  => $templatedesc,
+            'slots_json'   => json_encode($slotsarray),
+            'timecreated'  => $now,
+            'timemodified' => $now,
+        ];
+        $DB->insert_record('local_att_templates', $record);
+
+        $templatesurl = new moodle_url('/local/academic_timetabler/templates.php');
+        redirect($templatesurl, "Active slots saved as new template '{$templatename}' successfully!");
+    }
+}
+
+// -------------------------------------------------------------------
+// Action: Batch Generator Tool (Built-in Presets & User Templates)
 // -------------------------------------------------------------------
 if ($action === 'preset' && confirm_sesskey()) {
-    $presettype = optional_param('preset_type', 'academic', PARAM_ALPHA);
+    $presettype   = optional_param('preset_type', 'academic', PARAM_TEXT);
     $wipeexisting = optional_param('wipe_existing', 0, PARAM_INT);
 
     if ($wipeexisting) {
@@ -67,15 +105,37 @@ if ($action === 'preset' && confirm_sesskey()) {
     }
 
     $inserted = 0;
-    // Generate for Monday to Friday (days 1-5)
+
+    // Check if loading a custom user template (starts with custom_)
+    if (strpos($presettype, 'custom_') === 0) {
+        $templateid = (int)substr($presettype, 7);
+        $template   = $DB->get_record('local_att_templates', ['id' => $templateid]);
+        if ($template && !empty($template->slots_json)) {
+            $slotsdata = json_decode($template->slots_json, true);
+            if (is_array($slotsdata)) {
+                foreach ($slotsdata as $s) {
+                    $DB->insert_record('local_att_slots', (object)[
+                        'dayofweek' => isset($s['dayofweek']) ? (int)$s['dayofweek'] : 1,
+                        'starttime' => $s['starttime'] ?? '08:00',
+                        'endtime'   => $s['endtime'] ?? '09:30',
+                        'type'      => $s['type'] ?? 'class',
+                    ]);
+                    $inserted++;
+                }
+                redirect($url, "Custom template '{$template->name}' applied successfully! {$inserted} time slots added.");
+            }
+        }
+    }
+
+    // Standard built-in system presets for Monday to Friday (days 1-5)
     for ($day = 1; $day <= 5; $day++) {
         if ($presettype === 'academic') {
             $templates = [
                 ['07:00', '08:30', 'class'],
                 ['08:30', '10:00', 'class'],
-                ['10:00', '10:30', 'break'], // Tea Break
+                ['10:00', '10:30', 'break'],
                 ['10:30', '12:00', 'class'],
-                ['12:00', '13:30', 'break'], // Lunch Break
+                ['12:00', '13:30', 'break'],
                 ['13:30', '15:00', 'class'],
                 ['15:00', '16:30', 'class'],
                 ['16:30', '18:00', 'class'],
@@ -83,13 +143,15 @@ if ($action === 'preset' && confirm_sesskey()) {
         } else if ($presettype === 'exam') {
             $templates = [
                 ['08:30', '11:30', 'exam'],
-                ['11:30', '13:30', 'break'], // Exam Intermission
+                ['11:30', '13:30', 'break'],
                 ['13:30', '16:30', 'exam'],
             ];
         } else if ($presettype === 'lab') {
             $templates = [
                 ['14:00', '17:00', 'lab'],
             ];
+        } else {
+            $templates = [];
         }
 
         foreach ($templates as $t) {
@@ -113,19 +175,19 @@ if ($action === 'edit' && $id > 0) {
     $editslot = $DB->get_record('local_att_slots', ['id' => $id]);
 }
 
-if ($data = data_submitted() && confirm_sesskey()) {
+if ($data = data_submitted() && confirm_sesskey() && optional_param('save_slot', 0, PARAM_INT)) {
     $editslotid = optional_param('slotid', 0, PARAM_INT);
-    $dayofweek = optional_param('dayofweek', 1, PARAM_INT);
-    $starttime = optional_param('starttime', '', PARAM_TEXT);
-    $endtime = optional_param('endtime', '', PARAM_TEXT);
-    $type      = optional_param('type', 'class', PARAM_ALPHA);
+    $dayofweek  = optional_param('dayofweek', 1, PARAM_INT);
+    $starttime  = optional_param('starttime', '', PARAM_TEXT);
+    $endtime    = optional_param('endtime', '', PARAM_TEXT);
+    $type       = optional_param('type', 'class', PARAM_ALPHA);
 
     if (!empty($starttime) && !empty($endtime)) {
         $record = (object)[
-            'type' => $type,
+            'type'      => $type,
             'dayofweek' => $dayofweek,
             'starttime' => $starttime,
-            'endtime' => $endtime,
+            'endtime'   => $endtime,
         ];
 
         if ($editslotid > 0) {
@@ -143,26 +205,38 @@ echo $OUTPUT->header();
 
 echo \local_academic_timetabler\output\renderer::render_nav_header('slots');
 
+// Fetch user saved templates
+$usertemplates = $DB->get_records('local_att_templates', null, 'name ASC');
+$presetoptions = [
+    'System Built-in Templates' => [
+        'academic' => 'Standard Academic Day (07:00 - 18:00 with Tea & Lunch Breaks)',
+        'exam'     => 'Examination Period (08:30 - 11:30 & 13:30 - 16:30 Exams)',
+        'lab'      => 'Practical Lab Afternoon Blocks (14:00 - 17:00 Mon-Fri)',
+    ],
+];
+
+if (!empty($usertemplates)) {
+    $customoptions = [];
+    foreach ($usertemplates as $ut) {
+        $customoptions['custom_' . $ut->id] = s($ut->name) . ' (Custom Saved Template)';
+    }
+    $presetoptions['Custom Saved Templates'] = $customoptions;
+}
+
 // -------------------------------------------------------------------
 // Batch Slot Preset Generator Card
 // -------------------------------------------------------------------
 echo html_writer::start_div('card border-0 shadow-sm mb-4 bg-white');
-echo html_writer::div(html_writer::tag('h5', '1-Click Batch Slot Generator (7 AM - 6 PM Templates)', ['class' => 'mb-0 font-weight-bold']), 'card-header bg-dark text-white p-3');
+echo html_writer::div(html_writer::tag('h5', '1-Click Batch Slot Generator & Template Loader', ['class' => 'mb-0 font-weight-bold']), 'card-header bg-dark text-white p-3');
 echo html_writer::start_div('card-body p-4');
 
 echo html_writer::start_tag('form', ['method' => 'post', 'action' => $url->out(false)]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'preset']);
 
-$presetoptions = [
-    'academic' => 'Standard Academic Day (07:00 - 18:00 with Tea & Lunch Breaks)',
-    'exam'     => 'Examination Period (08:30 - 11:30 Morning & 13:30 - 16:30 Afternoon Exams)',
-    'lab'      => 'Practical Lab Afternoon Blocks (14:00 - 17:00 Mon-Fri)',
-];
-
 echo html_writer::start_div('row g-3 align-items-center');
 echo html_writer::start_div('col-md-6');
-echo html_writer::tag('label', 'Select Schedule Template', ['class' => 'form-label font-weight-bold text-dark']);
+echo html_writer::tag('label', 'Select Built-in or Custom Saved Template', ['class' => 'form-label font-weight-bold text-dark']);
 echo html_writer::select($presetoptions, 'preset_type', 'academic', false, ['class' => 'form-select p-2']);
 echo html_writer::end_div();
 
@@ -173,6 +247,73 @@ echo html_writer::end_div();
 echo html_writer::start_div('col-md-3 pt-4 text-end');
 echo html_writer::tag('button', 'Generate Batch Slots', ['type' => 'submit', 'class' => 'btn btn-success font-weight-bold px-4 py-2 shadow-sm']);
 echo html_writer::end_div();
+echo html_writer::end_div();
+
+echo html_writer::end_tag('form');
+echo html_writer::end_div();
+echo html_writer::end_div();
+
+// -------------------------------------------------------------------
+// Configured Time Slots Table
+// -------------------------------------------------------------------
+$slots = $DB->get_records('local_att_slots', null, 'dayofweek ASC, starttime ASC');
+
+echo html_writer::start_div('d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2');
+echo html_writer::tag('h4', 'Configured Weekly Time Slots (' . count($slots) . ')', ['class' => 'mb-0 font-weight-bold']);
+
+if (!empty($slots)) {
+    echo html_writer::start_div('d-flex gap-2 align-items-center');
+    // Button to trigger Save Active Slots as Template Modal/Form
+    echo html_writer::tag('button', 'Save Active Slots as Template', [
+        'class' => 'btn btn-sm btn-outline-primary font-weight-bold',
+        'type'  => 'button',
+        'onclick' => "document.getElementById('save-template-card').style.display='block';",
+    ]);
+
+    $clearallurl = new moodle_url($url, ['action' => 'clearall', 'sesskey' => sesskey()]);
+    echo html_writer::link($clearallurl, 'Clear All Slots', [
+        'class' => 'btn btn-sm btn-outline-danger font-weight-bold',
+        'onclick' => 'return confirm("Are you sure you want to clear all configured time slots?");',
+    ]);
+    echo html_writer::end_div();
+}
+echo html_writer::end_div();
+
+// -------------------------------------------------------------------
+// Save Active Slots as Template Card (Hidden by default)
+// -------------------------------------------------------------------
+echo html_writer::start_div('card border-primary border-2 shadow-sm mb-4 bg-white', ['id' => 'save-template-card', 'style' => 'display:none;']);
+echo html_writer::div(html_writer::tag('h5', 'Save Current Active Slots as Reusable Template', ['class' => 'mb-0 font-weight-bold text-primary']), 'card-header bg-light');
+echo html_writer::start_div('card-body p-4');
+
+echo html_writer::start_tag('form', ['method' => 'post', 'action' => $url->out(false)]);
+echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
+echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'savetemplate']);
+
+echo html_writer::start_div('row g-3');
+echo html_writer::start_div('col-md-6');
+echo html_writer::tag('label', 'Template Name', ['class' => 'form-label font-weight-bold']);
+echo html_writer::empty_tag('input', [
+    'type' => 'text', 'name' => 'template_name', 'class' => 'form-control',
+    'placeholder' => 'e.g. Faculty of Science Semester 1 Grid', 'required' => 'required',
+]);
+echo html_writer::end_div();
+
+echo html_writer::start_div('col-md-6');
+echo html_writer::tag('label', 'Description', ['class' => 'form-label font-weight-bold']);
+echo html_writer::empty_tag('input', [
+    'type' => 'text', 'name' => 'template_desc', 'class' => 'form-control',
+    'placeholder' => 'e.g. Standard 1.5hr lecture grid with 12pm lunch break',
+]);
+echo html_writer::end_div();
+echo html_writer::end_div();
+
+echo html_writer::start_div('mt-3 d-flex gap-2');
+echo html_writer::tag('button', 'Save as Template', ['type' => 'submit', 'class' => 'btn btn-primary font-weight-bold']);
+echo html_writer::tag('button', 'Cancel', [
+    'type' => 'button', 'class' => 'btn btn-outline-secondary',
+    'onclick' => "document.getElementById('save-template-card').style.display='none';",
+]);
 echo html_writer::end_div();
 
 echo html_writer::end_tag('form');
@@ -191,6 +332,7 @@ echo html_writer::start_div('card-body');
 
 echo html_writer::start_tag('form', ['method' => 'post', 'action' => $url->out(false)]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
+echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'save_slot', 'value' => '1']);
 if ($editslot) {
     echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'slotid', 'value' => $editslot->id]);
 }
@@ -249,28 +391,12 @@ echo html_writer::end_tag('form');
 echo html_writer::end_div();
 echo html_writer::end_div();
 
-// -------------------------------------------------------------------
-// Configured Time Slots Table
-// -------------------------------------------------------------------
-$slots = $DB->get_records('local_att_slots', null, 'dayofweek ASC, starttime ASC');
-
-echo html_writer::start_div('d-flex align-items-center justify-content-between mb-3');
-echo html_writer::tag('h4', 'Configured Weekly Time Slots (' . count($slots) . ')', ['class' => 'mb-0 font-weight-bold']);
-if (!empty($slots)) {
-    $clearallurl = new moodle_url($url, ['action' => 'clearall', 'sesskey' => sesskey()]);
-    echo html_writer::link($clearallurl, 'Clear All Slots', [
-        'class' => 'btn btn-sm btn-outline-danger font-weight-bold',
-        'onclick' => 'return confirm("Are you sure you want to clear all configured time slots?");',
-    ]);
-}
-echo html_writer::end_div();
-
 if (empty($slots)) {
     echo html_writer::div(get_string('no_slots', 'local_academic_timetabler'), 'alert alert-info');
 } else {
     $table = new html_table();
     $table->head = ['ID', 'Day', 'Time Window', 'Functional Category', 'Actions'];
-    $table->attributes = ['class' => 'table table-striped table-bordered align-middle'];
+    $table->attributes = ['class' => 'table table-striped table-bordered align-middle bg-white shadow-sm'];
 
     foreach ($slots as $slot) {
         $dayname = $days[$slot->dayofweek] ?? ('Day ' . $slot->dayofweek);
@@ -284,10 +410,10 @@ if (empty($slots)) {
         ]);
 
         $typebadge = match ($slot->type) {
-            'break' => '<span class="badge bg-danger text-white px-2 py-1">BREAK / BLOCKOUT</span>',
+            'break' => '<span class="badge bg-secondary text-white px-2 py-1">BREAK / BLOCKOUT</span>',
             'lab'   => '<span class="badge bg-info text-dark px-2 py-1">LABORATORY</span>',
             'exam'  => '<span class="badge bg-warning text-dark px-2 py-1">EXAM PERIOD</span>',
-            default => '<span class="badge bg-secondary text-white px-2 py-1">CLASS LECTURE</span>',
+            default => '<span class="badge bg-primary text-white px-2 py-1">CLASS LECTURE</span>',
         };
 
         $table->data[] = [

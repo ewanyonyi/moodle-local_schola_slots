@@ -26,7 +26,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_academic_timetabler';
-$plugin->version   = 2026081200;
+$plugin->version   = 2026081300;
 $plugin->requires  = 2024042200;
 $plugin->maturity  = MATURITY_STABLE;
 $plugin->release   = '1.0.0';
