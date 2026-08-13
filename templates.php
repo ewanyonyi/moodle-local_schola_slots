@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Manage reusable Schedule Templates for local_academic_timetabler.
+ * Manage reusable Schedule Templates for local_academic_timetabler with a user-friendly UI.
  *
  * @package     local_academic_timetabler
  * @copyright   2026 Emanuel Dickson Wanyonyi <wanyonyi.d.emanuel@gmail.com>
@@ -54,13 +54,8 @@ if ($action === 'apply' && $id > 0 && confirm_sesskey()) {
     if ($template && !empty($template->slots_json)) {
         $slotsdata = json_decode($template->slots_json, true);
         if (is_array($slotsdata)) {
-            $mode = optional_param('mode', 'overwrite', PARAM_ALPHA);
-            if ($mode === 'overwrite') {
-                $DB->delete_records('local_att_slots');
-            }
-
+            $DB->delete_records('local_att_slots');
             $count = 0;
-            // Apply slots for Mon-Fri (or specified days)
             foreach ($slotsdata as $s) {
                 $day = isset($s['dayofweek']) ? (int)$s['dayofweek'] : 1;
                 $DB->insert_record('local_att_slots', (object)[
@@ -80,7 +75,7 @@ if ($action === 'apply' && $id > 0 && confirm_sesskey()) {
 }
 
 // -------------------------------------------------------------------
-// Action: Save / Create / Edit Template
+// Action: Save / Create / Edit Template (User-friendly POST array)
 // -------------------------------------------------------------------
 $edittemplate = null;
 if ($action === 'edit' && $id > 0) {
@@ -91,22 +86,53 @@ if ($data = data_submitted() && confirm_sesskey() && optional_param('save_templa
     $templateid  = optional_param('templateid', 0, PARAM_INT);
     $name        = optional_param('name', '', PARAM_TEXT);
     $description = optional_param('description', '', PARAM_TEXT);
-    $slotsraw    = optional_param('slots_json', '', PARAM_RAW);
+
+    $days   = optional_param_array('slot_day', [], PARAM_INT);
+    $starts = optional_param_array('slot_start', [], PARAM_TEXT);
+    $ends   = optional_param_array('slot_end', [], PARAM_TEXT);
+    $types  = optional_param_array('slot_type', [], PARAM_ALPHA);
+
+    $slotsarr = [];
+    if (!empty($starts)) {
+        for ($i = 0; $i < count($starts); $i++) {
+            $dayval = isset($days[$i]) ? (int)$days[$i] : 0;
+            $start  = $starts[$i] ?? '08:00';
+            $end    = $ends[$i] ?? '09:30';
+            $type   = $types[$i] ?? 'class';
+
+            if (!empty($start) && !empty($end)) {
+                if ($dayval === 0) { // All Weekdays Mon-Fri
+                    for ($d = 1; $d <= 5; $d++) {
+                        $slotsarr[] = [
+                            'dayofweek' => $d,
+                            'starttime' => $start,
+                            'endtime'   => $end,
+                            'type'      => $type,
+                        ];
+                    }
+                } else {
+                    $slotsarr[] = [
+                        'dayofweek' => $dayval,
+                        'starttime' => $start,
+                        'endtime'   => $end,
+                        'type'      => $type,
+                    ];
+                }
+            }
+        }
+    }
 
     if (!empty($name)) {
-        // Validate or format JSON
-        $slotsarr = json_decode($slotsraw, true);
-        if (!is_array($slotsarr)) {
-            // Default 7am-6pm standard day if invalid JSON
-            $slotsarr = [
-                ['dayofweek' => 1, 'starttime' => '07:00', 'endtime' => '08:30', 'type' => 'class'],
-                ['dayofweek' => 1, 'starttime' => '08:30', 'endtime' => '10:00', 'type' => 'class'],
-                ['dayofweek' => 1, 'starttime' => '10:00', 'endtime' => '10:30', 'type' => 'break'],
-                ['dayofweek' => 1, 'starttime' => '10:30', 'endtime' => '12:00', 'type' => 'class'],
-                ['dayofweek' => 1, 'starttime' => '12:00', 'endtime' => '13:30', 'type' => 'break'],
-                ['dayofweek' => 1, 'starttime' => '13:30', 'endtime' => '15:00', 'type' => 'class'],
-                ['dayofweek' => 1, 'starttime' => '15:00', 'endtime' => '16:30', 'type' => 'class'],
-            ];
+        if (empty($slotsarr)) {
+            // Default 7am-6pm standard day if empty
+            for ($d = 1; $d <= 5; $d++) {
+                $slotsarr[] = ['dayofweek' => $d, 'starttime' => '07:00', 'endtime' => '08:30', 'type' => 'class'];
+                $slotsarr[] = ['dayofweek' => $d, 'starttime' => '08:30', 'endtime' => '10:00', 'type' => 'class'];
+                $slotsarr[] = ['dayofweek' => $d, 'starttime' => '10:00', 'endtime' => '10:30', 'type' => 'break'];
+                $slotsarr[] = ['dayofweek' => $d, 'starttime' => '10:30', 'endtime' => '12:00', 'type' => 'class'];
+                $slotsarr[] = ['dayofweek' => $d, 'starttime' => '12:00', 'endtime' => '13:30', 'type' => 'break'];
+                $slotsarr[] = ['dayofweek' => $d, 'starttime' => '13:30', 'endtime' => '15:00', 'type' => 'class'];
+            }
         }
 
         $now = time();
@@ -134,22 +160,48 @@ echo $OUTPUT->header();
 echo \local_academic_timetabler\output\renderer::render_nav_header('templates');
 
 // -------------------------------------------------------------------
-// Add / Edit Template Form Card
+// Friendly Template Builder Form Card
 // -------------------------------------------------------------------
 $cardtitle = $edittemplate ? 'Edit Schedule Template' : 'Create New Schedule Template';
 $btnlabel  = $edittemplate ? 'Update Template' : 'Save Template';
 
-$defaultjson = json_encode([
-    ['dayofweek' => 1, 'starttime' => '07:00', 'endtime' => '08:30', 'type' => 'class'],
-    ['dayofweek' => 1, 'starttime' => '08:30', 'endtime' => '10:00', 'type' => 'class'],
-    ['dayofweek' => 1, 'starttime' => '10:00', 'endtime' => '10:30', 'type' => 'break'],
-    ['dayofweek' => 1, 'starttime' => '10:30', 'endtime' => '12:00', 'type' => 'class'],
-    ['dayofweek' => 1, 'starttime' => '12:00', 'endtime' => '13:30', 'type' => 'break'],
-    ['dayofweek' => 1, 'starttime' => '13:30', 'endtime' => '15:00', 'type' => 'class'],
-    ['dayofweek' => 1, 'starttime' => '15:00', 'endtime' => '16:30', 'type' => 'class'],
-], JSON_PRETTY_PRINT);
+// Extract initial rows for form
+$initialrows = [];
+if ($edittemplate && !empty($edittemplate->slots_json)) {
+    $decoded = json_decode($edittemplate->slots_json, true);
+    if (is_array($decoded)) {
+        // Group identical time & type windows across days if all 1-5 present
+        $grouped = [];
+        foreach ($decoded as $item) {
+            $key = $item['starttime'] . '-' . $item['endtime'] . '-' . $item['type'];
+            $grouped[$key]['days'][] = $item['dayofweek'];
+            $grouped[$key]['item'] = $item;
+        }
 
-$jsonval = $edittemplate ? json_encode(json_decode($edittemplate->slots_json), JSON_PRETTY_PRINT) : $defaultjson;
+        foreach ($grouped as $g) {
+            $days = $g['days'];
+            $item = $g['item'];
+            $dayval = (count($days) >= 5 && in_array(1, $days) && in_array(5, $days)) ? 0 : ($days[0] ?? 1);
+            $initialrows[] = [
+                'day'   => $dayval,
+                'start' => $item['starttime'],
+                'end'   => $item['endtime'],
+                'type'  => $item['type'],
+            ];
+        }
+    }
+}
+
+if (empty($initialrows)) {
+    $initialrows = [
+        ['day' => 0, 'start' => '07:00', 'end' => '08:30', 'type' => 'class'],
+        ['day' => 0, 'start' => '08:30', 'end' => '10:00', 'type' => 'class'],
+        ['day' => 0, 'start' => '10:00', 'end' => '10:30', 'type' => 'break'],
+        ['day' => 0, 'start' => '10:30', 'end' => '12:00', 'type' => 'class'],
+        ['day' => 0, 'start' => '12:00', 'end' => '13:30', 'type' => 'break'],
+        ['day' => 0, 'start' => '13:30', 'end' => '15:00', 'type' => 'class'],
+    ];
+}
 
 echo html_writer::start_div('card shadow-sm mb-4 bg-white border-0');
 echo html_writer::div(html_writer::tag('h5', $cardtitle, ['class' => 'mb-0 font-weight-bold']), 'card-header bg-dark text-white p-3');
@@ -162,7 +214,7 @@ if ($edittemplate) {
     echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'templateid', 'value' => $edittemplate->id]);
 }
 
-echo html_writer::start_div('row g-3');
+echo html_writer::start_div('row g-3 mb-3');
 echo html_writer::start_div('col-md-6');
 echo html_writer::tag('label', 'Template Name', ['class' => 'form-label font-weight-bold text-dark']);
 echo html_writer::empty_tag('input', [
@@ -180,14 +232,30 @@ echo html_writer::empty_tag('input', [
     'value' => $edittemplate ? s($edittemplate->description) : '',
 ]);
 echo html_writer::end_div();
-
-echo html_writer::start_div('col-12');
-echo html_writer::tag('label', 'Time Slot Definitions (JSON Format)', ['class' => 'form-label font-weight-bold text-dark']);
-echo html_writer::tag('textarea', s($jsonval), [
-    'name' => 'slots_json', 'class' => 'form-control font-monospace', 'rows' => 7, 'required' => 'required',
-]);
-echo html_writer::tag('small', 'Specify slot items as a JSON array of objects with keys: dayofweek (1=Mon..7=Sun), starttime (HH:MM), endtime (HH:MM), and type (class, lab, break, exam).', ['class' => 'text-muted']);
 echo html_writer::end_div();
+
+// Dynamic Time Slot Rows Table
+echo html_writer::start_div('col-12 mt-3');
+echo html_writer::tag('label', 'Configure Schedule Time Windows', ['class' => 'form-label font-weight-bold text-dark fs-6']);
+echo html_writer::start_div('table-responsive border rounded bg-light p-2 mb-2');
+echo html_writer::start_tag('table', ['class' => 'table table-sm align-middle mb-0 bg-white', 'id' => 'slot-builder-table']);
+echo html_writer::start_tag('thead', ['class' => 'table-dark']);
+echo html_writer::start_tag('tr');
+echo html_writer::tag('th', 'Day Schedule');
+echo html_writer::tag('th', 'Start Time', ['style' => 'width: 150px;']);
+echo html_writer::tag('th', 'End Time', ['style' => 'width: 150px;']);
+echo html_writer::tag('th', 'Category / Slot Type');
+echo html_writer::tag('th', 'Action', ['style' => 'width: 90px;', 'class' => 'text-center']);
+echo html_writer::end_tag('tr');
+echo html_writer::end_tag('thead');
+echo html_writer::tag('tbody', '', ['id' => 'slot-rows-container']);
+echo html_writer::end_tag('table');
+echo html_writer::end_div();
+
+echo html_writer::tag('button', '+ Add Another Time Window', [
+    'type' => 'button', 'class' => 'btn btn-sm btn-outline-primary font-weight-bold shadow-sm',
+    'onclick' => 'addSlotRow();',
+]);
 echo html_writer::end_div();
 
 echo html_writer::start_div('mt-4 pt-3 border-top d-flex gap-2');
@@ -200,6 +268,62 @@ echo html_writer::end_div();
 echo html_writer::end_tag('form');
 echo html_writer::end_div();
 echo html_writer::end_div();
+
+// Inline JavaScript for dynamic slot row builder
+?>
+<script>
+function addSlotRow(day = 0, start = '08:00', end = '09:30', type = 'class') {
+    const container = document.getElementById('slot-rows-container');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td>
+            <select name="slot_day[]" class="form-select form-select-sm">
+                <option value="0" ${day == 0 ? 'selected' : ''}>All Weekdays (Mon-Fri)</option>
+                <option value="1" ${day == 1 ? 'selected' : ''}>Monday</option>
+                <option value="2" ${day == 2 ? 'selected' : ''}>Tuesday</option>
+                <option value="3" ${day == 3 ? 'selected' : ''}>Wednesday</option>
+                <option value="4" ${day == 4 ? 'selected' : ''}>Thursday</option>
+                <option value="5" ${day == 5 ? 'selected' : ''}>Friday</option>
+                <option value="6" ${day == 6 ? 'selected' : ''}>Saturday</option>
+                <option value="7" ${day == 7 ? 'selected' : ''}>Sunday</option>
+            </select>
+        </td>
+        <td>
+            <input type="time" name="slot_start[]" value="${start}" class="form-control form-control-sm" required>
+        </td>
+        <td>
+            <input type="time" name="slot_end[]" value="${end}" class="form-control form-control-sm" required>
+        </td>
+        <td>
+            <select name="slot_type[]" class="form-select form-select-sm">
+                <option value="class" ${type === 'class' ? 'selected' : ''}>Class Lecture (Standard Teaching Window)</option>
+                <option value="lab" ${type === 'lab' ? 'selected' : ''}>Laboratory Practical (Extended Block)</option>
+                <option value="break" ${type === 'break' ? 'selected' : ''}>Break / Blockout (Lunch, Tea Break, Assembly)</option>
+                <option value="exam" ${type === 'exam' ? 'selected' : ''}>Examination Period (Dedicated Exam Block)</option>
+            </select>
+        </td>
+        <td class="text-center">
+            <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2" onclick="this.closest('tr').remove();" title="Remove slot window">&times;</button>
+        </td>
+    `;
+    container.appendChild(tr);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const initialData = <?php echo json_encode($initialrows); ?>;
+    if (initialData && initialData.length > 0) {
+        initialData.forEach(r => addSlotRow(r.day, r.start, r.end, r.type));
+    } else {
+        addSlotRow(0, '07:00', '08:30', 'class');
+        addSlotRow(0, '08:30', '10:00', 'class');
+        addSlotRow(0, '10:00', '10:30', 'break');
+        addSlotRow(0, '10:30', '12:00', 'class');
+        addSlotRow(0, '12:00', '13:30', 'break');
+        addSlotRow(0, '13:30', '15:00', 'class');
+    }
+});
+</script>
+<?php
 
 // -------------------------------------------------------------------
 // Saved Schedule Templates Repository Table
