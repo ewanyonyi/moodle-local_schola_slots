@@ -74,25 +74,7 @@ if ($data = data_submitted() && confirm_sesskey()) {
 
 echo $OUTPUT->header();
 
-$navurls = [
-    'index' => new moodle_url('/local/academic_timetabler/index.php'),
-    'rooms' => $url,
-    'slots' => new moodle_url('/local/academic_timetabler/slots.php'),
-    'schedules' => new moodle_url('/local/academic_timetabler/schedules.php'),
-];
-
-$generateurl = new moodle_url('/local/academic_timetabler/index.php', [
-    'action' => 'generate',
-    'sesskey' => sesskey(),
-]);
-
-echo html_writer::start_div('mb-4 d-flex align-items-center flex-wrap');
-echo html_writer::link($navurls['index'], 'Overview', ['class' => 'btn btn-outline-primary me-2']);
-echo html_writer::link($navurls['rooms'], 'Manage Rooms', ['class' => 'btn btn-primary me-2']);
-echo html_writer::link($navurls['slots'], 'Manage Time Slots', ['class' => 'btn btn-outline-primary me-2']);
-echo html_writer::link($navurls['schedules'], 'View Timetables', ['class' => 'btn btn-outline-primary me-2']);
-echo html_writer::link($generateurl, 'Generate Timetable', ['class' => 'btn btn-success font-weight-bold shadow-sm']);
-echo html_writer::end_div();
+echo \local_academic_timetabler\output\renderer::render_nav_header('rooms');
 
 $cardheader = $editroom ? 'Edit Campus Room / Venue' : 'Add New Campus Room / Venue';
 $btnlabel = $editroom ? 'Update Room' : 'Save Room';

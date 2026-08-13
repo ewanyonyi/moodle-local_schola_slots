@@ -29,6 +29,65 @@ use plugin_renderer_base;
  */
 class renderer extends plugin_renderer_base {
     /**
+     * Render unified executive navigation header across plugin pages.
+     *
+     * @param string $activepage Active page key ('index', 'rooms', 'slots', 'schedules').
+     * @param bool $showclearall Whether to display the Clear All action button.
+     * @param string $scheduletype Schedule type key ('all', 'class', 'exam').
+     * @return string Rendered HTML header bar.
+     */
+    public static function render_nav_header(string $activepage = 'index', bool $showclearall = false, string $scheduletype = 'all'): string {
+        $indexurl = new \moodle_url('/local/academic_timetabler/index.php');
+        $roomsurl = new \moodle_url('/local/academic_timetabler/rooms.php');
+        $slotsurl = new \moodle_url('/local/academic_timetabler/slots.php');
+        $schedulesurl = new \moodle_url('/local/academic_timetabler/schedules.php');
+        $generateurl = new \moodle_url('/local/academic_timetabler/index.php', [
+            'action' => 'generate',
+            'sesskey' => sesskey(),
+        ]);
+
+        $navitems = [
+            'index'     => ['label' => 'Overview', 'url' => $indexurl],
+            'rooms'     => ['label' => 'Manage Rooms', 'url' => $roomsurl],
+            'slots'     => ['label' => 'Manage Time Slots', 'url' => $slotsurl],
+            'schedules' => ['label' => 'View Timetables', 'url' => $schedulesurl],
+        ];
+
+        $html = \html_writer::start_div('bg-white border rounded shadow-sm p-3 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-3');
+
+        // Navigation Tabs (Pills)
+        $html .= \html_writer::start_div('nav nav-pills gap-2');
+        foreach ($navitems as $key => $item) {
+            $isactive = ($key === $activepage);
+            $cls = $isactive
+                ? 'nav-link active bg-primary font-weight-bold px-3 py-2 shadow-sm'
+                : 'nav-link text-dark fw-semibold px-3 py-2 bg-light border border-secondary-subtle';
+            $html .= \html_writer::link($item['url'], $item['label'], ['class' => $cls]);
+        }
+        $html .= \html_writer::end_div();
+
+        // Action Buttons Group
+        $html .= \html_writer::start_div('d-flex align-items-center gap-2 flex-wrap');
+        $html .= \html_writer::link($generateurl, 'Generate Timetable', [
+            'class' => 'btn btn-success font-weight-bold px-3 py-2 shadow-sm',
+        ]);
+
+        if ($showclearall) {
+            $clearurl = new \moodle_url($schedulesurl, ['action' => 'clearall', 'type' => $scheduletype, 'sesskey' => sesskey()]);
+            $cleartitle = ($scheduletype !== 'all') ? 'Clear ' . strtoupper($scheduletype) . ' Timetables' : 'Clear All Timetables';
+            $html .= \html_writer::link($clearurl, $cleartitle, [
+                'class' => 'btn btn-outline-danger font-weight-bold px-3 py-2',
+                'onclick' => 'return confirm("Are you sure you want to delete selected generated schedule entries?");',
+            ]);
+        }
+        $html .= \html_writer::end_div();
+
+        $html .= \html_writer::end_div();
+
+        return $html;
+    }
+
+    /**
      * Render main plugin dashboard interface.
      *
      * @param mixed $page Page context object or array.
