@@ -25,24 +25,35 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-if ($ADMIN->fulltree) {
+if ($hassiteconfig) {
     $settings = new admin_settingpage(
         'local_academic_timetabler_settings',
         get_string('pluginname', 'local_academic_timetabler')
     );
 
-    $settings->add(new admin_setting_configtext(
-        'local_academic_timetabler/license_key',
-        get_string('license_key', 'local_academic_timetabler'),
-        get_string('license_key_desc', 'local_academic_timetabler'),
-        '',
-        PARAM_TEXT
-    ));
+    if ($ADMIN->fulltree) {
+        $settings->add(new admin_setting_heading(
+            'local_academic_timetabler/dashboard_heading',
+            '',
+            '<div class="alert alert-info d-flex align-items-center justify-content-between my-2">' .
+            '<div><strong>Academic & Exam Timetabler</strong> is installed and ready.</div>' .
+            '<a href="' . new moodle_url('/local/academic_timetabler/index.php') . '" class="btn btn-primary font-weight-bold">🚀 Open Timetabler Dashboard</a>' .
+            '</div>'
+        ));
+
+        $settings->add(new admin_setting_configtext(
+            'local_academic_timetabler/license_key',
+            get_string('license_key', 'local_academic_timetabler'),
+            get_string('license_key_desc', 'local_academic_timetabler'),
+            '',
+            PARAM_TEXT
+        ));
+    }
 
     $ADMIN->add('localplugins', $settings);
 
     $ADMIN->add('localplugins', new admin_externalpage(
-        'local_academic_timetabler',
+        'local_academic_timetabler_dashboard',
         get_string('manage_timetabler', 'local_academic_timetabler'),
         new moodle_url('/local/academic_timetabler/index.php'),
         'local/academic_timetabler:manage'

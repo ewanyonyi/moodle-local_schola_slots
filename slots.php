@@ -86,11 +86,17 @@ $navurls = [
     'schedules' => new moodle_url('/local/academic_timetabler/schedules.php'),
 ];
 
-echo html_writer::start_div('mb-4');
+$generateurl = new moodle_url('/local/academic_timetabler/index.php', [
+    'action' => 'generate',
+    'sesskey' => sesskey(),
+]);
+
+echo html_writer::start_div('mb-4 d-flex align-items-center flex-wrap');
 echo html_writer::link($navurls['index'], 'Overview', ['class' => 'btn btn-outline-primary me-2']);
 echo html_writer::link($navurls['rooms'], 'Manage Rooms', ['class' => 'btn btn-outline-primary me-2']);
 echo html_writer::link($navurls['slots'], 'Manage Time Slots', ['class' => 'btn btn-primary me-2']);
 echo html_writer::link($navurls['schedules'], 'View Timetables', ['class' => 'btn btn-outline-primary me-2']);
+echo html_writer::link($generateurl, '⚡ Generate Timetable', ['class' => 'btn btn-success font-weight-bold shadow-sm']);
 echo html_writer::end_div();
 
 $cardheader = $editslot ? 'Edit Weekly Time Slot' : 'Add New Weekly Time Slot';

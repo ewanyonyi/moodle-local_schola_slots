@@ -1,9 +1,10 @@
 <div class="academic-timetabler-dashboard">
-    <div class="mb-4">
+    <div class="mb-4 d-flex align-items-center flex-wrap">
         <a href="{{index_url}}" class="btn btn-primary me-2">Overview</a>
         <a href="{{rooms_url}}" class="btn btn-outline-primary me-2">Manage Rooms</a>
         <a href="{{slots_url}}" class="btn btn-outline-primary me-2">Manage Time Slots</a>
         <a href="{{schedules_url}}" class="btn btn-outline-primary me-2">View Timetables</a>
+        <a href="{{generate_url}}" class="btn btn-success font-weight-bold shadow-sm">⚡ Generate Timetable</a>
     </div>
 
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -72,10 +73,13 @@
             <h5 class="mb-0">Timetable Generation Engine</h5>
         </div>
         <div class="card-body">
-            <p class="text-muted">Run the automated CSP scheduling solver to assign conflict-free time slots and rooms across all courses.</p>
-            <div class="d-flex gap-2">
+            <p class="text-muted">Run the automated CSP scheduling solver engine to assign conflict-free time slots and rooms across all courses.</p>
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+                <a href="{{generate_url}}" class="btn btn-success font-weight-bold px-4 py-2 me-2">
+                    ⚡ Generate Timetable Now &rarr;
+                </a>
                 <a href="{{slots_url}}" class="btn btn-outline-secondary me-2">Configure Time Slots</a>
-                <a href="{{tasks_url}}" class="btn btn-primary">Run Timetable Generator Task &rarr;</a>
+                <a href="{{tasks_url}}" class="btn btn-sm btn-link text-muted">Advanced Scheduled Task</a>
             </div>
         </div>
     </div>

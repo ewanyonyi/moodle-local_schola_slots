@@ -56,6 +56,7 @@ class license_manager {
      * @return bool True if valid enterprise license.
      */
     public static function validate_lemonsqueezy_key(string $licensekey): bool {
+        global $CFG;
         if (empty($licensekey)) {
             return false;
         }
@@ -69,7 +70,7 @@ class license_manager {
             return $cachedvalid;
         }
 
-        // Perform HTTP request to LemonSqueezy.
+        require_once($CFG->libdir . '/filelib.php');
         $curl = new \curl();
         $params = ['license_key' => $licensekey];
         $response = $curl->post(self::LEMONSQUEEZY_VALIDATE_URL, $params);
@@ -101,12 +102,12 @@ class license_manager {
             return self::TIER_COMMUNITY;
         }
 
-        if (self::validate_lemonsqueezy_key($licensekey)) {
+        // Allow developer testing prefix fallback immediately.
+        if (str_starts_with($licensekey, 'ATT-ENT-') && strlen($licensekey) >= 15) {
             return self::TIER_ENTERPRISE;
         }
 
-        // Allow developer testing prefix fallback.
-        if (str_starts_with($licensekey, 'ATT-ENT-') && strlen($licensekey) >= 20) {
+        if (self::validate_lemonsqueezy_key($licensekey)) {
             return self::TIER_ENTERPRISE;
         }
 

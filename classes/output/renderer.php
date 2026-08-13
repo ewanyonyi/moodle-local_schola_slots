@@ -44,8 +44,12 @@ class renderer extends plugin_renderer_base {
         $schedulesurl = new \moodle_url('/local/academic_timetabler/schedules.php');
         $settingsurl = new \moodle_url('/admin/settings.php', ['section' => 'local_academic_timetabler_settings']);
         $tasksurl = new \moodle_url('/admin/settings.php', ['section' => 'scheduledtasks']);
+        $generateurl = new \moodle_url('/local/academic_timetabler/index.php', [
+            'action' => 'generate',
+            'sesskey' => sesskey(),
+        ]);
 
-        $coursecount = $DB->count_records('course', ['visible' => 1]);
+        $coursecount = $DB->count_records_select('course', 'id > 1 AND visible = 1');
         $roomcount = $DB->count_records('local_att_rooms');
         $schedulecount = $DB->count_records('local_att_schedules');
 
@@ -64,6 +68,7 @@ class renderer extends plugin_renderer_base {
             'schedules_url' => $schedulesurl->out(false),
             'settings_url' => $settingsurl->out(false),
             'tasks_url' => $tasksurl->out(false),
+            'generate_url' => $generateurl->out(false),
             'buy_url' => 'https://lemonsqueezy.com',
             'course_count' => $coursecount,
             'max_courses_label' => $maxlabel,

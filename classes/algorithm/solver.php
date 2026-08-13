@@ -92,8 +92,8 @@ class solver {
      * @return bool True if solution found, false otherwise.
      */
     public function solve_all(): bool {
-        // Most-Constrained-First ordering by enrolled count.
-        usort($this->courses, fn($a, $b) => count($b->students) <=> count($a->students));
+        // Most-Constrained-First ordering by enrolled count (preserving course ID keys).
+        uasort($this->courses, fn($a, $b) => count($b->students) <=> count($a->students));
         return $this->backtrack_classes(0);
     }
 
@@ -104,32 +104,80 @@ class solver {
      * @return bool True if successful assignment sequence completed.
      */
     private function backtrack_classes(int $index): bool {
-        if ($index >= count($this->courses)) {
+        $courselist = array_values($this->courses);
+        if ($index >= count($courselist)) {
             return true;
         }
 
-        $course = array_values($this->courses)[$index];
+        $course = $courselist[$index];
         $classslots = array_filter($this->slots, fn($s) => $s->type === 'class');
 
         foreach ($classslots as $slot) {
             foreach ($this->rooms as $room) {
-                if ($this->is_valid_class_assignment($course, $slot, $room)) {
-                    $this->solution['classes'][$course->id] = [
-                        'slot_id' => $slot->id,
-                        'room_id' => $room->id,
-                        'teacher_id' => $course->teacher_id,
-                    ];
+                // Check if this course requires a double-lesson (e.g. lab room or specialized course)
+                $requiresdouble = ($room->is_lab == 1) || (isset($course->is_double) && $course->is_double);
 
-                    if ($this->backtrack_classes($index + 1)) {
-                        return true;
+                if ($requiresdouble) {
+                    $nextslot = $this->get_consecutive_slot($slot);
+                    if ($nextslot && $this->is_valid_class_assignment($course, $slot, $room) && $this->is_valid_class_assignment($course, $nextslot, $room)) {
+                        $this->solution['classes'][$course->id . '_1'] = [
+                            'course_id' => $course->id,
+                            'slot_id'   => $slot->id,
+                            'room_id'   => $room->id,
+                            'teacher_id'=> $course->teacher_id,
+                            'note'      => 'Double Lesson (Block 1)'
+                        ];
+                        $this->solution['classes'][$course->id . '_2'] = [
+                            'course_id' => $course->id,
+                            'slot_id'   => $nextslot->id,
+                            'room_id'   => $room->id,
+                            'teacher_id'=> $course->teacher_id,
+                            'note'      => 'Double Lesson (Block 2)'
+                        ];
+
+                        if ($this->backtrack_classes($index + 1)) {
+                            return true;
+                        }
+
+                        unset($this->solution['classes'][$course->id . '_1']);
+                        unset($this->solution['classes'][$course->id . '_2']);
                     }
+                } else {
+                    if ($this->is_valid_class_assignment($course, $slot, $room)) {
+                        $this->solution['classes'][$course->id] = [
+                            'course_id' => $course->id,
+                            'slot_id'   => $slot->id,
+                            'room_id'   => $room->id,
+                            'teacher_id'=> $course->teacher_id,
+                            'note'      => 'Single Session'
+                        ];
 
-                    unset($this->solution['classes'][$course->id]);
+                        if ($this->backtrack_classes($index + 1)) {
+                            return true;
+                        }
+
+                        unset($this->solution['classes'][$course->id]);
+                    }
                 }
             }
         }
 
         return false;
+    }
+
+    /**
+     * Find immediate consecutive back-to-back time slot on the same day.
+     *
+     * @param object $slot Primary slot.
+     * @return object|null Consecutive slot record or null.
+     */
+    private function get_consecutive_slot(object $slot): ?object {
+        foreach ($this->slots as $s) {
+            if ($s->type === 'class' && $s->dayofweek == $slot->dayofweek && $s->starttime === $slot->endtime) {
+                return $s;
+            }
+        }
+        return null;
     }
 
     /**
@@ -145,18 +193,21 @@ class solver {
             return false;
         }
 
-        foreach ($this->solution['classes'] ?? [] as $assignedcourseid => $assignment) {
+        foreach ($this->solution['classes'] ?? [] as $assignedkey => $assignment) {
             if ($assignment['slot_id'] == $slot->id) {
                 if ($assignment['room_id'] == $room->id) {
                     return false;
                 }
-                if ($assignment['teacher_id'] == $course->teacher_id) {
+                if ($course->teacher_id > 0 && $assignment['teacher_id'] == $course->teacher_id) {
                     return false;
                 }
-                $assignedcourse = $this->courses[$assignedcourseid];
-                $sharedstudents = array_intersect($course->students, $assignedcourse->students);
-                if (!empty($sharedstudents)) {
-                    return false;
+                $assignedcourseid = $assignment['course_id'] ?? $assignedkey;
+                if (isset($this->courses[$assignedcourseid])) {
+                    $assignedcourse = $this->courses[$assignedcourseid];
+                    $sharedstudents = array_intersect($course->students, $assignedcourse->students);
+                    if (!empty($sharedstudents)) {
+                        return false;
+                    }
                 }
             }
         }
