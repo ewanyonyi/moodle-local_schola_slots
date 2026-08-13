@@ -159,15 +159,17 @@ if ($action === 'generate' && confirm_sesskey()) {
 }
 
 echo $OUTPUT->header();
+echo \local_academic_timetabler\output\renderer::render_nav_header('index');
+
 $output = $PAGE->get_renderer('local_academic_timetabler');
 echo $output->render_dashboard([]);
 
 // -------------------------------------------------------------------
 // Multi-Timetable Generator Options Card
 // -------------------------------------------------------------------
-echo html_writer::start_div('card border border-secondary-subtle shadow-sm my-4');
-echo html_writer::div(html_writer::tag('h5', 'Generate Institutional & Departmental Timetables', ['class' => 'mb-0 text-dark font-weight-bold']), 'card-header bg-light');
-echo html_writer::start_div('card-body');
+echo html_writer::start_div('card border-0 shadow-sm my-4 bg-white');
+echo html_writer::div(html_writer::tag('h5', 'Automated CSP Solver & Timetable Generator', ['class' => 'mb-0 font-weight-bold']), 'card-header bg-dark text-white p-3');
+echo html_writer::start_div('card-body p-4');
 
 echo html_writer::start_tag('form', ['method' => 'post', 'action' => (new moodle_url('/local/academic_timetabler/index.php'))->out(false)]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
@@ -189,24 +191,24 @@ $modeoptions = [
 
 echo html_writer::start_div('row g-3');
 echo html_writer::start_div('col-md-4');
-echo html_writer::tag('label', 'Timetable Type', ['class' => 'form-label font-weight-bold']);
-echo html_writer::select($typeoptions, 'scheduletype', 'class', false, ['class' => 'form-select']);
+echo html_writer::tag('label', 'Timetable Profile / Type', ['class' => 'form-label font-weight-bold text-dark']);
+echo html_writer::select($typeoptions, 'scheduletype', 'class', false, ['class' => 'form-select p-2']);
 echo html_writer::end_div();
 
 echo html_writer::start_div('col-md-4');
-echo html_writer::tag('label', 'Department / Course Category Scope', ['class' => 'form-label font-weight-bold']);
-echo html_writer::select($catoptions, 'categoryid', 0, false, ['class' => 'form-select']);
+echo html_writer::tag('label', 'Department / Course Category Scope', ['class' => 'form-label font-weight-bold text-dark']);
+echo html_writer::select($catoptions, 'categoryid', 0, false, ['class' => 'form-select p-2']);
 echo html_writer::end_div();
 
 echo html_writer::start_div('col-md-4');
-echo html_writer::tag('label', 'Generation & Conflict Mode', ['class' => 'form-label font-weight-bold']);
-echo html_writer::select($modeoptions, 'mode', 'overwrite', false, ['class' => 'form-select']);
+echo html_writer::tag('label', 'Generation & Conflict Mode', ['class' => 'form-label font-weight-bold text-dark']);
+echo html_writer::select($modeoptions, 'mode', 'overwrite', false, ['class' => 'form-select p-2']);
 echo html_writer::end_div();
 echo html_writer::end_div();
 
-echo html_writer::start_div('mt-3 d-flex align-items-center justify-content-between');
-echo html_writer::tag('button', 'Run Solver & Generate Timetable', ['type' => 'submit', 'class' => 'btn btn-success font-weight-bold px-4 shadow-sm']);
-echo html_writer::tag('small', 'Cross-schedule conflict prevention will automatically preserve occupied venues and instructors.', ['class' => 'text-muted']);
+echo html_writer::start_div('mt-4 pt-3 border-top d-flex align-items-center justify-content-between flex-wrap gap-2');
+echo html_writer::tag('button', 'Run Solver & Generate Timetable', ['type' => 'submit', 'class' => 'btn btn-success font-weight-bold px-4 py-2 shadow-sm fs-6']);
+echo html_writer::tag('span', 'Cross-schedule conflict prevention will automatically protect active venue and instructor bookings.', ['class' => 'text-muted small']);
 echo html_writer::end_div();
 
 echo html_writer::end_tag('form');
