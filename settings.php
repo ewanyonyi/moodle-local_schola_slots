@@ -25,32 +25,30 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-if ($hassiteconfig) {
-    $settings = new admin_settingpage(
-        'local_academic_timetabler_settings',
-        get_string('pluginname', 'local_academic_timetabler')
-    );
+/**
+ * Custom admin setting element to render commercial pricing plans HTML cleanly without escaping.
+ */
+class local_academic_timetabler_admin_setting_pricing extends admin_setting {
+    public function __construct() {
+        $this->nosave = true;
+        parent::__construct('local_academic_timetabler/commercial_plans', '', '', '');
+    }
 
-    if ($ADMIN->fulltree) {
-        $settings->add(new admin_setting_heading(
-            'local_academic_timetabler/dashboard_heading',
-            '',
-            '<div class="alert alert-info d-flex align-items-center justify-content-between my-2">' .
-            '<div><strong>Academic & Exam Timetabler</strong> is installed and ready.</div>' .
-            '<a href="' . new moodle_url('/local/academic_timetabler/index.php') . '" class="btn btn-primary font-weight-bold">Open Timetabler Dashboard</a>' .
-            '</div>'
-        ));
+    public function get_setting() {
+        return true;
+    }
 
-        $settings->add(new admin_setting_configtext(
-            'local_academic_timetabler/license_key',
-            get_string('license_key', 'local_academic_timetabler'),
-            get_string('license_key_desc', 'local_academic_timetabler'),
-            '',
-            PARAM_TEXT
-        ));
+    public function get_defaultsetting() {
+        return true;
+    }
 
-        $pricinghtml = '
-        <div class="mt-4 p-4 bg-white border rounded shadow-sm">
+    public function write_setting($data) {
+        return '';
+    }
+
+    public function output_html($data, $query = '') {
+        return '
+        <div class="mt-4 p-4 bg-white border rounded shadow-sm mb-4">
             <h4 class="font-weight-bold text-dark mb-1">Commercial Licensing & Enterprise Tiers</h4>
             <p class="text-muted small mb-4">Choose the right capacity for your institution. All commercial plans include LemonSqueezy license keys and automated updates.</p>
             
@@ -124,12 +122,34 @@ if ($hassiteconfig) {
                 </div>
             </div>
         </div>';
+    }
+}
 
+if ($hassiteconfig) {
+    $settings = new admin_settingpage(
+        'local_academic_timetabler_settings',
+        get_string('pluginname', 'local_academic_timetabler')
+    );
+
+    if ($ADMIN->fulltree) {
         $settings->add(new admin_setting_heading(
-            'local_academic_timetabler/commercial_plans',
+            'local_academic_timetabler/dashboard_heading',
             '',
-            $pricinghtml
+            '<div class="alert alert-info d-flex align-items-center justify-content-between my-2">' .
+            '<div><strong>Academic & Exam Timetabler</strong> is installed and ready.</div>' .
+            '<a href="' . new moodle_url('/local/academic_timetabler/index.php') . '" class="btn btn-primary font-weight-bold">Open Timetabler Dashboard</a>' .
+            '</div>'
         ));
+
+        $settings->add(new admin_setting_configtext(
+            'local_academic_timetabler/license_key',
+            get_string('license_key', 'local_academic_timetabler'),
+            get_string('license_key_desc', 'local_academic_timetabler'),
+            '',
+            PARAM_TEXT
+        ));
+
+        $settings->add(new local_academic_timetabler_admin_setting_pricing());
 
         $distoptions = [
             'balanced' => 'Equal 5-Day Load Balancing (Mon - Fri)',
