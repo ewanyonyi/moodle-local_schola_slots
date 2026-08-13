@@ -15,8 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Manage weekly time slots for local_academic_timetabler.
- * Supports functional slot types (class, lab, break, exam), custom templates, and batch setup tools.
+ * Manage Bell Schedule & Time Slots for local_academic_timetabler.
+ * Designed for Senior School Administrators with a Guided Bell Schedule Wizard.
  *
  * @package     local_academic_timetabler
  * @copyright   2026 Emanuel Dickson Wanyonyi <wanyonyi.d.emanuel@gmail.com>
@@ -36,8 +36,8 @@ $id     = optional_param('id', 0, PARAM_INT);
 $url = new moodle_url('/local/academic_timetabler/slots.php');
 $PAGE->set_url($url);
 $PAGE->set_context($context);
-$PAGE->set_title(get_string('manage_slots', 'local_academic_timetabler'));
-$PAGE->set_heading(get_string('manage_slots', 'local_academic_timetabler'));
+$PAGE->set_title('Bell Schedule & Time Slots');
+$PAGE->set_heading('Bell Schedule & Time Slots');
 
 // -------------------------------------------------------------------
 // Action: Delete Single Slot
@@ -52,53 +52,22 @@ if ($action === 'delete' && $id > 0 && confirm_sesskey()) {
 // -------------------------------------------------------------------
 if ($action === 'clearall' && confirm_sesskey()) {
     $DB->delete_records('local_att_slots');
-    redirect($url, 'All configured time slots cleared successfully.');
+    redirect($url, 'All time slots cleared successfully.');
 }
 
 // -------------------------------------------------------------------
-// Action: Save Current Active Slots as New Template
+// Action: Guided Bell Schedule Wizard Computation
 // -------------------------------------------------------------------
-if ($action === 'savetemplate' && confirm_sesskey()) {
-    $templatename = optional_param('template_name', '', PARAM_TEXT);
-    $templatedesc = optional_param('template_desc', '', PARAM_TEXT);
-
-    $activeslots = $DB->get_records('local_att_slots', null, 'dayofweek ASC, starttime ASC');
-    if (empty($activeslots)) {
-        redirect($url, 'Cannot save template: No active time slots configured yet.', null, \core\output\notification::NOTIFY_ERROR);
-    }
-
-    if (!empty($templatename)) {
-        $slotsarray = [];
-        foreach ($activeslots as $s) {
-            $slotsarray[] = [
-                'dayofweek' => (int)$s->dayofweek,
-                'starttime' => $s->starttime,
-                'endtime'   => $s->endtime,
-                'type'      => $s->type,
-            ];
-        }
-
-        $now = time();
-        $record = (object)[
-            'name'         => $templatename,
-            'description'  => $templatedesc,
-            'slots_json'   => json_encode($slotsarray),
-            'timecreated'  => $now,
-            'timemodified' => $now,
-        ];
-        $DB->insert_record('local_att_templates', $record);
-
-        $templatesurl = new moodle_url('/local/academic_timetabler/templates.php');
-        redirect($templatesurl, "Active slots saved as new template '{$templatename}' successfully!");
-    }
-}
-
-// -------------------------------------------------------------------
-// Action: Batch Generator Tool (Built-in Presets & User Templates)
-// -------------------------------------------------------------------
-if ($action === 'preset' && confirm_sesskey()) {
-    $presettype   = optional_param('preset_type', 'academic', PARAM_TEXT);
-    $wipeexisting = optional_param('wipe_existing', 0, PARAM_INT);
+if ($action === 'build_bell_schedule' && confirm_sesskey()) {
+    $daystart     = optional_param('day_start', '08:00', PARAM_TEXT);
+    $dayend       = optional_param('day_end', '17:00', PARAM_TEXT);
+    $periodmins   = optional_param('period_minutes', 60, PARAM_INT);
+    $teastart     = optional_param('tea_start', '10:00', PARAM_TEXT);
+    $teaend       = optional_param('tea_end', '10:30', PARAM_TEXT);
+    $lunchstart   = optional_param('lunch_start', '12:30', PARAM_TEXT);
+    $lunchend     = optional_param('lunch_end', '13:30', PARAM_TEXT);
+    $activedays   = optional_param_array('days', [1, 2, 3, 4, 5], PARAM_INT);
+    $wipeexisting = optional_param('wipe_existing', 1, PARAM_INT);
 
     if ($wipeexisting) {
         $DB->delete_records('local_att_slots');
@@ -106,52 +75,116 @@ if ($action === 'preset' && confirm_sesskey()) {
 
     $inserted = 0;
 
-    // Check if loading a custom user template (starts with custom_)
-    if (strpos($presettype, 'custom_') === 0) {
-        $templateid = (int)substr($presettype, 7);
-        $template   = $DB->get_record('local_att_templates', ['id' => $templateid]);
-        if ($template && !empty($template->slots_json)) {
-            $slotsdata = json_decode($template->slots_json, true);
-            if (is_array($slotsdata)) {
-                foreach ($slotsdata as $s) {
-                    $DB->insert_record('local_att_slots', (object)[
-                        'dayofweek' => isset($s['dayofweek']) ? (int)$s['dayofweek'] : 1,
-                        'starttime' => $s['starttime'] ?? '08:00',
-                        'endtime'   => $s['endtime'] ?? '09:30',
-                        'type'      => $s['type'] ?? 'class',
-                    ]);
-                    $inserted++;
-                }
-                redirect($url, "Custom template '{$template->name}' applied successfully! {$inserted} time slots added.");
+    foreach ($activedays as $day) {
+        $currsec = strtotime("2026-01-01 " . $daystart);
+        $endsec  = strtotime("2026-01-01 " . $dayend);
+
+        $tstartsec = strtotime("2026-01-01 " . $teastart);
+        $tendsec   = strtotime("2026-01-01 " . $teaend);
+        $lstartsec = strtotime("2026-01-01 " . $lunchstart);
+        $lendsec   = strtotime("2026-01-01 " . $lunchend);
+
+        while ($currsec < $endsec) {
+            // Check Morning Tea Break
+            if ($tstartsec && $tendsec && $currsec >= $tstartsec && $currsec < $tendsec) {
+                $DB->insert_record('local_att_slots', (object)[
+                    'dayofweek' => $day,
+                    'starttime' => date('H:i', $tstartsec),
+                    'endtime'   => date('H:i', $tendsec),
+                    'type'      => 'break',
+                ]);
+                $inserted++;
+                $currsec = $tendsec;
+                continue;
             }
+
+            // Check Lunch Break
+            if ($lstartsec && $lendsec && $currsec >= $lstartsec && $currsec < $lendsec) {
+                $DB->insert_record('local_att_slots', (object)[
+                    'dayofweek' => $day,
+                    'starttime' => date('H:i', $lstartsec),
+                    'endtime'   => date('H:i', $lendsec),
+                    'type'      => 'break',
+                ]);
+                $inserted++;
+                $currsec = $lendsec;
+                continue;
+            }
+
+            // Standard Lesson Period
+            $nextsec = $currsec + ($periodmins * 60);
+            if ($nextsec > $endsec) {
+                break;
+            }
+
+            // If lesson overlaps tea start
+            if ($tstartsec && $currsec < $tstartsec && $nextsec > $tstartsec) {
+                $nextsec = $tstartsec;
+            }
+            // If lesson overlaps lunch start
+            if ($lstartsec && $currsec < $lstartsec && $nextsec > $lstartsec) {
+                $nextsec = $lstartsec;
+            }
+
+            $DB->insert_record('local_att_slots', (object)[
+                'dayofweek' => $day,
+                'starttime' => date('H:i', $currsec),
+                'endtime'   => date('H:i', $nextsec),
+                'type'      => 'class',
+            ]);
+            $inserted++;
+            $currsec = $nextsec;
         }
     }
 
-    // Standard built-in system presets for Monday to Friday (days 1-5)
+    redirect($url, "Bell Schedule applied successfully! {$inserted} time windows generated across " . count($activedays) . " operating days.");
+}
+
+// -------------------------------------------------------------------
+// Action: Quick Executive Presets
+// -------------------------------------------------------------------
+if ($action === 'preset' && confirm_sesskey()) {
+    $profile = optional_param('profile', 'univ_60', PARAM_TEXT);
+    $DB->delete_records('local_att_slots');
+    $inserted = 0;
+
     for ($day = 1; $day <= 5; $day++) {
-        if ($presettype === 'academic') {
+        if ($profile === 'highschool_45') {
             $templates = [
-                ['07:00', '08:30', 'class'],
-                ['08:30', '10:00', 'class'],
-                ['10:00', '10:30', 'break'],
-                ['10:30', '12:00', 'class'],
-                ['12:00', '13:30', 'break'],
-                ['13:30', '15:00', 'class'],
-                ['15:00', '16:30', 'class'],
-                ['16:30', '18:00', 'class'],
+                ['08:00', '08:45', 'class'], ['08:45', '09:30', 'class'],
+                ['09:30', '10:15', 'class'], ['10:15', '10:45', 'break'], // Tea
+                ['10:45', '11:30', 'class'], ['11:30', '12:15', 'class'],
+                ['12:15', '13:15', 'break'], // Lunch
+                ['13:15', '14:00', 'class'], ['14:00', '14:45', 'class'], ['14:45', '15:30', 'class'],
             ];
-        } else if ($presettype === 'exam') {
+        } else if ($profile === 'univ_90') {
+            $templates = [
+                ['08:00', '09:30', 'class'], ['09:30', '11:00', 'class'],
+                ['11:00', '11:30', 'break'], // Tea
+                ['11:30', '13:00', 'class'], ['13:00', '14:00', 'break'], // Lunch
+                ['14:00', '15:30', 'class'], ['15:30', '17:00', 'class'],
+            ];
+        } else if ($profile === 'exam_3h') {
             $templates = [
                 ['08:30', '11:30', 'exam'],
                 ['11:30', '13:30', 'break'],
                 ['13:30', '16:30', 'exam'],
             ];
-        } else if ($presettype === 'lab') {
+        } else if ($profile === 'evening') {
             $templates = [
-                ['14:00', '17:00', 'lab'],
+                ['17:30', '19:00', 'class'],
+                ['19:00', '19:30', 'break'],
+                ['19:30', '21:00', 'class'],
             ];
         } else {
-            $templates = [];
+            // univ_60 default
+            $templates = [
+                ['08:00', '09:00', 'class'], ['09:00', '10:00', 'class'],
+                ['10:00', '10:30', 'break'], // Tea
+                ['10:30', '11:30', 'class'], ['11:30', '12:30', 'class'],
+                ['12:30', '13:30', 'break'], // Lunch
+                ['13:30', '14:30', 'class'], ['14:30', '15:30', 'class'], ['15:30', '16:30', 'class'],
+            ];
         }
 
         foreach ($templates as $t) {
@@ -164,11 +197,12 @@ if ($action === 'preset' && confirm_sesskey()) {
             $inserted++;
         }
     }
-    redirect($url, "Preset '{$presettype}' generated successfully! {$inserted} time slots added for Mon-Fri.");
+
+    redirect($url, "Executive Profile '{$profile}' loaded! {$inserted} time windows generated for Mon-Fri.");
 }
 
 // -------------------------------------------------------------------
-// Action: Add / Edit Single Slot
+// Action: Save / Edit Single Slot
 // -------------------------------------------------------------------
 $editslot = null;
 if ($action === 'edit' && $id > 0) {
@@ -205,44 +239,113 @@ echo $OUTPUT->header();
 
 echo \local_academic_timetabler\output\renderer::render_nav_header('slots');
 
-// Fetch user saved templates
-$usertemplates = $DB->get_records('local_att_templates', null, 'name ASC');
-$presetoptions = [
-    'academic' => 'Standard Academic Day (07:00 - 18:00 with Tea & Lunch Breaks)',
-    'exam'     => 'Examination Period (08:30 - 11:30 & 13:30 - 16:30 Exams)',
-    'lab'      => 'Practical Lab Afternoon Blocks (14:00 - 17:00 Mon-Fri)',
-];
-
-if (!empty($usertemplates)) {
-    foreach ($usertemplates as $ut) {
-        $presetoptions['custom_' . $ut->id] = 'Custom Template: ' . s($ut->name);
-    }
-}
-
 // -------------------------------------------------------------------
-// Batch Slot Preset Generator Card
+// Card 1: 1-Click School Profile Presets
 // -------------------------------------------------------------------
 echo html_writer::start_div('card border-0 shadow-sm mb-4 bg-white');
-echo html_writer::div(html_writer::tag('h5', '1-Click Batch Slot Generator & Template Loader', ['class' => 'mb-0 font-weight-bold']), 'card-header bg-dark text-white p-3');
+echo html_writer::div(html_writer::tag('h5', 'Quick School Schedule Profiles', ['class' => 'mb-0 font-weight-bold']), 'card-header bg-dark text-white p-3');
+echo html_writer::start_div('card-body p-4');
+
+echo html_writer::div('Select an official school structure profile to instantly configure your institution\'s weekly timetabling slots:', 'text-muted mb-3');
+
+echo html_writer::start_div('d-flex flex-wrap gap-2');
+
+$profiles = [
+    'univ_60'        => ['label' => 'University Standard (60-Min Periods)', 'class' => 'btn-primary'],
+    'highschool_45' => ['label' => 'High School (45-Min Periods)', 'class' => 'btn-info text-dark'],
+    'univ_90'        => ['label' => 'Modular University (90-Min Periods)', 'class' => 'btn-secondary'],
+    'exam_3h'        => ['label' => 'Examination Season (3-Hr Blocks)', 'class' => 'btn-warning text-dark'],
+    'evening'        => ['label' => 'Evening / Part-Time Program', 'class' => 'btn-dark'],
+];
+
+foreach ($profiles as $pkey => $pinfo) {
+    $purl = new moodle_url($url, ['action' => 'preset', 'profile' => $pkey, 'sesskey' => sesskey()]);
+    echo html_writer::link($purl, $pinfo['label'], [
+        'class' => 'btn ' . $pinfo['class'] . ' font-weight-bold px-3 py-2 shadow-sm',
+        'onclick' => "return confirm('Load profile \"{$pinfo['label']}\"? This will configure active slots for Mon-Fri.');",
+    ]);
+}
+
+echo html_writer::end_div();
+echo html_writer::end_div();
+echo html_writer::end_div();
+
+// -------------------------------------------------------------------
+// Card 2: Guided Bell Schedule Wizard
+// -------------------------------------------------------------------
+echo html_writer::start_div('card border-0 shadow-sm mb-4 bg-white');
+echo html_writer::div(html_writer::tag('h5', 'Guided Bell Schedule Wizard', ['class' => 'mb-0 font-weight-bold text-dark']), 'card-header bg-light p-3 border-bottom');
 echo html_writer::start_div('card-body p-4');
 
 echo html_writer::start_tag('form', ['method' => 'post', 'action' => $url->out(false)]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'preset']);
+echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'build_bell_schedule']);
 
-echo html_writer::start_div('row g-3 align-items-center');
+echo html_writer::start_div('row g-3');
+
+// School Hours & Period Length
+echo html_writer::start_div('col-md-3');
+echo html_writer::tag('label', 'Day Start Time', ['class' => 'form-label font-weight-bold text-dark']);
+echo html_writer::empty_tag('input', ['type' => 'time', 'name' => 'day_start', 'value' => '08:00', 'class' => 'form-control p-2', 'required' => 'required']);
+echo html_writer::end_div();
+
+echo html_writer::start_div('col-md-3');
+echo html_writer::tag('label', 'Day End Time', ['class' => 'form-label font-weight-bold text-dark']);
+echo html_writer::empty_tag('input', ['type' => 'time', 'name' => 'day_end', 'value' => '17:00', 'class' => 'form-control p-2', 'required' => 'required']);
+echo html_writer::end_div();
+
 echo html_writer::start_div('col-md-6');
-echo html_writer::tag('label', 'Select Built-in or Custom Saved Template', ['class' => 'form-label font-weight-bold text-dark']);
-echo html_writer::select($presetoptions, 'preset_type', 'academic', false, ['class' => 'form-select p-2']);
+echo html_writer::tag('label', 'Lesson / Period Duration', ['class' => 'form-label font-weight-bold text-dark']);
+$periodoptions = [
+    45  => '45 Minutes (Secondary / High School Period)',
+    50  => '50 Minutes (Standard School Hour)',
+    60  => '60 Minutes (Standard University Lecture)',
+    90  => '90 Minutes (Extended Modular Lecture)',
+    120 => '120 Minutes (2-Hour Double Period)',
+];
+echo html_writer::select($periodoptions, 'period_minutes', 60, false, ['class' => 'form-select p-2']);
 echo html_writer::end_div();
 
-echo html_writer::start_div('col-md-3 pt-4');
-echo html_writer::checkbox('wipe_existing', '1', true, ' Clear existing slots first', ['class' => 'form-check-input']);
+// Break Windows
+echo html_writer::start_div('col-md-3');
+echo html_writer::tag('label', 'Morning Tea Break Start', ['class' => 'form-label font-weight-bold text-dark']);
+echo html_writer::empty_tag('input', ['type' => 'time', 'name' => 'tea_start', 'value' => '10:00', 'class' => 'form-control p-2']);
 echo html_writer::end_div();
 
-echo html_writer::start_div('col-md-3 pt-4 text-end');
-echo html_writer::tag('button', 'Generate Batch Slots', ['type' => 'submit', 'class' => 'btn btn-success font-weight-bold px-4 py-2 shadow-sm']);
+echo html_writer::start_div('col-md-3');
+echo html_writer::tag('label', 'Morning Tea Break End', ['class' => 'form-label font-weight-bold text-dark']);
+echo html_writer::empty_tag('input', ['type' => 'time', 'name' => 'tea_end', 'value' => '10:30', 'class' => 'form-control p-2']);
 echo html_writer::end_div();
+
+echo html_writer::start_div('col-md-3');
+echo html_writer::tag('label', 'Lunch Break Start', ['class' => 'form-label font-weight-bold text-dark']);
+echo html_writer::empty_tag('input', ['type' => 'time', 'name' => 'lunch_start', 'value' => '12:30', 'class' => 'form-control p-2']);
+echo html_writer::end_div();
+
+echo html_writer::start_div('col-md-3');
+echo html_writer::tag('label', 'Lunch Break End', ['class' => 'form-label font-weight-bold text-dark']);
+echo html_writer::empty_tag('input', ['type' => 'time', 'name' => 'lunch_end', 'value' => '13:30', 'class' => 'form-control p-2']);
+echo html_writer::end_div();
+
+// Active Days Selection
+echo html_writer::start_div('col-12 mt-3');
+echo html_writer::tag('label', 'Operating School Days', ['class' => 'form-label font-weight-bold text-dark d-block']);
+$dayslist = [1 => 'Mon', 2 => 'Tue', 3 => 'Wed', 4 => 'Thu', 5 => 'Fri', 6 => 'Sat', 7 => 'Sun'];
+echo html_writer::start_div('d-flex gap-3 flex-wrap');
+foreach ($dayslist as $dnum => $dname) {
+    $checked = ($dnum <= 5);
+    echo html_writer::start_div('form-check form-check-inline');
+    echo html_writer::checkbox('days[]', $dnum, $checked, ' ' . $dname, ['class' => 'form-check-input', 'id' => 'day_chk_' . $dnum]);
+    echo html_writer::end_div();
+}
+echo html_writer::end_div();
+echo html_writer::end_div();
+
+echo html_writer::end_div(); // row
+
+echo html_writer::start_div('mt-4 pt-3 border-top d-flex align-items-center justify-content-between');
+echo html_writer::checkbox('wipe_existing', '1', true, ' Wipe existing time slots before applying', ['class' => 'form-check-input text-muted']);
+echo html_writer::tag('button', 'Apply Bell Schedule', ['type' => 'submit', 'class' => 'btn btn-success font-weight-bold px-4 py-2 shadow-sm']);
 echo html_writer::end_div();
 
 echo html_writer::end_tag('form');
@@ -250,146 +353,80 @@ echo html_writer::end_div();
 echo html_writer::end_div();
 
 // -------------------------------------------------------------------
-// Configured Time Slots Table
+// Card 3: Add / Edit Single Custom Slot
+// -------------------------------------------------------------------
+if ($editslot) {
+    echo html_writer::start_div('card shadow-sm mb-4 border-primary');
+    echo html_writer::div(html_writer::tag('h5', 'Edit Time Slot Window', ['class' => 'mb-0 font-weight-bold text-primary']), 'card-header bg-light');
+    echo html_writer::start_div('card-body');
+
+    echo html_writer::start_tag('form', ['method' => 'post', 'action' => $url->out(false)]);
+    echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
+    echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'save_slot', 'value' => '1']);
+    echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'slotid', 'value' => $editslot->id]);
+
+    $days = [1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday'];
+    $slottypes = [
+        'class' => 'Class Lecture (Standard Teaching Window)',
+        'lab'   => 'Laboratory Practical (Extended Block)',
+        'break' => 'Break / Blockout (Lunch, Tea Break - Excluded from Solver)',
+        'exam'  => 'Examination Period (Dedicated Exam Block)',
+    ];
+
+    echo html_writer::start_div('row g-3');
+    echo html_writer::start_div('col-md-3');
+    echo html_writer::tag('label', 'Day of Week', ['class' => 'form-label font-weight-bold']);
+    echo html_writer::select($days, 'dayofweek', $editslot->dayofweek, false, ['class' => 'form-select']);
+    echo html_writer::end_div();
+
+    echo html_writer::start_div('col-md-2');
+    echo html_writer::tag('label', 'Start Time', ['class' => 'form-label font-weight-bold']);
+    echo html_writer::empty_tag('input', ['type' => 'time', 'name' => 'starttime', 'class' => 'form-control', 'value' => s($editslot->starttime), 'required' => 'required']);
+    echo html_writer::end_div();
+
+    echo html_writer::start_div('col-md-2');
+    echo html_writer::tag('label', 'End Time', ['class' => 'form-label font-weight-bold']);
+    echo html_writer::empty_tag('input', ['type' => 'time', 'name' => 'endtime', 'class' => 'form-control', 'value' => s($editslot->endtime), 'required' => 'required']);
+    echo html_writer::end_div();
+
+    echo html_writer::start_div('col-md-5');
+    echo html_writer::tag('label', 'Slot Type / Category', ['class' => 'form-label font-weight-bold']);
+    echo html_writer::select($slottypes, 'type', $editslot->type, false, ['class' => 'form-select']);
+    echo html_writer::end_div();
+    echo html_writer::end_div();
+
+    echo html_writer::start_div('mt-3 d-flex gap-2');
+    echo html_writer::tag('button', 'Update Time Slot', ['type' => 'submit', 'class' => 'btn btn-primary font-weight-bold']);
+    echo html_writer::link($url, 'Cancel Edit', ['class' => 'btn btn-outline-secondary']);
+    echo html_writer::end_div();
+
+    echo html_writer::end_tag('form');
+    echo html_writer::end_div();
+    echo html_writer::end_div();
+}
+
+// -------------------------------------------------------------------
+// Visual Daily Bell Schedule Summary Table
 // -------------------------------------------------------------------
 $slots = $DB->get_records('local_att_slots', null, 'dayofweek ASC, starttime ASC');
 
 echo html_writer::start_div('d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2');
-echo html_writer::tag('h4', 'Configured Weekly Time Slots (' . count($slots) . ')', ['class' => 'mb-0 font-weight-bold']);
+echo html_writer::tag('h4', 'Active Bell Schedule Windows (' . count($slots) . ' Time Slots)', ['class' => 'mb-0 font-weight-bold']);
 
 if (!empty($slots)) {
-    echo html_writer::start_div('d-flex gap-2 align-items-center');
-    // Button to trigger Save Active Slots as Template Modal/Form
-    echo html_writer::tag('button', 'Save Active Slots as Template', [
-        'class' => 'btn btn-sm btn-outline-primary font-weight-bold',
-        'type'  => 'button',
-        'onclick' => "document.getElementById('save-template-card').style.display='block';",
-    ]);
-
     $clearallurl = new moodle_url($url, ['action' => 'clearall', 'sesskey' => sesskey()]);
     echo html_writer::link($clearallurl, 'Clear All Slots', [
         'class' => 'btn btn-sm btn-outline-danger font-weight-bold',
-        'onclick' => 'return confirm("Are you sure you want to clear all configured time slots?");',
+        'onclick' => 'return confirm("Clear all configured time slots?");',
     ]);
-    echo html_writer::end_div();
 }
-echo html_writer::end_div();
-
-// -------------------------------------------------------------------
-// Save Active Slots as Template Card (Hidden by default)
-// -------------------------------------------------------------------
-echo html_writer::start_div('card border-primary border-2 shadow-sm mb-4 bg-white', ['id' => 'save-template-card', 'style' => 'display:none;']);
-echo html_writer::div(html_writer::tag('h5', 'Save Current Active Slots as Reusable Template', ['class' => 'mb-0 font-weight-bold text-primary']), 'card-header bg-light');
-echo html_writer::start_div('card-body p-4');
-
-echo html_writer::start_tag('form', ['method' => 'post', 'action' => $url->out(false)]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'savetemplate']);
-
-echo html_writer::start_div('row g-3');
-echo html_writer::start_div('col-md-6');
-echo html_writer::tag('label', 'Template Name', ['class' => 'form-label font-weight-bold']);
-echo html_writer::empty_tag('input', [
-    'type' => 'text', 'name' => 'template_name', 'class' => 'form-control',
-    'placeholder' => 'e.g. Faculty of Science Semester 1 Grid', 'required' => 'required',
-]);
-echo html_writer::end_div();
-
-echo html_writer::start_div('col-md-6');
-echo html_writer::tag('label', 'Description', ['class' => 'form-label font-weight-bold']);
-echo html_writer::empty_tag('input', [
-    'type' => 'text', 'name' => 'template_desc', 'class' => 'form-control',
-    'placeholder' => 'e.g. Standard 1.5hr lecture grid with 12pm lunch break',
-]);
-echo html_writer::end_div();
-echo html_writer::end_div();
-
-echo html_writer::start_div('mt-3 d-flex gap-2');
-echo html_writer::tag('button', 'Save as Template', ['type' => 'submit', 'class' => 'btn btn-primary font-weight-bold']);
-echo html_writer::tag('button', 'Cancel', [
-    'type' => 'button', 'class' => 'btn btn-outline-secondary',
-    'onclick' => "document.getElementById('save-template-card').style.display='none';",
-]);
-echo html_writer::end_div();
-
-echo html_writer::end_tag('form');
-echo html_writer::end_div();
-echo html_writer::end_div();
-
-// -------------------------------------------------------------------
-// Add / Edit Single Slot Form Card
-// -------------------------------------------------------------------
-$cardheader = $editslot ? 'Edit Weekly Time Slot' : 'Add Custom Time Slot';
-$btnlabel   = $editslot ? 'Update Time Slot' : 'Save Time Slot';
-
-echo html_writer::start_div('card shadow-sm mb-4');
-echo html_writer::div(html_writer::tag('h5', $cardheader, ['class' => 'mb-0 font-weight-bold']), 'card-header bg-light');
-echo html_writer::start_div('card-body');
-
-echo html_writer::start_tag('form', ['method' => 'post', 'action' => $url->out(false)]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'save_slot', 'value' => '1']);
-if ($editslot) {
-    echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'slotid', 'value' => $editslot->id]);
-}
-
-$days = [
-    1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday',
-    4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday',
-];
-
-$slottypes = [
-    'class' => 'Class Lecture (Standard Teaching Window)',
-    'lab'   => 'Laboratory Practical (Extended Block)',
-    'break' => 'Break / Blockout (Lunch, Tea Break, Assembly - Excluded from Solver)',
-    'exam'  => 'Examination Period (Dedicated Exam Block)',
-];
-
-$selectedtype = $editslot ? $editslot->type : 'class';
-
-echo html_writer::start_div('row g-3');
-echo html_writer::start_div('col-md-3');
-echo html_writer::tag('label', 'Day of Week', ['class' => 'form-label font-weight-bold']);
-$selectedday = $editslot ? $editslot->dayofweek : 1;
-echo html_writer::select($days, 'dayofweek', $selectedday, false, ['class' => 'form-select']);
-echo html_writer::end_div();
-
-echo html_writer::start_div('col-md-2');
-echo html_writer::tag('label', 'Start Time', ['class' => 'form-label font-weight-bold']);
-echo html_writer::empty_tag('input', [
-    'type' => 'time', 'name' => 'starttime', 'class' => 'form-control',
-    'value' => $editslot ? s($editslot->starttime) : '08:00', 'required' => 'required',
-]);
-echo html_writer::end_div();
-
-echo html_writer::start_div('col-md-2');
-echo html_writer::tag('label', 'End Time', ['class' => 'form-label font-weight-bold']);
-echo html_writer::empty_tag('input', [
-    'type' => 'time', 'name' => 'endtime', 'class' => 'form-control',
-    'value' => $editslot ? s($editslot->endtime) : '09:30', 'required' => 'required',
-]);
-echo html_writer::end_div();
-
-echo html_writer::start_div('col-md-5');
-echo html_writer::tag('label', 'Slot Type / Functional Category', ['class' => 'form-label font-weight-bold']);
-echo html_writer::select($slottypes, 'type', $selectedtype, false, ['class' => 'form-select']);
-echo html_writer::end_div();
-echo html_writer::end_div();
-
-echo html_writer::start_div('mt-3 d-flex gap-2');
-echo html_writer::tag('button', $btnlabel, ['type' => 'submit', 'class' => 'btn btn-primary font-weight-bold']);
-if ($editslot) {
-    echo html_writer::link($url, 'Cancel Edit', ['class' => 'btn btn-outline-secondary']);
-}
-echo html_writer::end_div();
-
-echo html_writer::end_tag('form');
-echo html_writer::end_div();
 echo html_writer::end_div();
 
 if (empty($slots)) {
-    echo html_writer::div(get_string('no_slots', 'local_academic_timetabler'), 'alert alert-info');
+    echo html_writer::div('No bell schedule time windows configured yet. Use the <strong>Guided Bell Schedule Wizard</strong> or select a <strong>Quick School Profile</strong> above to get started instantly.', 'alert alert-info shadow-sm p-4 text-center fs-6');
 } else {
+    $days = [1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday'];
+
     $table = new html_table();
     $table->head = ['ID', 'Day', 'Time Window', 'Functional Category', 'Actions'];
     $table->attributes = ['class' => 'table table-striped table-bordered align-middle bg-white shadow-sm'];
@@ -406,10 +443,10 @@ if (empty($slots)) {
         ]);
 
         $typebadge = match ($slot->type) {
-            'break' => '<span class="badge bg-secondary text-white px-2 py-1">BREAK / BLOCKOUT</span>',
-            'lab'   => '<span class="badge bg-info text-dark px-2 py-1">LABORATORY</span>',
-            'exam'  => '<span class="badge bg-warning text-dark px-2 py-1">EXAM PERIOD</span>',
-            default => '<span class="badge bg-primary text-white px-2 py-1">CLASS LECTURE</span>',
+            'break' => '<span class="badge bg-secondary text-white px-2 py-1 fs-7">INSTITUTIONAL BREAK / BLOCKOUT</span>',
+            'lab'   => '<span class="badge bg-info text-dark px-2 py-1 fs-7">LABORATORY PRACTICAL</span>',
+            'exam'  => '<span class="badge bg-warning text-dark px-2 py-1 fs-7">EXAMINATION PERIOD</span>',
+            default => '<span class="badge bg-primary text-white px-2 py-1 fs-7">CLASS LECTURE</span>',
         };
 
         $table->data[] = [

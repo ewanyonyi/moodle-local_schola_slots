@@ -40,7 +40,6 @@ class renderer extends plugin_renderer_base {
         $indexurl = new \moodle_url('/local/academic_timetabler/index.php');
         $roomsurl = new \moodle_url('/local/academic_timetabler/rooms.php');
         $slotsurl = new \moodle_url('/local/academic_timetabler/slots.php');
-        $templatesurl = new \moodle_url('/local/academic_timetabler/templates.php');
         $schedulesurl = new \moodle_url('/local/academic_timetabler/schedules.php');
         $generateurl = new \moodle_url('/local/academic_timetabler/index.php', [
             'action' => 'generate',
@@ -50,8 +49,7 @@ class renderer extends plugin_renderer_base {
         $navitems = [
             'index'     => ['label' => 'Overview', 'url' => $indexurl],
             'rooms'     => ['label' => 'Manage Rooms', 'url' => $roomsurl],
-            'slots'     => ['label' => 'Manage Time Slots', 'url' => $slotsurl],
-            'templates' => ['label' => 'Schedule Templates', 'url' => $templatesurl],
+            'slots'     => ['label' => 'Bell Schedule & Slots', 'url' => $slotsurl],
             'schedules' => ['label' => 'View Timetables', 'url' => $schedulesurl],
         ];
 
