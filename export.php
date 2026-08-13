@@ -205,8 +205,8 @@ foreach ($schedules as $s) {
                                     ?>
                                     <div class="cell-entry">
                                         <strong><?php echo s($e->coursecode); ?></strong>
-                                        <small>📍 <?php echo s($e->roomname); ?></small>
-                                        <small>👨‍🏫 <?php echo s($teacher); ?></small>
+                                        <small><?php echo s($e->roomname); ?></small>
+                                        <small><?php echo s($teacher); ?></small>
                                     </div>
                                     <?php
                                 endforeach;

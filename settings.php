@@ -37,7 +37,7 @@ if ($hassiteconfig) {
             '',
             '<div class="alert alert-info d-flex align-items-center justify-content-between my-2">' .
             '<div><strong>Academic & Exam Timetabler</strong> is installed and ready.</div>' .
-            '<a href="' . new moodle_url('/local/academic_timetabler/index.php') . '" class="btn btn-primary font-weight-bold">🚀 Open Timetabler Dashboard</a>' .
+            '<a href="' . new moodle_url('/local/academic_timetabler/index.php') . '" class="btn btn-primary font-weight-bold">Open Timetabler Dashboard</a>' .
             '</div>'
         ));
 
