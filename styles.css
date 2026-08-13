@@ -56,3 +56,45 @@
 .att-meta-pill strong {
     color: #212529;
 }
+
+/* Pricing & Plan Cards */
+.att-pricing-card {
+    transition: transform 0.25 ease, box-shadow 0.25s ease;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+}
+
+.att-pricing-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08) !important;
+}
+
+.att-pricing-card.att-pricing-popular {
+    border: 2px solid #0d6efd !important;
+    box-shadow: 0 8px 24px rgba(13, 110, 253, 0.15) !important;
+}
+
+.att-price-amount {
+    font-size: 2.25rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.att-feature-list {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 0;
+}
+
+.att-feature-list li {
+    padding: 6px 0;
+    font-size: 0.88rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.att-feature-list li i {
+    color: #198754;
+}
+
