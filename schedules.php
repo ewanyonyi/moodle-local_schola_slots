@@ -357,8 +357,19 @@ if (empty($schedules)) {
 
     echo html_writer::tag('h4', 'Weekly Timetable Grid Matrix (' . count($matrixdays) . ' Days)', ['class' => 'mb-3 font-weight-bold']);
 
-    // Extract unique time windows
+    // Fetch all configured slots to include Break windows in the matrix
+    $allslots = $DB->get_records('local_att_slots', null, 'starttime ASC');
     $timeblocks = [];
+    $breakwindows = [];
+    foreach ($allslots as $sl) {
+        $window = s($sl->starttime) . ' - ' . s($sl->endtime);
+        if (!in_array($window, $timeblocks)) {
+            $timeblocks[] = $window;
+        }
+        if ($sl->type === 'break') {
+            $breakwindows[$window] = true;
+        }
+    }
     foreach ($schedules as $s) {
         $window = s($s->starttime) . ' - ' . s($s->endtime);
         if (!in_array($window, $timeblocks)) {
@@ -387,39 +398,49 @@ if (empty($schedules)) {
 
     echo html_writer::start_tag('tbody');
     foreach ($timeblocks as $timeblock) {
+        $isbreak = isset($breakwindows[$timeblock]);
         echo html_writer::start_tag('tr');
-        echo html_writer::tag('td', '<strong>' . $timeblock . '</strong>', ['class' => 'bg-light font-weight-bold']);
 
-        foreach (array_keys($matrixdays) as $day) {
-            echo html_writer::start_tag('td', ['class' => 'p-2']);
-            $entries = $matrix[$timeblock][$day] ?? [];
-            if (empty($entries)) {
-                echo '<span class="text-muted small">&mdash;</span>';
-            } else {
-                foreach ($entries as $entry) {
-                    $teacher = (!empty($entry->firstname) || !empty($entry->lastname)) ? fullname($entry) : 'Unassigned';
-                    $editurl = new moodle_url($url, ['action' => 'edit', 'id' => $entry->id]);
-                    $delurl = new moodle_url($url, ['action' => 'delete', 'id' => $entry->id, 'sesskey' => sesskey()]);
-                    $typebadge = ($entry->schedule_type === 'exam') ? '<span class="badge bg-warning text-dark me-1">EXAM</span>' : '';
+        if ($isbreak) {
+            echo html_writer::tag('td', '<strong>' . $timeblock . '</strong><br><span class="badge bg-secondary text-white mt-1">BREAK WINDOW</span>', ['class' => 'bg-light font-weight-bold align-middle']);
+            echo html_writer::tag('td', '<span class="text-muted fw-semibold">INSTITUTIONAL BREAK / BLOCKOUT &mdash; NO CLASSES OR EXAMS</span>', [
+                'colspan' => count($matrixdays),
+                'class'   => 'bg-light text-secondary text-center py-2 align-middle',
+            ]);
+        } else {
+            echo html_writer::tag('td', '<strong>' . $timeblock . '</strong>', ['class' => 'bg-light font-weight-bold']);
 
-                    echo html_writer::start_div('bg-white border rounded shadow-sm p-2 mb-2 text-start', ['style' => 'border-color: #cbd5e1 !important;']);
-                    echo html_writer::div($typebadge . s($entry->coursecode), '', ['style' => 'color: #0f172a; font-weight: 700; font-size: 13px;']);
-                    echo html_writer::div(s($entry->roomname), 'mt-1', ['style' => 'color: #334155; font-weight: 600; font-size: 12px;']);
-                    echo html_writer::div(s($teacher), '', ['style' => 'color: #475569; font-size: 12px;']);
+            foreach (array_keys($matrixdays) as $day) {
+                echo html_writer::start_tag('td', ['class' => 'p-2']);
+                $entries = $matrix[$timeblock][$day] ?? [];
+                if (empty($entries)) {
+                    echo '<span class="text-muted small">&mdash;</span>';
+                } else {
+                    foreach ($entries as $entry) {
+                        $teacher = (!empty($entry->firstname) || !empty($entry->lastname)) ? fullname($entry) : 'Unassigned';
+                        $editurl = new moodle_url($url, ['action' => 'edit', 'id' => $entry->id]);
+                        $delurl = new moodle_url($url, ['action' => 'delete', 'id' => $entry->id, 'sesskey' => sesskey()]);
+                        $typebadge = ($entry->schedule_type === 'exam') ? '<span class="badge bg-warning text-dark me-1">EXAM</span>' : '';
 
-                    // Clean action links
-                    echo html_writer::start_div('mt-2 pt-1 border-top d-flex gap-1');
-                    echo html_writer::link($editurl, 'Edit', ['class' => 'btn btn-sm btn-outline-primary py-0 px-2 fs-7']);
-                    echo html_writer::link($delurl, 'Delete', [
-                        'class' => 'btn btn-sm btn-outline-danger py-0 px-2 fs-7',
-                        'onclick' => 'return confirm("Delete this allocation?");',
-                    ]);
-                    echo html_writer::end_div();
+                        echo html_writer::start_div('bg-white border rounded shadow-sm p-2 mb-2 text-start', ['style' => 'border-color: #cbd5e1 !important;']);
+                        echo html_writer::div($typebadge . s($entry->coursecode), '', ['style' => 'color: #0f172a; font-weight: 700; font-size: 13px;']);
+                        echo html_writer::div(s($entry->roomname), 'mt-1', ['style' => 'color: #334155; font-weight: 600; font-size: 12px;']);
+                        echo html_writer::div(s($teacher), '', ['style' => 'color: #475569; font-size: 12px;']);
 
-                    echo html_writer::end_div();
+                        // Clean action links
+                        echo html_writer::start_div('mt-2 pt-1 border-top d-flex gap-1');
+                        echo html_writer::link($editurl, 'Edit', ['class' => 'btn btn-sm btn-outline-primary py-0 px-2 fs-7']);
+                        echo html_writer::link($delurl, 'Delete', [
+                            'class' => 'btn btn-sm btn-outline-danger py-0 px-2 fs-7',
+                            'onclick' => 'return confirm("Delete this allocation?");',
+                        ]);
+                        echo html_writer::end_div();
+
+                        echo html_writer::end_div();
+                    }
                 }
+                echo html_writer::end_tag('td');
             }
-            echo html_writer::end_tag('td');
         }
         echo html_writer::end_tag('tr');
     }

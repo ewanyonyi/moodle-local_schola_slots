@@ -117,8 +117,19 @@ $currentstrategy = get_config('local_academic_timetabler', 'day_distribution') ?
 $maxday = ($currentstrategy === 'mon_to_sat') ? 6 : 5;
 $matrixdays = array_slice($days, 0, $maxday, true);
 
-// Extract unique time windows
+// Extract unique time windows from configured slots & schedules
+$allslots = $DB->get_records('local_att_slots', null, 'starttime ASC');
 $timeblocks = [];
+$breakwindows = [];
+foreach ($allslots as $sl) {
+    $window = s($sl->starttime) . ' - ' . s($sl->endtime);
+    if (!in_array($window, $timeblocks)) {
+        $timeblocks[] = $window;
+    }
+    if ($sl->type === 'break') {
+        $breakwindows[$window] = true;
+    }
+}
 foreach ($schedules as $s) {
     $window = s($s->starttime) . ' - ' . s($s->endtime);
     if (!in_array($window, $timeblocks)) {
@@ -190,30 +201,38 @@ foreach ($schedules as $s) {
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($timeblocks as $timeblock): ?>
+            <?php foreach ($timeblocks as $timeblock): 
+                $isbreak = isset($breakwindows[$timeblock]);
+            ?>
                 <tr>
                     <td style="background:#f9f9f9; font-weight:bold;"><?php echo s($timeblock); ?></td>
-                    <?php foreach (array_keys($matrixdays) as $day): ?>
-                        <td>
-                            <?php 
-                            $entries = $matrix[$timeblock][$day] ?? [];
-                            if (empty($entries)): 
-                                echo '&mdash;';
-                            else:
-                                foreach ($entries as $e):
-                                    $teacher = (!empty($e->firstname) || !empty($e->lastname)) ? fullname($e) : 'Unassigned';
-                                    ?>
-                                    <div class="cell-entry">
-                                        <strong><?php echo s($e->coursecode); ?></strong>
-                                        <small><?php echo s($e->roomname); ?></small>
-                                        <small><?php echo s($teacher); ?></small>
-                                    </div>
-                                    <?php
-                                endforeach;
-                            endif;
-                            ?>
+                    <?php if ($isbreak): ?>
+                        <td colspan="<?php echo count($matrixdays); ?>" style="background:#f1f5f9; color:#64748b; font-weight:bold; font-style:italic; padding:10px;">
+                            INSTITUTIONAL BREAK / BLOCKOUT &mdash; NO CLASSES OR EXAMS
                         </td>
-                    <?php endforeach; ?>
+                    <?php else: ?>
+                        <?php foreach (array_keys($matrixdays) as $day): ?>
+                            <td>
+                                <?php 
+                                $entries = $matrix[$timeblock][$day] ?? [];
+                                if (empty($entries)): 
+                                    echo '&mdash;';
+                                else:
+                                    foreach ($entries as $e):
+                                        $teacher = (!empty($e->firstname) || !empty($e->lastname)) ? fullname($e) : 'Unassigned';
+                                        ?>
+                                        <div class="cell-entry">
+                                            <strong><?php echo s($e->coursecode); ?></strong>
+                                            <small><?php echo s($e->roomname); ?></small>
+                                            <small><?php echo s($teacher); ?></small>
+                                        </div>
+                                        <?php
+                                    endforeach;
+                                endif;
+                                ?>
+                            </td>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </tr>
             <?php endforeach; ?>
         </tbody>

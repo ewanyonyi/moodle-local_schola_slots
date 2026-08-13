@@ -141,10 +141,16 @@ class solver {
             return true;
         }
 
-        $course = $courselist[$index];
         $targettype = $this->slottype;
         $classslots = array_values(array_filter($this->slots, function($s) use ($targettype) {
+            // Strictly exclude break / blockout slots from scheduling
+            if ($s->type === 'break') {
+                return false;
+            }
             if ($s->type === $targettype) {
+                return true;
+            }
+            if ($targettype === 'class' && $s->type === 'lab') {
                 return true;
             }
             // Fallback if no specific exam slots configured
@@ -256,7 +262,8 @@ class solver {
      * @return bool True if assignment is valid.
      */
     private function is_valid_class_assignment($course, $slot, $room): bool {
-        if ($room->capacity < count($course->students)) {
+        $studentcount = (is_array($course->students) || $course->students instanceof \Countable) ? count($course->students) : 0;
+        if ($room->capacity < $studentcount) {
             return false;
         }
 
