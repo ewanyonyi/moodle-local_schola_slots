@@ -208,19 +208,15 @@ echo \local_academic_timetabler\output\renderer::render_nav_header('slots');
 // Fetch user saved templates
 $usertemplates = $DB->get_records('local_att_templates', null, 'name ASC');
 $presetoptions = [
-    'System Built-in Templates' => [
-        'academic' => 'Standard Academic Day (07:00 - 18:00 with Tea & Lunch Breaks)',
-        'exam'     => 'Examination Period (08:30 - 11:30 & 13:30 - 16:30 Exams)',
-        'lab'      => 'Practical Lab Afternoon Blocks (14:00 - 17:00 Mon-Fri)',
-    ],
+    'academic' => 'Standard Academic Day (07:00 - 18:00 with Tea & Lunch Breaks)',
+    'exam'     => 'Examination Period (08:30 - 11:30 & 13:30 - 16:30 Exams)',
+    'lab'      => 'Practical Lab Afternoon Blocks (14:00 - 17:00 Mon-Fri)',
 ];
 
 if (!empty($usertemplates)) {
-    $customoptions = [];
     foreach ($usertemplates as $ut) {
-        $customoptions['custom_' . $ut->id] = s($ut->name) . ' (Custom Saved Template)';
+        $presetoptions['custom_' . $ut->id] = 'Custom Template: ' . s($ut->name);
     }
-    $presetoptions['Custom Saved Templates'] = $customoptions;
 }
 
 // -------------------------------------------------------------------
