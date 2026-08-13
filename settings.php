@@ -48,6 +48,21 @@ if ($hassiteconfig) {
             '',
             PARAM_TEXT
         ));
+
+        $distoptions = [
+            'balanced' => 'Equal 5-Day Load Balancing (Mon - Fri)',
+            'mon_to_sat' => '6-Day Institution Schedule (Mon - Sat)',
+            'mon_to_thu' => '4-Day Compact Schedule (Mon - Thu)',
+            'frontload' => 'Sequential Day Frontloading (Mon - Fri)',
+        ];
+
+        $settings->add(new admin_setting_configselect(
+            'local_academic_timetabler/day_distribution',
+            'Weekly Day Distribution Strategy',
+            'Select how the solver engine spreads course sessions across weekdays.',
+            'balanced',
+            $distoptions
+        ));
     }
 
     $ADMIN->add('localplugins', $settings);

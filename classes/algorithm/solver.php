@@ -110,7 +110,35 @@ class solver {
         }
 
         $course = $courselist[$index];
-        $classslots = array_filter($this->slots, fn($s) => $s->type === 'class');
+        $classslots = array_values(array_filter($this->slots, fn($s) => $s->type === 'class'));
+
+        $strategy = get_config('local_academic_timetabler', 'day_distribution') ?: 'balanced';
+
+        if ($strategy === 'mon_to_sat') {
+            $targetday = ($index % 6) + 1;
+            usort($classslots, function($a, $b) use ($targetday) {
+                $adist = ($a->dayofweek == $targetday) ? 0 : 1;
+                $bdist = ($b->dayofweek == $targetday) ? 0 : 1;
+                return ($adist !== $bdist) ? ($adist <=> $bdist) : ($a->dayofweek <=> $b->dayofweek);
+            });
+        } else if ($strategy === 'mon_to_thu') {
+            $targetday = ($index % 4) + 1;
+            usort($classslots, function($a, $b) use ($targetday) {
+                $adist = ($a->dayofweek == $targetday) ? 0 : 1;
+                $bdist = ($b->dayofweek == $targetday) ? 0 : 1;
+                return ($adist !== $bdist) ? ($adist <=> $bdist) : ($a->dayofweek <=> $b->dayofweek);
+            });
+        } else if ($strategy === 'frontload') {
+            // Preserve standard sequential dayofweek order (1..5)
+        } else {
+            // Default 'balanced': Distribute across 5 days (1 to 5)
+            $targetday = ($index % 5) + 1;
+            usort($classslots, function($a, $b) use ($targetday) {
+                $adist = ($a->dayofweek == $targetday) ? 0 : 1;
+                $bdist = ($b->dayofweek == $targetday) ? 0 : 1;
+                return ($adist !== $bdist) ? ($adist <=> $bdist) : ($a->dayofweek <=> $b->dayofweek);
+            });
+        }
 
         foreach ($classslots as $slot) {
             foreach ($this->rooms as $room) {

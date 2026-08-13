@@ -96,7 +96,7 @@ echo html_writer::link($navurls['index'], 'Overview', ['class' => 'btn btn-outli
 echo html_writer::link($navurls['rooms'], 'Manage Rooms', ['class' => 'btn btn-outline-primary me-2']);
 echo html_writer::link($navurls['slots'], 'Manage Time Slots', ['class' => 'btn btn-primary me-2']);
 echo html_writer::link($navurls['schedules'], 'View Timetables', ['class' => 'btn btn-outline-primary me-2']);
-echo html_writer::link($generateurl, '⚡ Generate Timetable', ['class' => 'btn btn-success font-weight-bold shadow-sm']);
+echo html_writer::link($generateurl, 'Generate Timetable', ['class' => 'btn btn-success font-weight-bold shadow-sm']);
 echo html_writer::end_div();
 
 $cardheader = $editslot ? 'Edit Weekly Time Slot' : 'Add New Weekly Time Slot';

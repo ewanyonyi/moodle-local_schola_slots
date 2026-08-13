@@ -142,10 +142,10 @@ echo $OUTPUT->header();
 
 <div class="no-print">
     <button onclick="window.print();" class="btn btn-primary font-weight-bold">
-        🖨️ Print / Save as PDF
+        Print / Save as PDF
     </button>
-    <a href="<?php echo (new moodle_url('/local/academic_timetabler/export.php', ['action' => 'csv']))->out(false); ?>" class="btn btn-success">
-        📥 Export to CSV
+    <a href="<?php echo (new moodle_url('/local/academic_timetabler/export.php', ['action' => 'csv']))->out(false); ?>" class="btn btn-success font-weight-bold">
+        Export to CSV
     </a>
     <button onclick="window.close();" class="btn btn-outline-secondary">
         Close Window
@@ -209,7 +209,7 @@ if (empty($schedules)) {
         echo '<td><span class="badge-type">' . strtoupper($s->schedule_type) . '</span></td>';
         echo '</tr>';
     }
-    echo 'tbody></table>';
+    echo '</tbody></table>';
 }
 ?>
 
