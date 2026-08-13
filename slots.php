@@ -16,7 +16,7 @@
 
 /**
  * Manage Bell Schedule & Time Slots for local_academic_timetabler.
- * Designed for Senior School Administrators with a Guided Bell Schedule Wizard.
+ * Designed for Senior School Administrators with customizable institutional schedule profiles.
  *
  * @package     local_academic_timetabler
  * @copyright   2026 Emanuel Dickson Wanyonyi <wanyonyi.d.emanuel@gmail.com>
@@ -26,12 +26,15 @@
 
 require_once(__DIR__ . '/../../config.php');
 
+use local_academic_timetabler\profile_manager;
+
 require_login();
 $context = context_system::instance();
 require_capability('local/academic_timetabler:manage', $context);
 
-$action = optional_param('action', '', PARAM_ALPHA);
+$action = optional_param('action', '', PARAM_ALPHANUMEXT);
 $id     = optional_param('id', 0, PARAM_INT);
+$pkey   = optional_param('profile', '', PARAM_ALPHANUMEXT);
 
 $url = new moodle_url('/local/academic_timetabler/slots.php');
 $PAGE->set_url($url);
@@ -40,7 +43,7 @@ $PAGE->set_title('Bell Schedule & Time Slots');
 $PAGE->set_heading('Bell Schedule & Time Slots');
 
 // -------------------------------------------------------------------
-// Action: Delete Single Slot
+// Action: Delete Single Time Slot
 // -------------------------------------------------------------------
 if ($action === 'delete' && $id > 0 && confirm_sesskey()) {
     $DB->delete_records('local_att_slots', ['id' => $id]);
@@ -53,6 +56,91 @@ if ($action === 'delete' && $id > 0 && confirm_sesskey()) {
 if ($action === 'clearall' && confirm_sesskey()) {
     $DB->delete_records('local_att_slots');
     redirect($url, 'All time slots cleared successfully.');
+}
+
+// -------------------------------------------------------------------
+// Action: Apply Executive / School Schedule Profile
+// -------------------------------------------------------------------
+if ($action === 'preset' && !empty($pkey) && confirm_sesskey()) {
+    $profile = profile_manager::get_profile($pkey);
+    if ($profile) {
+        $count = profile_manager::apply_profile($pkey);
+        $pname = s($profile['name']);
+        redirect($url, "Schedule Profile '{$pname}' loaded successfully! {$count} active time slots generated.");
+    } else {
+        redirect($url, 'Invalid profile key specified.', null, \core\output\notification::NOTIFY_ERROR);
+    }
+}
+
+// -------------------------------------------------------------------
+// Action: Save / Update Schedule Profile Configuration
+// -------------------------------------------------------------------
+if ($action === 'save_profile' && confirm_sesskey() && data_submitted()) {
+    $key         = optional_param('key', '', PARAM_ALPHANUMEXT);
+    $name        = optional_param('name', '', PARAM_TEXT);
+    $badge       = optional_param('badge', '', PARAM_TEXT);
+    $theme       = optional_param('theme', 'primary', PARAM_ALPHA);
+    $icon        = optional_param('icon', 'fa-graduation-cap', PARAM_TEXT);
+    $description = optional_param('description', '', PARAM_TEXT);
+    $daystart    = optional_param('day_start', '08:00', PARAM_TEXT);
+    $dayend      = optional_param('day_end', '17:00', PARAM_TEXT);
+    $periodmins  = optional_param('period_minutes', 60, PARAM_INT);
+    $teastart    = optional_param('tea_start', '', PARAM_TEXT);
+    $teaend      = optional_param('tea_end', '', PARAM_TEXT);
+    $lunchstart  = optional_param('lunch_start', '', PARAM_TEXT);
+    $lunchend    = optional_param('lunch_end', '', PARAM_TEXT);
+    $activedays  = optional_param_array('days', [1, 2, 3, 4, 5], PARAM_INT);
+    $applynow    = optional_param('apply_now', 0, PARAM_INT);
+
+    if (empty($key)) {
+        $key = 'custom_' . time();
+    }
+
+    if (!empty($name)) {
+        $profiledata = [
+            'key'            => $key,
+            'name'           => $name,
+            'badge'          => $badge ?: "{$periodmins}-Min Periods",
+            'theme'          => $theme,
+            'icon'           => $icon,
+            'description'    => $description,
+            'day_start'      => $daystart,
+            'day_end'        => $dayend,
+            'period_minutes' => $periodmins,
+            'tea_start'      => $teastart,
+            'tea_end'        => $teaend,
+            'lunch_start'    => $lunchstart,
+            'lunch_end'      => $lunchend,
+            'days'           => array_map('intval', $activedays),
+            'is_default'     => false,
+        ];
+
+        profile_manager::save_profile($key, $profiledata);
+
+        $msg = "Schedule Profile '{$name}' saved successfully.";
+        if ($applynow) {
+            $count = profile_manager::apply_profile($key);
+            $msg .= " Applied immediately with {$count} generated time slots.";
+        }
+
+        redirect($url, $msg);
+    }
+}
+
+// -------------------------------------------------------------------
+// Action: Reset Profiles to System Defaults
+// -------------------------------------------------------------------
+if ($action === 'reset_profiles' && confirm_sesskey()) {
+    profile_manager::reset_defaults();
+    redirect($url, 'Schedule profiles reset to system default institutional profiles.');
+}
+
+// -------------------------------------------------------------------
+// Action: Delete Custom Profile
+// -------------------------------------------------------------------
+if ($action === 'delete_profile' && !empty($pkey) && confirm_sesskey()) {
+    profile_manager::delete_profile($pkey);
+    redirect($url, 'Custom schedule profile removed.');
 }
 
 // -------------------------------------------------------------------
@@ -117,11 +205,9 @@ if ($action === 'build_bell_schedule' && confirm_sesskey()) {
                 break;
             }
 
-            // If lesson overlaps tea start
             if ($tstartsec && $currsec < $tstartsec && $nextsec > $tstartsec) {
                 $nextsec = $tstartsec;
             }
-            // If lesson overlaps lunch start
             if ($lstartsec && $currsec < $lstartsec && $nextsec > $lstartsec) {
                 $nextsec = $lstartsec;
             }
@@ -141,75 +227,7 @@ if ($action === 'build_bell_schedule' && confirm_sesskey()) {
 }
 
 // -------------------------------------------------------------------
-// Action: Quick Executive Presets
-// -------------------------------------------------------------------
-if ($action === 'preset' && confirm_sesskey()) {
-    $profile = optional_param('profile', 'univ_60', PARAM_TEXT);
-    $DB->delete_records('local_att_slots');
-    $inserted = 0;
-
-    for ($day = 1; $day <= 5; $day++) {
-        if ($profile === 'highschool_45') {
-            $templates = [
-                ['08:00', '08:45', 'class'], ['08:45', '09:30', 'class'],
-                ['09:30', '10:15', 'class'], ['10:15', '10:45', 'break'], // Tea
-                ['10:45', '11:30', 'class'], ['11:30', '12:15', 'class'],
-                ['12:15', '13:15', 'break'], // Lunch
-                ['13:15', '14:00', 'class'], ['14:00', '14:45', 'class'], ['14:45', '15:30', 'class'],
-            ];
-        } else if ($profile === 'univ_180') {
-            $templates = [
-                ['08:00', '11:00', 'class'],
-                ['11:00', '13:00', 'break'], // Break / Lunch
-                ['13:00', '16:00', 'class'],
-                ['16:00', '19:00', 'class'],
-            ];
-        } else if ($profile === 'univ_90') {
-            $templates = [
-                ['08:00', '09:30', 'class'], ['09:30', '11:00', 'class'],
-                ['11:00', '11:30', 'break'], // Tea
-                ['11:30', '13:00', 'class'], ['13:00', '14:00', 'break'], // Lunch
-                ['14:00', '15:30', 'class'], ['15:30', '17:00', 'class'],
-            ];
-        } else if ($profile === 'exam_3h') {
-            $templates = [
-                ['08:30', '11:30', 'exam'],
-                ['11:30', '13:30', 'break'],
-                ['13:30', '16:30', 'exam'],
-            ];
-        } else if ($profile === 'evening') {
-            $templates = [
-                ['17:30', '19:00', 'class'],
-                ['19:00', '19:30', 'break'],
-                ['19:30', '21:00', 'class'],
-            ];
-        } else {
-            // univ_60 default
-            $templates = [
-                ['08:00', '09:00', 'class'], ['09:00', '10:00', 'class'],
-                ['10:00', '10:30', 'break'], // Tea
-                ['10:30', '11:30', 'class'], ['11:30', '12:30', 'class'],
-                ['12:30', '13:30', 'break'], // Lunch
-                ['13:30', '14:30', 'class'], ['14:30', '15:30', 'class'], ['15:30', '16:30', 'class'],
-            ];
-        }
-
-        foreach ($templates as $t) {
-            $DB->insert_record('local_att_slots', (object)[
-                'dayofweek' => $day,
-                'starttime' => $t[0],
-                'endtime'   => $t[1],
-                'type'      => $t[2],
-            ]);
-            $inserted++;
-        }
-    }
-
-    redirect($url, "Executive Profile '{$profile}' loaded! {$inserted} time windows generated for Mon-Fri.");
-}
-
-// -------------------------------------------------------------------
-// Action: Save / Edit Single Slot
+// Action: Save / Edit Single Time Slot
 // -------------------------------------------------------------------
 $editslot = null;
 if ($action === 'edit' && $id > 0) {
@@ -242,46 +260,317 @@ if ($data = data_submitted() && confirm_sesskey() && optional_param('save_slot',
     }
 }
 
+// -------------------------------------------------------------------
+// Prepare Editing Profile Context (if edit_profile or add_profile requested)
+// -------------------------------------------------------------------
+$editingprofile = null;
+if (($action === 'edit_profile' || $action === 'add_profile') && (!empty($pkey) || $action === 'add_profile')) {
+    if (!empty($pkey)) {
+        $editingprofile = profile_manager::get_profile($pkey);
+    }
+    if (!$editingprofile) {
+        $editingprofile = [
+            'key'            => 'profile_' . time(),
+            'name'           => '',
+            'badge'          => '60-Min Periods',
+            'theme'          => 'primary',
+            'icon'           => 'fa-graduation-cap',
+            'description'    => '',
+            'day_start'      => '08:00',
+            'day_end'        => '17:00',
+            'period_minutes' => 60,
+            'tea_start'      => '10:00',
+            'tea_end'        => '10:30',
+            'lunch_start'    => '12:30',
+            'lunch_end'      => '13:30',
+            'days'           => [1, 2, 3, 4, 5],
+            'is_default'     => false,
+        ];
+    }
+}
+
 echo $OUTPUT->header();
 
 echo \local_academic_timetabler\output\renderer::render_nav_header('slots');
 
 // -------------------------------------------------------------------
-// Card 1: 1-Click School Profile Presets
+// Form View: Edit / Create Schedule Profile Form Card
 // -------------------------------------------------------------------
-echo html_writer::start_div('card border-0 shadow-sm mb-4 bg-white');
-echo html_writer::div(html_writer::tag('h5', 'Quick School Schedule Profiles', ['class' => 'mb-0 font-weight-bold']), 'card-header bg-dark text-white p-3');
-echo html_writer::start_div('card-body p-4');
+if ($editingprofile) {
+    $formtitle = !empty($editingprofile['name'])
+        ? 'Edit Schedule Profile: ' . s($editingprofile['name'])
+        : 'Create Custom Institutional Schedule Profile';
 
-echo html_writer::div('Select an official school structure profile to instantly configure your institution\'s weekly timetabling slots:', 'text-muted mb-3');
+    echo html_writer::start_div('card border-0 shadow-lg mb-4 bg-white rounded-3');
+    echo html_writer::start_div('card-header bg-dark text-white p-3 d-flex align-items-center justify-content-between');
+    echo html_writer::tag('h5', '<i class="fa fa-pen-to-square me-2"></i>' . $formtitle, ['class' => 'mb-0 font-weight-bold']);
+    echo html_writer::link($url, '&times; Close Editor', ['class' => 'btn btn-sm btn-outline-light']);
+    echo html_writer::end_div();
 
-echo html_writer::start_div('d-flex flex-wrap gap-2');
+    echo html_writer::start_div('card-body p-4');
 
-$profiles = [
-    'univ_60'        => ['label' => 'University Standard (60-Min Periods)', 'class' => 'btn-primary'],
-    'univ_180'       => ['label' => 'University 3-Hour Block Lectures', 'class' => 'btn-success text-white'],
-    'highschool_45' => ['label' => 'High School (45-Min Periods)', 'class' => 'btn-info text-dark'],
-    'univ_90'        => ['label' => 'Modular University (90-Min Periods)', 'class' => 'btn-secondary'],
-    'exam_3h'        => ['label' => 'Examination Season (3-Hr Blocks)', 'class' => 'btn-warning text-dark'],
-    'evening'        => ['label' => 'Evening / Part-Time Program', 'class' => 'btn-dark'],
-];
+    echo html_writer::start_tag('form', ['method' => 'post', 'action' => $url->out(false)]);
+    echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
+    echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'save_profile']);
+    echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'key', 'value' => s($editingprofile['key'])]);
 
-foreach ($profiles as $pkey => $pinfo) {
-    $purl = new moodle_url($url, ['action' => 'preset', 'profile' => $pkey, 'sesskey' => sesskey()]);
-    echo html_writer::link($purl, $pinfo['label'], [
-        'class' => 'btn ' . $pinfo['class'] . ' font-weight-bold px-3 py-2 shadow-sm',
-        'onclick' => "return confirm('Load profile \"{$pinfo['label']}\"? This will configure active slots for Mon-Fri.');",
+    echo html_writer::start_div('row g-3 mb-3');
+
+    // Profile Title
+    echo html_writer::start_div('col-md-5');
+    echo html_writer::tag('label', 'Profile Name / Title', ['class' => 'form-label font-weight-bold text-dark']);
+    echo html_writer::empty_tag('input', [
+        'type' => 'text', 'name' => 'name', 'value' => s($editingprofile['name']),
+        'class' => 'form-control p-2', 'placeholder' => 'e.g. University Standard', 'required' => 'required'
     ]);
+    echo html_writer::end_div();
+
+    // Badge Label
+    echo html_writer::start_div('col-md-3');
+    echo html_writer::tag('label', 'Badge Subtitle', ['class' => 'form-label font-weight-bold text-dark']);
+    echo html_writer::empty_tag('input', [
+        'type' => 'text', 'name' => 'badge', 'value' => s($editingprofile['badge'] ?? ''),
+        'class' => 'form-control p-2', 'placeholder' => 'e.g. 60-Min Periods'
+    ]);
+    echo html_writer::end_div();
+
+    // Color Theme
+    echo html_writer::start_div('col-md-2');
+    echo html_writer::tag('label', 'Color Theme', ['class' => 'form-label font-weight-bold text-dark']);
+    $themeoptions = [
+        'primary' => 'Primary Blue',
+        'success' => 'Emerald Green',
+        'info'    => 'Teal / Cyan',
+        'purple'  => 'Modular Purple',
+        'warning' => 'Amber / Gold',
+        'dark'    => 'Night Dark',
+    ];
+    echo html_writer::select($themeoptions, 'theme', $editingprofile['theme'] ?? 'primary', false, ['class' => 'form-select p-2']);
+    echo html_writer::end_div();
+
+    // Icon Selection
+    echo html_writer::start_div('col-md-2');
+    echo html_writer::tag('label', 'Profile Icon', ['class' => 'form-label font-weight-bold text-dark']);
+    $iconoptions = [
+        'fa-graduation-cap'  => '🎓 Graduation Cap',
+        'fa-building-columns' => '🏛️ Executive Building',
+        'fa-school'           => '🏫 School House',
+        'fa-cubes'            => '⚡ Modular Cubes',
+        'fa-file-signature'  => '📝 Examination',
+        'fa-moon'            => '🌙 Evening Moon',
+        'fa-clock'           => '⏱️ Standard Clock',
+    ];
+    echo html_writer::select($iconoptions, 'icon', $editingprofile['icon'] ?? 'fa-graduation-cap', false, ['class' => 'form-select p-2']);
+    echo html_writer::end_div();
+
+    // Description
+    echo html_writer::start_div('col-12');
+    echo html_writer::tag('label', 'Profile Description', ['class' => 'form-label font-weight-bold text-dark']);
+    echo html_writer::empty_tag('input', [
+        'type' => 'text', 'name' => 'description', 'value' => s($editingprofile['description'] ?? ''),
+        'class' => 'form-control p-2', 'placeholder' => 'e.g. Standard 60-minute university lecture blocks with morning tea and lunch breaks.'
+    ]);
+    echo html_writer::end_div();
+
+    // Day Start & End
+    echo html_writer::start_div('col-md-3');
+    echo html_writer::tag('label', 'Daily Day Start Time', ['class' => 'form-label font-weight-bold text-dark']);
+    echo html_writer::empty_tag('input', ['type' => 'time', 'name' => 'day_start', 'value' => s($editingprofile['day_start'] ?? '08:00'), 'class' => 'form-control p-2', 'required' => 'required']);
+    echo html_writer::end_div();
+
+    echo html_writer::start_div('col-md-3');
+    echo html_writer::tag('label', 'Daily Day End Time', ['class' => 'form-label font-weight-bold text-dark']);
+    echo html_writer::empty_tag('input', ['type' => 'time', 'name' => 'day_end', 'value' => s($editingprofile['day_end'] ?? '17:00'), 'class' => 'form-control p-2', 'required' => 'required']);
+    echo html_writer::end_div();
+
+    // Period Duration
+    echo html_writer::start_div('col-md-6');
+    echo html_writer::tag('label', 'Period / Lecture Duration', ['class' => 'form-label font-weight-bold text-dark']);
+    $periodoptions = [
+        45  => '45 Minutes (Secondary / High School Period)',
+        50  => '50 Minutes (Standard School Hour)',
+        60  => '60 Minutes (Standard University Lecture)',
+        90  => '90 Minutes (Extended Modular Block)',
+        120 => '120 Minutes (2-Hour Double Period)',
+        180 => '180 Minutes (3-Hour Block Lecture)',
+    ];
+    echo html_writer::select($periodoptions, 'period_minutes', (int)($editingprofile['period_minutes'] ?? 60), false, ['class' => 'form-select p-2']);
+    echo html_writer::end_div();
+
+    // Tea & Lunch Breaks
+    echo html_writer::start_div('col-md-3');
+    echo html_writer::tag('label', 'Tea Break Start (Optional)', ['class' => 'form-label font-weight-bold text-dark']);
+    echo html_writer::empty_tag('input', ['type' => 'time', 'name' => 'tea_start', 'value' => s($editingprofile['tea_start'] ?? ''), 'class' => 'form-control p-2']);
+    echo html_writer::end_div();
+
+    echo html_writer::start_div('col-md-3');
+    echo html_writer::tag('label', 'Tea Break End (Optional)', ['class' => 'form-label font-weight-bold text-dark']);
+    echo html_writer::empty_tag('input', ['type' => 'time', 'name' => 'tea_end', 'value' => s($editingprofile['tea_end'] ?? ''), 'class' => 'form-control p-2']);
+    echo html_writer::end_div();
+
+    echo html_writer::start_div('col-md-3');
+    echo html_writer::tag('label', 'Lunch Break Start (Optional)', ['class' => 'form-label font-weight-bold text-dark']);
+    echo html_writer::empty_tag('input', ['type' => 'time', 'name' => 'lunch_start', 'value' => s($editingprofile['lunch_start'] ?? ''), 'class' => 'form-control p-2']);
+    echo html_writer::end_div();
+
+    echo html_writer::start_div('col-md-3');
+    echo html_writer::tag('label', 'Lunch Break End (Optional)', ['class' => 'form-label font-weight-bold text-dark']);
+    echo html_writer::empty_tag('input', ['type' => 'time', 'name' => 'lunch_end', 'value' => s($editingprofile['lunch_end'] ?? ''), 'class' => 'form-control p-2']);
+    echo html_writer::end_div();
+
+    // Active Days
+    echo html_writer::start_div('col-12 mt-2');
+    echo html_writer::tag('label', 'Operating School Days', ['class' => 'form-label font-weight-bold text-dark d-block']);
+    $dayslist = [1 => 'Mon', 2 => 'Tue', 3 => 'Wed', 4 => 'Thu', 5 => 'Fri', 6 => 'Sat', 7 => 'Sun'];
+    $activedays = $editingprofile['days'] ?? [1, 2, 3, 4, 5];
+    echo html_writer::start_div('d-flex gap-3 flex-wrap');
+    foreach ($dayslist as $dnum => $dname) {
+        $checked = in_array($dnum, $activedays);
+        echo html_writer::start_div('form-check form-check-inline');
+        echo html_writer::checkbox('days[]', $dnum, $checked, ' ' . $dname, ['class' => 'form-check-input', 'id' => 'profile_day_' . $dnum]);
+        echo html_writer::end_div();
+    }
+    echo html_writer::end_div();
+    echo html_writer::end_div();
+
+    echo html_writer::end_div(); // row
+
+    // Submit actions
+    echo html_writer::start_div('mt-4 pt-3 border-top d-flex align-items-center justify-content-between flex-wrap gap-2');
+    echo html_writer::checkbox('apply_now', '1', true, ' Apply this profile to active time slots immediately upon saving', ['class' => 'form-check-input text-muted']);
+
+    echo html_writer::start_div('d-flex gap-2');
+    echo html_writer::tag('button', 'Save Profile', ['type' => 'submit', 'class' => 'btn btn-primary font-weight-bold px-4 py-2 shadow-sm']);
+    echo html_writer::link($url, 'Cancel', ['class' => 'btn btn-outline-secondary px-3 py-2']);
+    echo html_writer::end_div();
+
+    echo html_writer::end_div();
+
+    echo html_writer::end_tag('form');
+    echo html_writer::end_div();
+    echo html_writer::end_div();
 }
 
+// -------------------------------------------------------------------
+// Component: Professional Quick School Schedule Profiles Gallery
+// -------------------------------------------------------------------
+$profiles = profile_manager::get_profiles();
+
+echo html_writer::start_div('card border-0 shadow-sm mb-4 bg-white rounded-3');
+echo html_writer::start_div('card-header bg-dark text-white p-3 d-flex align-items-center justify-content-between flex-wrap gap-2');
+echo html_writer::start_div('d-flex align-items-center gap-2');
+echo html_writer::tag('h5', 'Institutional Schedule Profiles', ['class' => 'mb-0 font-weight-bold']);
+echo html_writer::tag('span', count($profiles) . ' Profiles', ['class' => 'badge bg-secondary px-2 py-1 fs-7']);
 echo html_writer::end_div();
+
+// Action Toolbar Top-Right
+echo html_writer::start_div('d-flex align-items-center gap-2');
+$addprofileurl = new moodle_url($url, ['action' => 'add_profile']);
+echo html_writer::link($addprofileurl, '+ Add Custom Profile', ['class' => 'btn btn-sm btn-light text-dark font-weight-bold shadow-sm']);
+
+$reseturl = new moodle_url($url, ['action' => 'reset_profiles', 'sesskey' => sesskey()]);
+echo html_writer::link($reseturl, 'Reset Defaults', [
+    'class' => 'btn btn-sm btn-outline-light opacity-75',
+    'onclick' => 'return confirm("Reset all schedule profiles back to institutional defaults?");',
+]);
 echo html_writer::end_div();
 echo html_writer::end_div();
 
+echo html_writer::start_div('card-body p-4');
+echo html_writer::div('Select an official school structure profile to instantly configure your institution\'s weekly timetabling slots, or click <strong>Edit Profile</strong> to customize period lengths and break windows:', 'text-muted mb-4');
+
+echo html_writer::start_div('row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3');
+
+foreach ($profiles as $pkey => $pinfo) {
+    $theme = $pinfo['theme'] ?? 'primary';
+    $icon  = $pinfo['icon'] ?? 'fa-graduation-cap';
+    $name  = s($pinfo['name']);
+    $badge = s($pinfo['badge'] ?? (($pinfo['period_minutes'] ?? 60) . '-Min Periods'));
+    $desc  = s($pinfo['description'] ?? '');
+
+    $start = s($pinfo['day_start'] ?? '08:00');
+    $end   = s($pinfo['day_end'] ?? '17:00');
+    $dayscount = count($pinfo['days'] ?? [1, 2, 3, 4, 5]);
+
+    $tea   = (!empty($pinfo['tea_start']) && !empty($pinfo['tea_end'])) ? s($pinfo['tea_start']) . '-' . s($pinfo['tea_end']) : 'None';
+    $lunch = (!empty($pinfo['lunch_start']) && !empty($pinfo['lunch_end'])) ? s($pinfo['lunch_start']) . '-' . s($pinfo['lunch_end']) : 'None';
+
+    $applyurl = new moodle_url($url, ['action' => 'preset', 'profile' => $pkey, 'sesskey' => sesskey()]);
+    $editprofurl = new moodle_url($url, ['action' => 'edit_profile', 'profile' => $pkey]);
+    $delprofurl  = new moodle_url($url, ['action' => 'delete_profile', 'profile' => $pkey, 'sesskey' => sesskey()]);
+
+    echo html_writer::start_div('col');
+    echo html_writer::start_div('card h-100 att-profile-card shadow-sm border-0 bg-white position-relative d-flex flex-column');
+
+    // Accent line on top
+    echo html_writer::div('', 'card-header-accent att-accent-' . $theme);
+
+    echo html_writer::start_div('card-body p-4 d-flex flex-column');
+
+    // Card Header Info (Icon + Title + Badge)
+    echo html_writer::start_div('d-flex align-items-start gap-3 mb-3');
+    echo html_writer::div('<i class="fa ' . $icon . '"></i>', 'att-icon-box att-icon-' . $theme);
+    echo html_writer::start_div();
+    echo html_writer::tag('h5', $name, ['class' => 'card-title mb-1 font-weight-bold text-dark fs-6']);
+    echo html_writer::tag('span', $badge, ['class' => 'badge bg-' . ($theme === 'purple' ? 'primary' : $theme) . ' text-white px-2 py-1 fs-7']);
+    echo html_writer::end_div();
+    echo html_writer::end_div();
+
+    // Card Description
+    echo html_writer::tag('p', $desc, ['class' => 'card-text text-muted small mb-3 flex-grow-1']);
+
+    // Specs Metadata Grid / Pills
+    $dayslabel = profile_manager::format_days_label($pinfo['days'] ?? [1, 2, 3, 4, 5]);
+    echo html_writer::start_div('d-flex flex-wrap gap-2 mb-3');
+    echo html_writer::div('⏱️ <strong>' . $start . ' &ndash; ' . $end . '</strong>', 'att-meta-pill');
+    echo html_writer::div('📅 <strong>' . $dayslabel . '</strong>', 'att-meta-pill');
+    if ($tea !== 'None') {
+        echo html_writer::div('☕ Tea: <strong>' . $tea . '</strong>', 'att-meta-pill');
+    }
+    if ($lunch !== 'None') {
+        echo html_writer::div('🍽️ Lunch: <strong>' . $lunch . '</strong>', 'att-meta-pill');
+    }
+    echo html_writer::end_div();
+
+    // Card Action Buttons Footer
+    echo html_writer::start_div('d-flex align-items-center gap-2 pt-3 border-top mt-auto');
+
+    // Apply Profile Button
+    echo html_writer::link($applyurl, '<i class="fa fa-bolt me-1"></i> Apply Profile', [
+        'class' => 'btn btn-' . ($theme === 'purple' ? 'primary' : $theme) . ' btn-sm flex-grow-1 font-weight-bold shadow-sm py-2',
+        'onclick' => "return confirm('Apply profile \"{$name}\"? This will configure active slots.');",
+    ]);
+
+    // Edit Profile Button
+    echo html_writer::link($editprofurl, '<i class="fa fa-pen me-1"></i> Edit Profile', [
+        'class' => 'btn btn-outline-secondary btn-sm font-weight-bold px-3 py-2',
+        'title' => 'Edit profile parameters and break windows',
+    ]);
+
+    // Delete custom profile button (if non-default)
+    if (empty($pinfo['is_default'])) {
+        echo html_writer::link($delprofurl, '<i class="fa fa-trash"></i>', [
+            'class' => 'btn btn-outline-danger btn-sm px-2 py-2',
+            'title' => 'Delete custom profile',
+            'onclick' => "return confirm('Delete custom profile \"{$name}\"?');",
+        ]);
+    }
+
+    echo html_writer::end_div(); // action row
+
+    echo html_writer::end_div(); // card-body
+    echo html_writer::end_div(); // card
+    echo html_writer::end_div(); // col
+}
+
+echo html_writer::end_div(); // row
+echo html_writer::end_div(); // card-body
+echo html_writer::end_div(); // card
+
 // -------------------------------------------------------------------
-// Card 2: Guided Bell Schedule Wizard
+// Component 2: Guided Bell Schedule Wizard
 // -------------------------------------------------------------------
-echo html_writer::start_div('card border-0 shadow-sm mb-4 bg-white');
+echo html_writer::start_div('card border-0 shadow-sm mb-4 bg-white rounded-3');
 echo html_writer::div(html_writer::tag('h5', 'Guided Bell Schedule Wizard', ['class' => 'mb-0 font-weight-bold text-dark']), 'card-header bg-light p-3 border-bottom');
 echo html_writer::start_div('card-body p-4');
 
@@ -362,12 +651,12 @@ echo html_writer::end_div();
 echo html_writer::end_div();
 
 // -------------------------------------------------------------------
-// Card 3: Add / Edit Single Custom Slot
+// Component 3: Add / Edit Single Custom Slot
 // -------------------------------------------------------------------
 if ($editslot) {
-    echo html_writer::start_div('card shadow-sm mb-4 border-primary');
+    echo html_writer::start_div('card shadow-sm mb-4 border-primary rounded-3');
     echo html_writer::div(html_writer::tag('h5', 'Edit Time Slot Window', ['class' => 'mb-0 font-weight-bold text-primary']), 'card-header bg-light');
-    echo html_writer::start_div('card-body');
+    echo html_writer::start_div('card-body p-4');
 
     echo html_writer::start_tag('form', ['method' => 'post', 'action' => $url->out(false)]);
     echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
@@ -415,7 +704,7 @@ if ($editslot) {
 }
 
 // -------------------------------------------------------------------
-// Visual Daily Bell Schedule Summary Table
+// Component 4: Visual Daily Bell Schedule Summary Table
 // -------------------------------------------------------------------
 $slots = $DB->get_records('local_att_slots', null, 'dayofweek ASC, starttime ASC');
 
@@ -432,13 +721,13 @@ if (!empty($slots)) {
 echo html_writer::end_div();
 
 if (empty($slots)) {
-    echo html_writer::div('No bell schedule time windows configured yet. Use the <strong>Guided Bell Schedule Wizard</strong> or select a <strong>Quick School Profile</strong> above to get started instantly.', 'alert alert-info shadow-sm p-4 text-center fs-6');
+    echo html_writer::div('No bell schedule time windows configured yet. Use the <strong>Guided Bell Schedule Wizard</strong> or select an <strong>Institutional Schedule Profile</strong> above to get started instantly.', 'alert alert-info shadow-sm p-4 text-center fs-6 rounded-3');
 } else {
     $days = [1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday'];
 
     $table = new html_table();
     $table->head = ['ID', 'Day', 'Time Window', 'Functional Category', 'Actions'];
-    $table->attributes = ['class' => 'table table-striped table-bordered align-middle bg-white shadow-sm'];
+    $table->attributes = ['class' => 'table table-striped table-bordered align-middle bg-white shadow-sm rounded-3'];
 
     foreach ($slots as $slot) {
         $dayname = $days[$slot->dayofweek] ?? ('Day ' . $slot->dayofweek);

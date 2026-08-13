@@ -1,0 +1,58 @@
+/* local_academic_timetabler custom styling */
+
+.att-profile-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+.att-profile-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+.att-profile-card .card-header-accent {
+    height: 6px;
+    width: 100%;
+}
+
+.att-accent-primary { background: linear-gradient(90deg, #0d6efd, #0b5ed7); }
+.att-accent-success { background: linear-gradient(90deg, #198754, #157347); }
+.att-accent-info { background: linear-gradient(90deg, #0dcaf0, #0bacce); }
+.att-accent-purple { background: linear-gradient(90deg, #6f42c1, #59359a); }
+.att-accent-warning { background: linear-gradient(90deg, #ffc107, #fd7e14); }
+.att-accent-dark { background: linear-gradient(90deg, #212529, #343a40); }
+
+.att-icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+
+.att-icon-primary { background-color: #e7f1ff; color: #0d6efd; }
+.att-icon-success { background-color: #e6f4ea; color: #198754; }
+.att-icon-info { background-color: #e0f7fa; color: #00838f; }
+.att-icon-purple { background-color: #f3e5f5; color: #6f42c1; }
+.att-icon-warning { background-color: #fff8e1; color: #b78103; }
+.att-icon-dark { background-color: #e9ecef; color: #212529; }
+
+.att-meta-pill {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 0.85rem;
+    color: #495057;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.att-meta-pill strong {
+    color: #212529;
+}
