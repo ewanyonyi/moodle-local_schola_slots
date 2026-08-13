@@ -157,6 +157,13 @@ if ($action === 'preset' && confirm_sesskey()) {
                 ['12:15', '13:15', 'break'], // Lunch
                 ['13:15', '14:00', 'class'], ['14:00', '14:45', 'class'], ['14:45', '15:30', 'class'],
             ];
+        } else if ($profile === 'univ_180') {
+            $templates = [
+                ['08:00', '11:00', 'class'],
+                ['11:00', '13:00', 'break'], // Break / Lunch
+                ['13:00', '16:00', 'class'],
+                ['16:00', '19:00', 'class'],
+            ];
         } else if ($profile === 'univ_90') {
             $templates = [
                 ['08:00', '09:30', 'class'], ['09:30', '11:00', 'class'],
@@ -252,6 +259,7 @@ echo html_writer::start_div('d-flex flex-wrap gap-2');
 
 $profiles = [
     'univ_60'        => ['label' => 'University Standard (60-Min Periods)', 'class' => 'btn-primary'],
+    'univ_180'       => ['label' => 'University 3-Hour Block Lectures', 'class' => 'btn-success text-white'],
     'highschool_45' => ['label' => 'High School (45-Min Periods)', 'class' => 'btn-info text-dark'],
     'univ_90'        => ['label' => 'Modular University (90-Min Periods)', 'class' => 'btn-secondary'],
     'exam_3h'        => ['label' => 'Examination Season (3-Hr Blocks)', 'class' => 'btn-warning text-dark'],
@@ -302,6 +310,7 @@ $periodoptions = [
     60  => '60 Minutes (Standard University Lecture)',
     90  => '90 Minutes (Extended Modular Lecture)',
     120 => '120 Minutes (2-Hour Double Period)',
+    180 => '180 Minutes (3-Hour Block Lecture)',
 ];
 echo html_writer::select($periodoptions, 'period_minutes', 60, false, ['class' => 'form-select p-2']);
 echo html_writer::end_div();
