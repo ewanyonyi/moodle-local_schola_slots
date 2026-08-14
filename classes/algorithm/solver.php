@@ -128,9 +128,17 @@ class solver {
             if ($this->call_cloud_solver()) {
                 return true;
             }
+            // If Cloud solver call fails during Pro mode, check course count.
+            // If dataset exceeds local PHP capability (> 50 courses), inform user.
+            if (count($this->courses) > license_manager::STARTER_COURSE_LIMIT) {
+                throw new \moodle_exception(
+                    'cloud_offline_limit_err',
+                    'local_academic_timetabler'
+                );
+            }
         }
 
-        // Native PHP Solver Fallback
+        // Native PHP Solver Fallback (for datasets under Starter limit)
         uasort($this->courses, fn($a, $b) => count($b->students) <=> count($a->students));
         return $this->backtrack_classes(0);
     }
