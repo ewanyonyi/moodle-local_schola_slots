@@ -53,6 +53,16 @@ class license_manager {
     public const CACHE_TTL = 604800;
 
     /**
+     * Get configured LemonSqueezy store checkout URL.
+     *
+     * @return string Checkout URL.
+     */
+    public static function get_checkout_url(): string {
+        $url = get_config('local_academic_timetabler', 'checkout_url');
+        return !empty($url) ? trim((string)$url) : 'https://saugra.lemonsqueezy.com/buy';
+    }
+
+    /**
      * Get configured license key from admin settings.
      *
      * @return string License key string.

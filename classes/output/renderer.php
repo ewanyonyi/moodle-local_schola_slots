@@ -144,7 +144,7 @@ class renderer extends plugin_renderer_base {
             'settings_url' => $settingsurl->out(false),
             'tasks_url' => $tasksurl->out(false),
             'generate_url' => $generateurl->out(false),
-            'buy_url' => 'https://lemonsqueezy.com',
+            'buy_url' => license_manager::get_checkout_url(),
             'course_count' => $coursecount,
             'max_courses_label' => $maxcourseslabel,
             'room_count' => $roomcount,

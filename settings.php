@@ -62,6 +62,8 @@ if (!class_exists('local_academic_timetabler_admin_setting_pricing')) {
                 }
             }
 
+            $checkouturl = \local_academic_timetabler\licensing\license_manager::get_checkout_url();
+
             // Top Status & Suggested Upgrade Banner
             $bannerhtml = '';
             if ($currenttier === 2) {
@@ -80,7 +82,7 @@ if (!class_exists('local_academic_timetabler_admin_setting_pricing')) {
                         <strong class="text-dark fs-6"><i class="fa fa-check-circle me-2"></i> Current Plan: Starter Edition ($199/yr)</strong>
                         <div class="small text-muted mt-1">Suggested Upgrade: <strong>Pro University ($499/yr)</strong> to unlock <strong>UNLIMITED active courses & campus rooms</strong>, combined course & exam solver, and batch room CSV import.</div>
                     </div>
-                    <a href="https://lemonsqueezy.com" target="_blank" class="btn btn-primary font-weight-bold px-3 py-2 ms-3">Upgrade to Pro University &rarr;</a>
+                    <a href="' . s($checkouturl) . '" target="_blank" class="btn btn-primary font-weight-bold px-3 py-2 ms-3">Upgrade to Pro University &rarr;</a>
                 </div>';
             } else {
                 $bannerhtml = '
@@ -89,18 +91,18 @@ if (!class_exists('local_academic_timetabler_admin_setting_pricing')) {
                         <strong class="text-dark fs-6"><i class="fa fa-info-circle me-2"></i> Current Plan: Community Edition (Free)</strong>
                         <div class="small text-muted mt-1">Suggested Upgrade: <strong>Pro University ($499/yr)</strong> to unlock full university constraint engine, batch room CSV import, automated background tasks, and priority support.</div>
                     </div>
-                    <a href="https://lemonsqueezy.com" target="_blank" class="btn btn-primary font-weight-bold px-3 py-2 ms-3">Upgrade to Pro University &rarr;</a>
+                    <a href="' . s($checkouturl) . '" target="_blank" class="btn btn-primary font-weight-bold px-3 py-2 ms-3">Upgrade to Pro University &rarr;</a>
                 </div>';
             }
 
             // Card Footer Button Helper
-            $getFooterButton = function($cardtier) use ($currenttier) {
+            $getFooterButton = function($cardtier) use ($currenttier, $checkouturl) {
                 if ($cardtier === $currenttier) {
                     return '<button class="btn btn-outline-success w-100 font-weight-bold py-2" disabled><i class="fa fa-check-circle me-1"></i> Current Active Plan</button>';
                 } else if ($cardtier > $currenttier) {
                     $btnclass = ($cardtier === 2) ? 'btn-primary shadow-sm' : 'btn-outline-primary';
                     $label = ($cardtier === 1) ? 'Upgrade to Starter' : 'Upgrade to Pro University';
-                    return '<a href="https://lemonsqueezy.com" target="_blank" class="btn ' . $btnclass . ' w-100 font-weight-bold py-2">' . $label . ' &rarr;</a>';
+                    return '<a href="' . s($checkouturl) . '" target="_blank" class="btn ' . $btnclass . ' w-100 font-weight-bold py-2">' . $label . ' &rarr;</a>';
                 } else {
                     return '<button class="btn btn-light text-muted w-100 font-weight-bold py-2" disabled>Included in Current Plan</button>';
                 }
@@ -234,6 +236,14 @@ if ($hassiteconfig) {
             get_string('license_key_desc', 'local_academic_timetabler'),
             '',
             PARAM_TEXT
+        ));
+
+        $settings->add(new admin_setting_configtext(
+            'local_academic_timetabler/checkout_url',
+            'LemonSqueezy Store / Checkout URL',
+            'URL where administrators purchase or upgrade license keys for your timetabler plugin.',
+            'https://saugra.lemonsqueezy.com/buy',
+            PARAM_URL
         ));
 
         $settings->add(new local_academic_timetabler_admin_setting_pricing());
