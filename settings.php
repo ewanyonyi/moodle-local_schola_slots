@@ -51,47 +51,34 @@ if (!class_exists('local_academic_timetabler_admin_setting_pricing')) {
             $licensekey = get_config('local_academic_timetabler', 'license_key');
             $licensekey = trim((string)$licensekey);
 
-            // Tier Detection: 0=Community, 1=Starter, 2=Pro, 3=Enterprise
+            // Tier Detection: 0=Community (Free), 1=Starter ($199/yr), 2=Pro University ($499/yr - Highest Tier)
             $currenttier = 0;
             if (!empty($licensekey)) {
                 $keyupper = strtoupper($licensekey);
-                if (strpos($keyupper, 'ENT') !== false || strpos($keyupper, 'ENTERPRISE') !== false) {
-                    $currenttier = 3;
-                } else if (strpos($keyupper, 'PRO') !== false || strpos($keyupper, 'UNIV') !== false) {
-                    $currenttier = 2;
-                } else if (strpos($keyupper, 'START') !== false) {
+                if (strpos($keyupper, 'START') !== false) {
                     $currenttier = 1;
                 } else {
-                    $currenttier = 2;
+                    $currenttier = 2; // Any valid commercial license defaults to Pro University (Highest Tier)
                 }
             }
 
             // Top Status & Suggested Upgrade Banner
             $bannerhtml = '';
-            if ($currenttier === 3) {
+            if ($currenttier === 2) {
                 $bannerhtml = '
                 <div class="alert alert-success d-flex align-items-center justify-content-between mb-4 shadow-sm rounded-3">
                     <div>
-                        <strong class="text-success fs-6"><i class="fa fa-shield-check me-2"></i> Current Plan: Enterprise System ($1,499/yr)</strong>
-                        <div class="small text-muted mt-1">You are on our highest tier! Multi-site Moodle deployment, direct SIS/ERP integration support, and dedicated SLA technical onboarding are active.</div>
+                        <strong class="text-success fs-6"><i class="fa fa-shield-check me-2"></i> Current Plan: Pro University ($499/yr)</strong>
+                        <div class="small text-muted mt-1">You are on our highest tier! UNLIMITED active courses, campus venues, combined exam solver, batch CSV room import, and priority support are fully active.</div>
                     </div>
                     <span class="badge bg-success text-white px-3 py-2 rounded-pill"><i class="fa fa-check-circle me-1"></i> HIGHEST TIER ACTIVE</span>
-                </div>';
-            } else if ($currenttier === 2) {
-                $bannerhtml = '
-                <div class="alert alert-primary d-flex align-items-center justify-content-between mb-4 shadow-sm rounded-3">
-                    <div>
-                        <strong class="text-primary fs-6"><i class="fa fa-check-circle me-2"></i> Current Plan: Pro University ($499/yr)</strong>
-                        <div class="small text-muted mt-1">Suggested Upgrade: <strong>Enterprise System ($1,499/yr)</strong> for multi-campus Moodle networks, direct SIS/ERP integration, and dedicated SLA onboarding.</div>
-                    </div>
-                    <a href="https://lemonsqueezy.com" target="_blank" class="btn btn-dark font-weight-bold px-3 py-2 ms-3">Upgrade to Enterprise &rarr;</a>
                 </div>';
             } else if ($currenttier === 1) {
                 $bannerhtml = '
                 <div class="alert alert-warning d-flex align-items-center justify-content-between mb-4 shadow-sm rounded-3">
                     <div>
                         <strong class="text-dark fs-6"><i class="fa fa-check-circle me-2"></i> Current Plan: Starter Edition ($199/yr)</strong>
-                        <div class="small text-muted mt-1">Suggested Upgrade: <strong>Pro University ($499/yr)</strong> to unlock <strong>UNLIMITED active courses, campus rooms</strong>, and combined course/exam solvers.</div>
+                        <div class="small text-muted mt-1">Suggested Upgrade: <strong>Pro University ($499/yr)</strong> to unlock <strong>UNLIMITED active courses & campus rooms</strong>, combined course & exam solver, and batch room CSV import.</div>
                     </div>
                     <a href="https://lemonsqueezy.com" target="_blank" class="btn btn-primary font-weight-bold px-3 py-2 ms-3">Upgrade to Pro University &rarr;</a>
                 </div>';
@@ -100,9 +87,9 @@ if (!class_exists('local_academic_timetabler_admin_setting_pricing')) {
                 <div class="alert alert-secondary d-flex align-items-center justify-content-between mb-4 shadow-sm rounded-3">
                     <div>
                         <strong class="text-dark fs-6"><i class="fa fa-info-circle me-2"></i> Current Plan: Community Edition (Free)</strong>
-                        <div class="small text-muted mt-1">Suggested Upgrade: <strong>Pro University ($499/yr)</strong> to unlock full university constraint engine, automated background tasks, and priority support.</div>
+                        <div class="small text-muted mt-1">Suggested Upgrade: <strong>Pro University ($499/yr)</strong> to unlock full university constraint engine, batch room CSV import, automated background tasks, and priority support.</div>
                     </div>
-                    <a href="https://lemonsqueezy.com" target="_blank" class="btn btn-primary font-weight-bold px-3 py-2 ms-3">Upgrade License &rarr;</a>
+                    <a href="https://lemonsqueezy.com" target="_blank" class="btn btn-primary font-weight-bold px-3 py-2 ms-3">Upgrade to Pro University &rarr;</a>
                 </div>';
             }
 
@@ -111,8 +98,8 @@ if (!class_exists('local_academic_timetabler_admin_setting_pricing')) {
                 if ($cardtier === $currenttier) {
                     return '<button class="btn btn-outline-success w-100 font-weight-bold py-2" disabled><i class="fa fa-check-circle me-1"></i> Current Active Plan</button>';
                 } else if ($cardtier > $currenttier) {
-                    $btnclass = ($cardtier === 2) ? 'btn-primary shadow-sm' : ($cardtier === 3 ? 'btn-dark shadow-sm' : 'btn-outline-primary');
-                    $label = ($cardtier === 1) ? 'Upgrade to Starter' : (($cardtier === 2) ? 'Upgrade to Pro University' : 'Upgrade to Enterprise');
+                    $btnclass = ($cardtier === 2) ? 'btn-primary shadow-sm' : 'btn-outline-primary';
+                    $label = ($cardtier === 1) ? 'Upgrade to Starter' : 'Upgrade to Pro University';
                     return '<a href="https://lemonsqueezy.com" target="_blank" class="btn ' . $btnclass . ' w-100 font-weight-bold py-2">' . $label . ' &rarr;</a>';
                 } else {
                     return '<button class="btn btn-light text-muted w-100 font-weight-bold py-2" disabled>Included in Current Plan</button>';
@@ -143,18 +130,41 @@ if (!class_exists('local_academic_timetabler_admin_setting_pricing')) {
 
             return '
             <div class="mt-4 p-4 bg-white border rounded shadow-sm mb-4">
-                <h4 class="font-weight-bold text-dark mb-1">Commercial Licensing & Enterprise Tiers</h4>
+                <h4 class="font-weight-bold text-dark mb-1">Licensing Tiers & Plan Comparison</h4>
                 <p class="text-muted small mb-4">Manage your institutional capacity and unlock advanced solver features with LemonSqueezy license keys.</p>
                 
                 ' . $bannerhtml . '
 
                 <div class="row row-cols-1 row-cols-md-3 g-4">
+                    <!-- Tier 0: Community Edition (Free) -->
+                    <div class="col">
+                        <div class="' . $getCardClass(0) . '">
+                            ' . $getBadge(0) . '
+                            <div class="mb-3">
+                                <span class="badge bg-secondary text-white font-weight-bold px-3 py-1">Open Source / Free</span>
+                                <h4 class="font-weight-bold text-dark mt-2 mb-1">Community Edition</h4>
+                                <div class="text-muted small">Free scheduling for basic Moodle sites</div>
+                            </div>
+                            <div class="my-3 fs-2 font-weight-bold text-dark">$0 <span class="fs-6 text-muted font-weight-normal">/ forever</span></div>
+                            <ul class="list-unstyled my-3 flex-grow-1 small">
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Up to 30 Active Courses</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Basic Venue Management</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Master Weekly Course Timetabling</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Standard Bell Schedule Wizard</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Community Forum Support</li>
+                            </ul>
+                            <div class="pt-3 border-top mt-auto">
+                                ' . $getFooterButton(0) . '
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Tier 1: Starter / High School -->
                     <div class="col">
                         <div class="' . $getCardClass(1) . '">
                             ' . $getBadge(1) . '
                             <div class="mb-3">
-                                <span class="badge bg-secondary text-white font-weight-bold px-3 py-1">High School / Department</span>
+                                <span class="badge bg-info text-white font-weight-bold px-3 py-1">High School / Department</span>
                                 <h4 class="font-weight-bold text-dark mt-2 mb-1">Starter Edition</h4>
                                 <div class="text-muted small">Ideal for small institutes & high schools</div>
                             </div>
@@ -172,14 +182,14 @@ if (!class_exists('local_academic_timetabler_admin_setting_pricing')) {
                         </div>
                     </div>
 
-                    <!-- Tier 2: Pro / University -->
+                    <!-- Tier 2: Pro / University (Highest Tier) -->
                     <div class="col">
                         <div class="' . $getCardClass(2) . '">
                             ' . $getBadge(2) . '
                             <div class="mb-3">
                                 <span class="badge bg-primary text-white font-weight-bold px-3 py-1">University / College</span>
                                 <h4 class="font-weight-bold text-dark mt-2 mb-1">Pro University</h4>
-                                <div class="text-muted small">Complete scheduling for higher education</div>
+                                <div class="text-muted small">Complete scheduling & exam suite for higher education</div>
                             </div>
                             <div class="my-3 fs-2 font-weight-bold text-primary">$499 <span class="fs-6 text-muted font-weight-normal">/ year</span></div>
                             <ul class="list-unstyled my-3 flex-grow-1 small">
@@ -187,34 +197,12 @@ if (!class_exists('local_academic_timetabler_admin_setting_pricing')) {
                                 <li class="py-1"><i class="fa fa-check text-success me-2"></i> <strong>UNLIMITED</strong> Campus Rooms & Venues</li>
                                 <li class="py-1"><i class="fa fa-check text-success me-2"></i> Combined Course & Exam Solver</li>
                                 <li class="py-1"><i class="fa fa-check text-success me-2"></i> Background Adhoc Task Solver</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Batch CSV / Excel Room Importer</li>
                                 <li class="py-1"><i class="fa fa-check text-success me-2"></i> Custom Break Windows & Rules</li>
                                 <li class="py-1"><i class="fa fa-check text-success me-2"></i> Priority Ticket Support</li>
                             </ul>
                             <div class="pt-3 border-top mt-auto">
                                 ' . $getFooterButton(2) . '
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Tier 3: Enterprise Multi-Site -->
-                    <div class="col">
-                        <div class="' . $getCardClass(3) . '">
-                            ' . $getBadge(3) . '
-                            <div class="mb-3">
-                                <span class="badge bg-dark text-white font-weight-bold px-3 py-1">Multi-Site System</span>
-                                <h4 class="font-weight-bold text-dark mt-2 mb-1">Enterprise System</h4>
-                                <div class="text-muted small">For multi-campus university networks</div>
-                            </div>
-                            <div class="my-3 fs-2 font-weight-bold text-dark">$1,499 <span class="fs-6 text-muted font-weight-normal">/ year</span></div>
-                            <ul class="list-unstyled my-3 flex-grow-1 small">
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> <strong>Multi-Site / Multi-Moodle</strong> Deployment</li>
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Custom Solver Constraint Engineering</li>
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Dedicated Technical Onboarding SLA</li>
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Direct SIS/ERP Integration Support</li>
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> 1-on-1 Admin Training Session</li>
-                            </ul>
-                            <div class="pt-3 border-top mt-auto">
-                                ' . $getFooterButton(3) . '
                             </div>
                         </div>
                     </div>

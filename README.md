@@ -8,12 +8,11 @@ The entire system executes **100% on-premise** within Moodle's PHP environment w
 
 ## 💳 Commercial Licensing & Tiered Plans
 
-`local_academic_timetabler` follows a dual-tier freemium model backed by automated **LemonSqueezy** license key validation:
+`local_academic_timetabler` follows a transparent commercial licensing model backed by automated **LemonSqueezy** license key validation:
 
-* **Community Edition (Free)**: Limited to 30 courses, single-venue master scheduling, standard bell schedule wizard.
+* **Community Edition (Free)**: Standard single-venue course scheduling, manual room management, basic schedule profile, community forum support.
 * **Starter Plan ($199 / year)**: Up to 100 active courses, 50 campus rooms, high school & department schedule profiles, standard email support.
-* **Pro University ($499 / year — *Recommended*)**: **Unlimited** active courses, campus rooms, & faculty, combined Course & Exam Solver, background adhoc task execution, custom break windows, priority support.
-* **Enterprise System ($1,499 / year)**: Multi-site / multi-Moodle campus deployment, custom solver constraint development, dedicated technical SLA onboarding, and direct SIS/ERP integration support.
+* **Pro University ($499 / year — *Highest Tier*)**: **UNLIMITED** active courses, campus rooms, & faculty, combined Course & Exam Solver, background adhoc task execution, custom break windows, batch room CSV importer, priority support.
 
 ---
 
