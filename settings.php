@@ -94,9 +94,10 @@ if (!class_exists('local_academic_timetabler_admin_setting_pricing')) {
             $getBadge = function($cardtier) use ($currenttier) {
                 if ($cardtier === $currenttier) {
                     return '<span class="position-absolute top-0 end-0 translate-middle-y me-3 badge bg-success text-white font-weight-bold px-3 py-2 rounded-pill shadow-sm"><i class="fa fa-check me-1"></i> CURRENT PLAN</span>';
-                } else {
+                } else if ($cardtier === 1) {
                     return '<span class="position-absolute top-0 end-0 translate-middle-y me-3 badge bg-primary text-white font-weight-bold px-3 py-2 rounded-pill shadow-sm">RECOMMENDED FOR UNIVERSITIES</span>';
                 }
+                return '';
             };
 
             // Card Class Helper
