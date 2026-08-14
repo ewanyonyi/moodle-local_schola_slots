@@ -100,7 +100,7 @@ class renderer extends plugin_renderer_base {
         $tiername = license_manager::get_tier_name();
         $ispro = license_manager::is_pro();
         $isstarter = ($tier === license_manager::TIER_STARTER);
-        $iscommunity = ($tier === license_manager::TIER_COMMUNITY);
+        $iscommunity = ($tier === license_manager::TIER_STARTER);
 
         $indexurl = new \moodle_url('/local/academic_timetabler/index.php');
         $roomsurl = new \moodle_url('/local/academic_timetabler/rooms.php');

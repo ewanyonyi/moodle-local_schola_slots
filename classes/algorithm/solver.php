@@ -63,7 +63,7 @@ class solver {
     public function load_courses(array $courses): void {
         $coursecount = count($courses);
         if (!license_manager::can_solve_courses($coursecount)) {
-            $limit = license_manager::COMMUNITY_COURSE_LIMIT;
+            $limit = license_manager::STARTER_COURSE_LIMIT;
             throw new \moodle_exception(
                 'license_err_limit',
                 'local_academic_timetabler',
