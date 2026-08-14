@@ -25,26 +25,17 @@ namespace local_academic_timetabler\licensing;
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class license_manager {
-    /** @var string Community tier identifier. */
-    public const TIER_COMMUNITY = 'community';
-
-    /** @var string Starter tier identifier. */
+    /** @var string Starter Edition tier identifier (Default Free Tier). */
     public const TIER_STARTER = 'starter';
 
-    /** @var string Pro University tier identifier (highest tier). */
+    /** @var string Pro Cloud Engine tier identifier (Highest Tier). */
     public const TIER_PRO = 'pro';
 
-    /** @var int Course limit for Community tier. */
-    public const COMMUNITY_COURSE_LIMIT = 30;
+    /** @var int Course limit for Starter Edition (Free). */
+    public const STARTER_COURSE_LIMIT = 50;
 
-    /** @var int Room limit for Community tier. */
-    public const COMMUNITY_ROOM_LIMIT = 10;
-
-    /** @var int Course limit for Starter tier. */
-    public const STARTER_COURSE_LIMIT = 100;
-
-    /** @var int Room limit for Starter tier. */
-    public const STARTER_ROOM_LIMIT = 50;
+    /** @var int Room limit for Starter Edition (Free). */
+    public const STARTER_ROOM_LIMIT = 25;
 
     /** @var string LemonSqueezy validation endpoint. */
     public const LEMONSQUEEZY_VALIDATE_URL = 'https://api.lemonsqueezy.com/v1/licenses/validate';
@@ -115,26 +106,24 @@ class license_manager {
 
     /**
      * Get current active license tier.
+     * Defaults to Starter Edition (Free Open Source).
      *
-     * @return string Active tier ('community', 'starter', or 'pro').
+     * @return string Active tier ('starter' or 'pro').
      */
     public static function get_tier(): string {
         $licensekey = trim(self::get_license_key());
         if (empty($licensekey)) {
-            return self::TIER_COMMUNITY;
-        }
-
-        $keyupper = strtoupper($licensekey);
-        if (strpos($keyupper, 'START') !== false) {
             return self::TIER_STARTER;
         }
 
-        // Developer keys starting with ATT- or valid LemonSqueezy key -> Pro University
+        $keyupper = strtoupper($licensekey);
+
+        // Developer keys starting with ATT- or valid LemonSqueezy key -> Pro Cloud Engine
         if (str_starts_with($keyupper, 'ATT-') || self::validate_lemonsqueezy_key($licensekey)) {
             return self::TIER_PRO;
         }
 
-        return self::TIER_COMMUNITY;
+        return self::TIER_STARTER;
     }
 
     /**
@@ -145,17 +134,15 @@ class license_manager {
     public static function get_tier_name(): string {
         $tier = self::get_tier();
         if ($tier === self::TIER_PRO) {
-            return 'Pro University';
-        } else if ($tier === self::TIER_STARTER) {
-            return 'Starter Edition';
+            return 'Pro Cloud Engine';
         }
-        return 'Community Edition';
+        return 'Starter Edition (Free)';
     }
 
     /**
-     * Check if site is operating on Pro University tier.
+     * Check if site is operating on Pro Cloud Engine tier.
      *
-     * @return bool True if Pro University tier active.
+     * @return bool True if Pro Cloud Engine active.
      */
     public static function is_pro(): bool {
         return self::get_tier() === self::TIER_PRO;
@@ -167,7 +154,7 @@ class license_manager {
      * @return bool True if Starter or Pro tier active.
      */
     public static function is_starter_or_higher(): bool {
-        return self::get_tier() !== self::TIER_COMMUNITY;
+        return true;
     }
 
     /**
@@ -179,10 +166,8 @@ class license_manager {
         $tier = self::get_tier();
         if ($tier === self::TIER_PRO) {
             return 0; // Unlimited
-        } else if ($tier === self::TIER_STARTER) {
-            return self::STARTER_COURSE_LIMIT;
         }
-        return self::COMMUNITY_COURSE_LIMIT;
+        return self::STARTER_COURSE_LIMIT;
     }
 
     /**
@@ -194,10 +179,8 @@ class license_manager {
         $tier = self::get_tier();
         if ($tier === self::TIER_PRO) {
             return 0; // Unlimited
-        } else if ($tier === self::TIER_STARTER) {
-            return self::STARTER_ROOM_LIMIT;
         }
-        return self::COMMUNITY_ROOM_LIMIT;
+        return self::STARTER_ROOM_LIMIT;
     }
 
     /**

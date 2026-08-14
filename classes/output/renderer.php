@@ -124,11 +124,9 @@ class renderer extends plugin_renderer_base {
 
         $tiernotice = '';
         if ($ispro) {
-            $tiernotice = 'Pro University Active — UNLIMITED active courses, campus venues, combined exam solver, and batch CSV room import are fully unlocked.';
-        } else if ($isstarter) {
-            $tiernotice = 'Starter Edition Active (Up to 100 courses & 50 campus rooms). Upgrade to Pro University ($499/yr) for unlimited courses and batch room CSV import.';
+            $tiernotice = 'Pro Cloud Engine Active — Off-server high-speed solver API, UNLIMITED active courses, campus venues, and batch CSV room import unlocked.';
         } else {
-            $tiernotice = 'Community Edition Active (Limited to 30 courses). Upgrade to Pro University ($499/yr) to unlock unlimited course scheduling and batch venue importing.';
+            $tiernotice = 'Starter Edition Active (Free Open Source — Up to 50 active courses & 25 campus rooms). Need off-server high-speed solving or unlimited capacity? Upgrade to Pro Cloud Engine ($499/yr).';
         }
 
         $contextdata = [

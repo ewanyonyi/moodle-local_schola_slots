@@ -51,60 +51,42 @@ if (!class_exists('local_academic_timetabler_admin_setting_pricing')) {
             $licensekey = get_config('local_academic_timetabler', 'license_key');
             $licensekey = trim((string)$licensekey);
 
-            // Tier Detection: 0=Community (Free), 1=Starter ($199/yr), 2=Pro University ($499/yr - Highest Tier)
+            // Tier Detection: 0=Starter Edition (Free), 1=Pro Cloud Engine ($499/yr)
             $currenttier = 0;
             if (!empty($licensekey)) {
-                $keyupper = strtoupper($licensekey);
-                if (strpos($keyupper, 'START') !== false) {
-                    $currenttier = 1;
-                } else {
-                    $currenttier = 2; // Any valid commercial license defaults to Pro University (Highest Tier)
-                }
+                $currenttier = 1; // Valid license key unlocks Pro Cloud Engine
             }
 
             $checkouturl = \local_academic_timetabler\licensing\license_manager::get_checkout_url();
 
             // Top Status & Suggested Upgrade Banner
             $bannerhtml = '';
-            if ($currenttier === 2) {
+            if ($currenttier === 1) {
                 $bannerhtml = '
                 <div class="alert alert-success d-flex align-items-center justify-content-between mb-4 shadow-sm rounded-3">
                     <div>
-                        <strong class="text-success fs-6"><i class="fa fa-shield-check me-2"></i> Current Plan: Pro University ($499/yr)</strong>
-                        <div class="small text-muted mt-1">You are on our highest tier! UNLIMITED active courses, campus venues, combined exam solver, batch CSV room import, and priority support are fully active.</div>
+                        <strong class="text-success fs-6"><i class="fa fa-shield-check me-2"></i> Current Active Tier: Pro Cloud Engine ($499/yr)</strong>
+                        <div class="small text-muted mt-1">High-speed Cloud Solver API active! UNLIMITED courses, campus rooms, combined exam solver, batch CSV room import, and priority ticket support unlocked.</div>
                     </div>
-                    <span class="badge bg-success text-white px-3 py-2 rounded-pill"><i class="fa fa-check-circle me-1"></i> HIGHEST TIER ACTIVE</span>
-                </div>';
-            } else if ($currenttier === 1) {
-                $bannerhtml = '
-                <div class="alert alert-warning d-flex align-items-center justify-content-between mb-4 shadow-sm rounded-3">
-                    <div>
-                        <strong class="text-dark fs-6"><i class="fa fa-check-circle me-2"></i> Current Plan: Starter Edition ($199/yr)</strong>
-                        <div class="small text-muted mt-1">Suggested Upgrade: <strong>Pro University ($499/yr)</strong> to unlock <strong>UNLIMITED active courses & campus rooms</strong>, combined course & exam solver, and batch room CSV import.</div>
-                    </div>
-                    <a href="' . s($checkouturl) . '" target="_blank" class="btn btn-primary font-weight-bold px-3 py-2 ms-3">Upgrade to Pro University &rarr;</a>
+                    <span class="badge bg-success text-white px-3 py-2 rounded-pill"><i class="fa fa-check-circle me-1"></i> PRO CLOUD ACTIVE</span>
                 </div>';
             } else {
                 $bannerhtml = '
-                <div class="alert alert-secondary d-flex align-items-center justify-content-between mb-4 shadow-sm rounded-3">
+                <div class="alert alert-info d-flex align-items-center justify-content-between mb-4 shadow-sm rounded-3">
                     <div>
-                        <strong class="text-dark fs-6"><i class="fa fa-info-circle me-2"></i> Current Plan: Community Edition (Free)</strong>
-                        <div class="small text-muted mt-1">Suggested Upgrade: <strong>Pro University ($499/yr)</strong> to unlock full university constraint engine, batch room CSV import, automated background tasks, and priority support.</div>
+                        <strong class="text-dark fs-6"><i class="fa fa-info-circle me-2"></i> Current Tier: Starter Edition (Free Open Source)</strong>
+                        <div class="small text-muted mt-1">Included free out-of-the-box for up to 50 courses & 25 rooms. Need off-server high-speed solving or unlimited capacity? Upgrade to <strong>Pro Cloud Engine</strong>.</div>
                     </div>
-                    <a href="' . s($checkouturl) . '" target="_blank" class="btn btn-primary font-weight-bold px-3 py-2 ms-3">Upgrade to Pro University &rarr;</a>
+                    <a href="' . s($checkouturl) . '" target="_blank" class="btn btn-primary font-weight-bold px-3 py-2 ms-3">Upgrade to Pro Cloud Engine &rarr;</a>
                 </div>';
             }
 
             // Card Footer Button Helper
             $getFooterButton = function($cardtier) use ($currenttier, $checkouturl) {
                 if ($cardtier === $currenttier) {
-                    return '<button class="btn btn-outline-success w-100 font-weight-bold py-2" disabled><i class="fa fa-check-circle me-1"></i> Current Active Plan</button>';
-                } else if ($cardtier > $currenttier) {
-                    $btnclass = ($cardtier === 2) ? 'btn-primary shadow-sm' : 'btn-outline-primary';
-                    $label = ($cardtier === 1) ? 'Upgrade to Starter' : 'Upgrade to Pro University';
-                    return '<a href="' . s($checkouturl) . '" target="_blank" class="btn ' . $btnclass . ' w-100 font-weight-bold py-2">' . $label . ' &rarr;</a>';
+                    return '<button class="btn btn-outline-success w-100 font-weight-bold py-2" disabled><i class="fa fa-check-circle me-1"></i> Active Included Plan</button>';
                 } else {
-                    return '<button class="btn btn-light text-muted w-100 font-weight-bold py-2" disabled>Included in Current Plan</button>';
+                    return '<a href="' . s($checkouturl) . '" target="_blank" class="btn btn-primary shadow-sm w-100 font-weight-bold py-2">Upgrade to Pro Cloud Engine &rarr;</a>';
                 }
             };
 
@@ -112,48 +94,44 @@ if (!class_exists('local_academic_timetabler_admin_setting_pricing')) {
             $getBadge = function($cardtier) use ($currenttier) {
                 if ($cardtier === $currenttier) {
                     return '<span class="position-absolute top-0 end-0 translate-middle-y me-3 badge bg-success text-white font-weight-bold px-3 py-2 rounded-pill shadow-sm"><i class="fa fa-check me-1"></i> CURRENT PLAN</span>';
-                } else if ($cardtier === $currenttier + 1) {
-                    return '<span class="position-absolute top-0 end-0 translate-middle-y me-3 badge bg-warning text-dark font-weight-bold px-3 py-2 rounded-pill shadow-sm"><i class="fa fa-arrow-up me-1"></i> SUGGESTED UPGRADE</span>';
-                } else if ($cardtier === 2 && $currenttier === 0) {
-                    return '<span class="position-absolute top-0 end-0 translate-middle-y me-3 badge bg-primary text-white font-weight-bold px-3 py-2 rounded-pill shadow-sm">MOST POPULAR</span>';
+                } else {
+                    return '<span class="position-absolute top-0 end-0 translate-middle-y me-3 badge bg-primary text-white font-weight-bold px-3 py-2 rounded-pill shadow-sm">RECOMMENDED FOR UNIVERSITIES</span>';
                 }
-                return '';
             };
 
             // Card Class Helper
             $getCardClass = function($cardtier) use ($currenttier) {
                 if ($cardtier === $currenttier) {
                     return 'card h-100 border border-2 border-success p-4 d-flex flex-column rounded-3 position-relative shadow-sm bg-white';
-                } else if ($cardtier === $currenttier + 1) {
-                    return 'card h-100 border border-2 border-warning p-4 d-flex flex-column rounded-3 position-relative shadow-sm bg-white';
                 }
-                return 'card h-100 border p-4 d-flex flex-column rounded-3 bg-light';
+                return 'card h-100 border border-2 border-primary p-4 d-flex flex-column rounded-3 position-relative shadow-sm bg-white';
             };
 
             return '
             <div class="mt-4 p-4 bg-white border rounded shadow-sm mb-4">
                 <h4 class="font-weight-bold text-dark mb-1">Licensing Tiers & Plan Comparison</h4>
-                <p class="text-muted small mb-4">Manage your institutional capacity and unlock advanced solver features with LemonSqueezy license keys.</p>
+                <p class="text-muted small mb-4">Manage institutional capacity and unlock high-speed off-server cloud solver capabilities.</p>
                 
                 ' . $bannerhtml . '
 
-                <div class="row row-cols-1 row-cols-md-3 g-4">
-                    <!-- Tier 0: Community Edition (Free) -->
+                <div class="row row-cols-1 row-cols-md-2 g-4">
+                    <!-- Starter Edition (Free Open Source) -->
                     <div class="col">
                         <div class="' . $getCardClass(0) . '">
                             ' . $getBadge(0) . '
                             <div class="mb-3">
-                                <span class="badge bg-secondary text-white font-weight-bold px-3 py-1">Open Source / Free</span>
-                                <h4 class="font-weight-bold text-dark mt-2 mb-1">Community Edition</h4>
-                                <div class="text-muted small">Free scheduling for basic Moodle sites</div>
+                                <span class="badge bg-secondary text-white font-weight-bold px-3 py-1">Free / Included</span>
+                                <h4 class="font-weight-bold text-dark mt-2 mb-1">Starter Edition</h4>
+                                <div class="text-muted small">Standard local PHP solver for departments & schools</div>
                             </div>
                             <div class="my-3 fs-2 font-weight-bold text-dark">$0 <span class="fs-6 text-muted font-weight-normal">/ forever</span></div>
                             <ul class="list-unstyled my-3 flex-grow-1 small">
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Up to 30 Active Courses</li>
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Basic Venue Management</li>
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Master Weekly Course Timetabling</li>
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Standard Bell Schedule Wizard</li>
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Community Forum Support</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Up to 50 Active Courses</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Up to 25 Campus Venues & Rooms</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Local Master Weekly Timetabling</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Exam Timetabling Engine</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Bell Schedule Wizard</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Standard Moodle Community Support</li>
                             </ul>
                             <div class="pt-3 border-top mt-auto">
                                 ' . $getFooterButton(0) . '
@@ -161,50 +139,27 @@ if (!class_exists('local_academic_timetabler_admin_setting_pricing')) {
                         </div>
                     </div>
 
-                    <!-- Tier 1: Starter / High School -->
+                    <!-- Pro Cloud Engine ($499/yr) -->
                     <div class="col">
                         <div class="' . $getCardClass(1) . '">
                             ' . $getBadge(1) . '
                             <div class="mb-3">
-                                <span class="badge bg-info text-white font-weight-bold px-3 py-1">High School / Department</span>
-                                <h4 class="font-weight-bold text-dark mt-2 mb-1">Starter Edition</h4>
-                                <div class="text-muted small">Ideal for small institutes & high schools</div>
-                            </div>
-                            <div class="my-3 fs-2 font-weight-bold text-dark">$199 <span class="fs-6 text-muted font-weight-normal">/ year</span></div>
-                            <ul class="list-unstyled my-3 flex-grow-1 small">
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Up to 100 Active Courses</li>
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Up to 50 Campus Rooms</li>
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Master Course Timetable Solver</li>
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Institutional Schedule Profiles</li>
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Standard Email Support</li>
-                            </ul>
-                            <div class="pt-3 border-top mt-auto">
-                                ' . $getFooterButton(1) . '
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Tier 2: Pro / University (Highest Tier) -->
-                    <div class="col">
-                        <div class="' . $getCardClass(2) . '">
-                            ' . $getBadge(2) . '
-                            <div class="mb-3">
-                                <span class="badge bg-primary text-white font-weight-bold px-3 py-1">University / College</span>
-                                <h4 class="font-weight-bold text-dark mt-2 mb-1">Pro University</h4>
-                                <div class="text-muted small">Complete scheduling & exam suite for higher education</div>
+                                <span class="badge bg-primary text-white font-weight-bold px-3 py-1">University / High Performance</span>
+                                <h4 class="font-weight-bold text-dark mt-2 mb-1">Pro Cloud Engine</h4>
+                                <div class="text-muted small">High-speed off-server cloud solver for large higher-ed institutions</div>
                             </div>
                             <div class="my-3 fs-2 font-weight-bold text-primary">$499 <span class="fs-6 text-muted font-weight-normal">/ year</span></div>
                             <ul class="list-unstyled my-3 flex-grow-1 small">
                                 <li class="py-1"><i class="fa fa-check text-success me-2"></i> <strong>UNLIMITED</strong> Active Courses</li>
                                 <li class="py-1"><i class="fa fa-check text-success me-2"></i> <strong>UNLIMITED</strong> Campus Rooms & Venues</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> High-Speed Off-Server Cloud Solver API</li>
                                 <li class="py-1"><i class="fa fa-check text-success me-2"></i> Combined Course & Exam Solver</li>
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Background Adhoc Task Solver</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Automated Background Solver Tasks</li>
                                 <li class="py-1"><i class="fa fa-check text-success me-2"></i> Batch CSV / Excel Room Importer</li>
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Custom Break Windows & Rules</li>
                                 <li class="py-1"><i class="fa fa-check text-success me-2"></i> Priority Ticket Support</li>
                             </ul>
                             <div class="pt-3 border-top mt-auto">
-                                ' . $getFooterButton(2) . '
+                                ' . $getFooterButton(1) . '
                             </div>
                         </div>
                     </div>
