@@ -27,7 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 
 if (!class_exists('local_academic_timetabler_admin_setting_pricing')) {
     /**
-     * Custom admin setting element to render commercial pricing plans HTML cleanly without escaping.
+     * Custom admin setting element to render clean System Performance & Cloud Solver Information.
      */
     class local_academic_timetabler_admin_setting_pricing extends admin_setting {
         public function __construct() {
@@ -51,116 +51,76 @@ if (!class_exists('local_academic_timetabler_admin_setting_pricing')) {
             $licensekey = get_config('local_academic_timetabler', 'license_key');
             $licensekey = trim((string)$licensekey);
 
-            // Tier Detection: 0=Starter Edition (Free), 1=Pro Cloud Engine ($499/yr)
-            $currenttier = 0;
-            if (!empty($licensekey)) {
-                $currenttier = 1; // Valid license key unlocks Pro Cloud Engine
-            }
-
+            $iscloudactive = !empty($licensekey);
             $checkouturl = \local_academic_timetabler\licensing\license_manager::get_checkout_url();
 
-            // Top Status & Suggested Upgrade Banner
-            $bannerhtml = '';
-            if ($currenttier === 1) {
-                $bannerhtml = '
-                <div class="alert alert-success d-flex align-items-center justify-content-between mb-4 shadow-sm rounded-3">
-                    <div>
-                        <strong class="text-success fs-6"><i class="fa fa-shield-check me-2"></i> Current Active Tier: Pro Cloud Engine ($499/yr)</strong>
-                        <div class="small text-muted mt-1">High-speed Cloud Solver API active! UNLIMITED courses, campus rooms, combined exam solver, batch CSV room import, and priority ticket support unlocked.</div>
+            $statuscard = '';
+            if ($iscloudactive) {
+                $statuscard = '
+                <div class="alert alert-success d-flex align-items-center justify-content-between mb-4 rounded-3 border-0 shadow-sm p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3 text-success fs-3"><i class="fa fa-cloud-check"></i></div>
+                        <div>
+                            <strong class="text-success fs-6">High-Performance Cloud Solver Active</strong>
+                            <div class="small text-muted">Off-server solver engine connected. Unlimited course scheduling, campus venue capacity, and priority processing enabled.</div>
+                        </div>
                     </div>
-                    <span class="badge bg-success text-white px-3 py-2 rounded-pill"><i class="fa fa-check-circle me-1"></i> PRO CLOUD ACTIVE</span>
+                    <span class="badge bg-success text-white px-3 py-2 rounded-pill"><i class="fa fa-check-circle me-1"></i> CLOUD CONNECTED</span>
                 </div>';
             } else {
-                $bannerhtml = '
-                <div class="alert alert-info d-flex align-items-center justify-content-between mb-4 shadow-sm rounded-3">
-                    <div>
-                        <strong class="text-dark fs-6"><i class="fa fa-info-circle me-2"></i> Current Tier: Starter Edition (Free Open Source)</strong>
-                        <div class="small text-muted mt-1">Included free out-of-the-box for up to 50 courses & 25 rooms. Need off-server high-speed solving or unlimited capacity? Upgrade to <strong>Pro Cloud Engine</strong>.</div>
+                $statuscard = '
+                <div class="alert alert-light border d-flex align-items-center justify-content-between mb-4 rounded-3 shadow-sm p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3 text-primary fs-3"><i class="fa fa-server"></i></div>
+                        <div>
+                            <strong class="text-dark fs-6">Native Server Processing Engine (Active)</strong>
+                            <div class="small text-muted">Course and exam timetables are generated locally on your Moodle server. Ideal for departments & mid-sized schools.</div>
+                        </div>
                     </div>
-                    <a href="' . s($checkouturl) . '" target="_blank" class="btn btn-primary font-weight-bold px-3 py-2 ms-3">Upgrade to Pro Cloud Engine &rarr;</a>
+                    <span class="badge bg-secondary text-white px-3 py-2 rounded-pill"><i class="fa fa-check me-1"></i> NATIVE MODE</span>
                 </div>';
             }
-
-            // Card Footer Button Helper
-            $getFooterButton = function($cardtier) use ($currenttier, $checkouturl) {
-                if ($cardtier === $currenttier) {
-                    return '<button class="btn btn-outline-success w-100 font-weight-bold py-2" disabled><i class="fa fa-check-circle me-1"></i> Active Included Plan</button>';
-                } else {
-                    return '<a href="' . s($checkouturl) . '" target="_blank" class="btn btn-primary shadow-sm w-100 font-weight-bold py-2">Upgrade to Pro Cloud Engine &rarr;</a>';
-                }
-            };
-
-            // Card Badge Helper
-            $getBadge = function($cardtier) use ($currenttier) {
-                if ($cardtier === $currenttier) {
-                    return '<span class="position-absolute top-0 end-0 translate-middle-y me-3 badge bg-success text-white font-weight-bold px-3 py-2 rounded-pill shadow-sm"><i class="fa fa-check me-1"></i> CURRENT PLAN</span>';
-                } else if ($cardtier === 1) {
-                    return '<span class="position-absolute top-0 end-0 translate-middle-y me-3 badge bg-primary text-white font-weight-bold px-3 py-2 rounded-pill shadow-sm">RECOMMENDED FOR UNIVERSITIES</span>';
-                }
-                return '';
-            };
-
-            // Card Class Helper
-            $getCardClass = function($cardtier) use ($currenttier) {
-                if ($cardtier === $currenttier) {
-                    return 'card h-100 border border-2 border-success p-4 d-flex flex-column rounded-3 position-relative shadow-sm bg-white';
-                }
-                return 'card h-100 border border-2 border-primary p-4 d-flex flex-column rounded-3 position-relative shadow-sm bg-white';
-            };
 
             return '
             <div class="mt-4 p-4 bg-white border rounded shadow-sm mb-4">
-                <h4 class="font-weight-bold text-dark mb-1">Licensing Tiers & Plan Comparison</h4>
-                <p class="text-muted small mb-4">Manage institutional capacity and unlock high-speed off-server cloud solver capabilities.</p>
+                <h5 class="font-weight-bold text-dark mb-1"><i class="fa fa-microchip me-2 text-primary"></i>Solver Engine Architecture</h5>
+                <p class="text-muted small mb-4">Choose between native server processing or off-server cloud acceleration for large datasets.</p>
                 
-                ' . $bannerhtml . '
+                ' . $statuscard . '
 
                 <div class="row row-cols-1 row-cols-md-2 g-4">
-                    <!-- Starter Edition (Free Open Source) -->
                     <div class="col">
-                        <div class="' . $getCardClass(0) . '">
-                            ' . $getBadge(0) . '
-                            <div class="mb-3">
-                                <span class="badge bg-secondary text-white font-weight-bold px-3 py-1">Free / Included</span>
-                                <h4 class="font-weight-bold text-dark mt-2 mb-1">Starter Edition</h4>
-                                <div class="text-muted small">Standard local PHP solver for departments & schools</div>
+                        <div class="card h-100 border p-4 rounded-3 bg-light">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="fa fa-hdd text-secondary fs-4 me-2"></i>
+                                <h6 class="font-weight-bold text-dark m-0">Native Local Engine</h6>
                             </div>
-                            <div class="my-3 fs-2 font-weight-bold text-dark">$0 <span class="fs-6 text-muted font-weight-normal">/ forever</span></div>
-                            <ul class="list-unstyled my-3 flex-grow-1 small">
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Up to 50 Active Courses</li>
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Up to 25 Campus Venues & Rooms</li>
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Local Master Weekly Timetabling</li>
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Exam Timetabling Engine</li>
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Bell Schedule Wizard</li>
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Standard Moodle Community Support</li>
+                            <ul class="list-unstyled mb-3 small text-muted">
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Runs directly inside your Moodle PHP environment</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Master weekly timetables & exam scheduling</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Bell schedule wizard & venue management</li>
                             </ul>
-                            <div class="pt-3 border-top mt-auto">
-                                ' . $getFooterButton(0) . '
-                            </div>
                         </div>
                     </div>
 
-                    <!-- Pro Cloud Engine ($499/yr) -->
                     <div class="col">
-                        <div class="' . $getCardClass(1) . '">
-                            ' . $getBadge(1) . '
-                            <div class="mb-3">
-                                <span class="badge bg-primary text-white font-weight-bold px-3 py-1">University / High Performance</span>
-                                <h4 class="font-weight-bold text-dark mt-2 mb-1">Pro Cloud Engine</h4>
-                                <div class="text-muted small">High-speed off-server cloud solver for large higher-ed institutions</div>
+                        <div class="card h-100 border border-primary-subtle p-4 rounded-3 bg-white">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="fa fa-cloud text-primary fs-4 me-2"></i>
+                                    <h6 class="font-weight-bold text-dark m-0">Cloud Solver Acceleration</h6>
+                                </div>
+                                <span class="badge bg-primary-subtle text-primary font-weight-normal px-2 py-1">Optional</span>
                             </div>
-                            <div class="my-3 fs-2 font-weight-bold text-primary">$499 <span class="fs-6 text-muted font-weight-normal">/ year</span></div>
-                            <ul class="list-unstyled my-3 flex-grow-1 small">
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> <strong>UNLIMITED</strong> Active Courses</li>
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> <strong>UNLIMITED</strong> Campus Rooms & Venues</li>
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> High-Speed Off-Server Cloud Solver API</li>
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Combined Course & Exam Solver</li>
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Automated Background Solver Tasks</li>
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Batch CSV / Excel Room Importer</li>
-                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Priority Ticket Support</li>
+                            <ul class="list-unstyled mb-3 small text-muted">
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Off-server high-speed solver engine</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Unlimited course datasets & campus venues</li>
+                                <li class="py-1"><i class="fa fa-check text-success me-2"></i> Automated background tasks & batch venue import</li>
                             </ul>
-                            <div class="pt-3 border-top mt-auto">
-                                ' . $getFooterButton(1) . '
+                            <div class="pt-2 mt-auto">
+                                <a href="' . s($checkouturl) . '" target="_blank" class="btn btn-outline-primary btn-sm font-weight-bold w-100 py-2">
+                                    Learn About Cloud Engine Services &rarr;
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -181,25 +141,17 @@ if ($hassiteconfig) {
             'local_academic_timetabler/dashboard_heading',
             '',
             '<div class="alert alert-info d-flex align-items-center justify-content-between my-2">' .
-            '<div><strong>Academic & Exam Timetabler</strong> is installed and ready.</div>' .
+            '<div><strong>Academic & Exam Timetabler</strong> is installed and operational.</div>' .
             '<a href="' . new moodle_url('/local/academic_timetabler/index.php') . '" class="btn btn-primary font-weight-bold">Open Timetabler Dashboard</a>' .
             '</div>'
         ));
 
         $settings->add(new admin_setting_configtext(
             'local_academic_timetabler/license_key',
-            get_string('license_key', 'local_academic_timetabler'),
-            get_string('license_key_desc', 'local_academic_timetabler'),
+            'Cloud Solver API Key',
+            'Optional. Enter your Cloud Solver API key to connect off-server high-performance solver services.',
             '',
             PARAM_TEXT
-        ));
-
-        $settings->add(new admin_setting_configtext(
-            'local_academic_timetabler/checkout_url',
-            'LemonSqueezy Store / Checkout URL',
-            'URL where administrators purchase or upgrade license keys for your timetabler plugin.',
-            'https://saugra.lemonsqueezy.com/buy',
-            PARAM_URL
         ));
 
         $settings->add(new local_academic_timetabler_admin_setting_pricing());

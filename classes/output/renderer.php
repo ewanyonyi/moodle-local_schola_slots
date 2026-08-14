@@ -124,9 +124,9 @@ class renderer extends plugin_renderer_base {
 
         $tiernotice = '';
         if ($ispro) {
-            $tiernotice = 'Pro Cloud Engine Active — Off-server high-speed solver API, UNLIMITED active courses, campus venues, and batch CSV room import unlocked.';
+            $tiernotice = 'Cloud Solver Acceleration Active — Off-server high-performance timetabling enabled for unlimited capacity.';
         } else {
-            $tiernotice = 'Starter Edition Active (Free Open Source — Up to 50 active courses & 25 campus rooms). Need off-server high-speed solving or unlimited capacity? Upgrade to Pro Cloud Engine ($499/yr).';
+            $tiernotice = 'Native Processing Engine Active — Course and exam timetables are processed locally on your server.';
         }
 
         $contextdata = [
