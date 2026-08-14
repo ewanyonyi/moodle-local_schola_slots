@@ -318,13 +318,13 @@ if (empty($rooms)) {
         ]);
 
         $typebadge = $room->is_lab
-            ? '<span class="badge bg-purple-subtle text-purple border border-purple px-2 py-1"><i class="fa fa-flask me-1"></i> Lab / Studio</span>'
-            : '<span class="badge bg-light text-dark border px-2 py-1"><i class="fa fa-chalkboard me-1"></i> Lecture Hall</span>';
+            ? '<span class="badge att-badge-lab"><i class="fa fa-flask me-1"></i> Lab / Studio</span>'
+            : '<span class="badge att-badge-lecture"><i class="fa fa-chalkboard me-1"></i> Lecture Hall</span>';
 
         $table->data[] = [
-            $room->id,
-            '<strong>' . s($room->name) . '</strong>',
-            '<span class="badge bg-secondary font-weight-bold px-2 py-1">' . $room->capacity . ' Seats</span>',
+            '<span class="font-weight-bold text-dark">#' . $room->id . '</span>',
+            '<strong class="text-dark fs-6">' . s($room->name) . '</strong>',
+            '<span class="badge att-badge-capacity"><i class="fa fa-users me-1"></i> ' . $room->capacity . ' Seats</span>',
             $typebadge,
             $editbtn . $deletebtn,
         ];

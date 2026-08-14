@@ -98,3 +98,71 @@
     color: #198754;
 }
 
+/* High Contrast Badges & Legibility Enhancements */
+.text-muted {
+    color: #475569 !important;
+}
+
+.extra-small {
+    font-size: 0.78rem;
+}
+
+.att-badge-capacity {
+    background-color: #1e293b !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 0.82rem !important;
+    padding: 0.4rem 0.75rem !important;
+    border-radius: 6px !important;
+    display: inline-block !important;
+}
+
+.att-badge-lab {
+    background-color: #6b21a8 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 0.82rem !important;
+    padding: 0.4rem 0.75rem !important;
+    border-radius: 6px !important;
+    display: inline-block !important;
+}
+
+.att-badge-lecture {
+    background-color: #0f766e !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 0.82rem !important;
+    padding: 0.4rem 0.75rem !important;
+    border-radius: 6px !important;
+    display: inline-block !important;
+}
+
+.att-badge-break {
+    background-color: #475569 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+.att-badge-exam {
+    background-color: #d97706 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+.att-badge-class {
+    background-color: #2563eb !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+.table th {
+    color: #0f172a !important;
+    font-weight: 700 !important;
+    background-color: #f1f5f9 !important;
+}
+
+.table td {
+    color: #1e293b !important;
+    font-weight: 500 !important;
+}
+
