@@ -402,7 +402,7 @@ if (empty($schedules)) {
         echo html_writer::start_tag('tr');
 
         if ($isbreak) {
-            echo html_writer::tag('td', '<strong>' . $timeblock . '</strong><br><span class="badge bg-secondary text-white mt-1">BREAK WINDOW</span>', ['class' => 'bg-light font-weight-bold align-middle']);
+            echo html_writer::tag('td', '<strong>' . $timeblock . '</strong><br><span class="badge att-badge-break text-white mt-1">BREAK WINDOW</span>', ['class' => 'bg-light font-weight-bold align-middle']);
             echo html_writer::tag('td', '<span class="text-muted fw-semibold">INSTITUTIONAL BREAK / BLOCKOUT &mdash; NO CLASSES OR EXAMS</span>', [
                 'colspan' => count($matrixdays),
                 'class'   => 'bg-light text-secondary text-center py-2 align-middle',
@@ -420,7 +420,7 @@ if (empty($schedules)) {
                         $teacher = (!empty($entry->firstname) || !empty($entry->lastname)) ? fullname($entry) : 'Unassigned';
                         $editurl = new moodle_url($url, ['action' => 'edit', 'id' => $entry->id]);
                         $delurl = new moodle_url($url, ['action' => 'delete', 'id' => $entry->id, 'sesskey' => sesskey()]);
-                        $typebadge = ($entry->schedule_type === 'exam') ? '<span class="badge bg-warning text-dark me-1">EXAM</span>' : '';
+                        $typebadge = ($entry->schedule_type === 'exam') ? '<span class="badge att-badge-exam me-1">EXAM</span>' : '';
 
                         echo html_writer::start_div('bg-white border rounded shadow-sm p-2 mb-2 text-start', ['style' => 'border-color: #cbd5e1 !important;']);
                         echo html_writer::div($typebadge . s($entry->coursecode), '', ['style' => 'color: #0f172a; font-weight: 700; font-size: 13px;']);
@@ -470,7 +470,7 @@ if (empty($schedules)) {
             'onclick' => 'return confirm("Are you sure you want to delete this schedule allocation?");',
         ]);
 
-        $typecls = ($sched->schedule_type === 'exam') ? 'bg-warning text-dark' : 'bg-secondary text-white';
+        $typecls = ($sched->schedule_type === 'exam') ? 'att-badge-exam' : 'att-badge-class';
 
         $table->data[] = [
             $sched->id,

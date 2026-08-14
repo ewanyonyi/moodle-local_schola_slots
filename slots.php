@@ -732,25 +732,25 @@ if (empty($slots)) {
     foreach ($slots as $slot) {
         $dayname = $days[$slot->dayofweek] ?? ('Day ' . $slot->dayofweek);
         $editurl = new moodle_url($url, ['action' => 'edit', 'id' => $slot->id]);
-        $editbtn = html_writer::link($editurl, 'Edit', ['class' => 'btn btn-sm btn-outline-primary me-2']);
+        $editbtn = html_writer::link($editurl, '<i class="fa fa-pen me-1"></i> Edit', ['class' => 'btn btn-sm btn-outline-primary font-weight-bold me-2']);
 
         $delurl = new moodle_url($url, ['action' => 'delete', 'id' => $slot->id, 'sesskey' => sesskey()]);
-        $delbtn = html_writer::link($delurl, 'Delete', [
-            'class' => 'btn btn-sm btn-outline-danger',
+        $delbtn = html_writer::link($delurl, '<i class="fa fa-trash me-1"></i> Delete', [
+            'class' => 'btn btn-sm btn-outline-danger font-weight-bold',
             'onclick' => 'return confirm("Delete this time slot?");',
         ]);
 
         $typebadge = match ($slot->type) {
-            'break' => '<span class="badge bg-secondary text-white px-2 py-1 fs-7">INSTITUTIONAL BREAK / BLOCKOUT</span>',
-            'lab'   => '<span class="badge bg-info text-dark px-2 py-1 fs-7">LABORATORY PRACTICAL</span>',
-            'exam'  => '<span class="badge bg-warning text-dark px-2 py-1 fs-7">EXAMINATION PERIOD</span>',
-            default => '<span class="badge bg-primary text-white px-2 py-1 fs-7">CLASS LECTURE</span>',
+            'break' => '<span class="badge att-badge-break"><i class="fa fa-coffee me-1"></i> INSTITUTIONAL BREAK / BLOCKOUT</span>',
+            'lab'   => '<span class="badge att-badge-lab"><i class="fa fa-flask me-1"></i> LABORATORY PRACTICAL</span>',
+            'exam'  => '<span class="badge att-badge-exam"><i class="fa fa-file-alt me-1"></i> EXAMINATION PERIOD</span>',
+            default => '<span class="badge att-badge-class"><i class="fa fa-book me-1"></i> CLASS LECTURE</span>',
         };
 
         $table->data[] = [
-            $slot->id,
-            '<strong>' . $dayname . '</strong>',
-            s($slot->starttime) . ' &mdash; ' . s($slot->endtime),
+            '<span class="font-weight-bold text-dark">#' . $slot->id . '</span>',
+            '<strong class="text-dark fs-6">' . $dayname . '</strong>',
+            '<span class="badge bg-light text-dark border px-3 py-2 fs-6 font-weight-bold"><i class="fa fa-clock me-1 text-primary"></i> ' . s($slot->starttime) . ' &mdash; ' . s($slot->endtime) . '</span>',
             $typebadge,
             $editbtn . $delbtn,
         ];
