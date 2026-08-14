@@ -189,7 +189,7 @@ class solver {
         ];
 
         require_once($CFG->libdir . '/filelib.php');
-        $curl = new \curl();
+        $curl = new \curl(['CURLOPT_TIMEOUT' => 5, 'CURLOPT_CONNECTTIMEOUT' => 3]);
         $curl->setHeader('Content-Type: application/json');
         $cloudurl = 'http://localhost:8080/api/v1/solve';
 
