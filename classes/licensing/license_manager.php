@@ -50,7 +50,7 @@ class license_manager {
      */
     public static function get_checkout_url(): string {
         $url = get_config('local_academic_timetabler', 'checkout_url');
-        return !empty($url) ? trim((string)$url) : 'https://saugra.lemonsqueezy.com/buy';
+        return !empty($url) ? trim((string)$url) : 'http://localhost:8080/portal';
     }
 
     /**
