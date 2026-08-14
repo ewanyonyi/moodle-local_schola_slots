@@ -140,15 +140,21 @@ if ($action === 'generate' && confirm_sesskey()) {
                 if (strpos((string)$assignedkey, 'existing_') === 0) {
                     continue; // Skip loaded blockout entries
                 }
-                $courseid = $sched['course_id'] ?? (int)$assignedkey;
-                $DB->insert_record('local_att_schedules', (object)[
-                    'schedule_type' => $scheduletype,
-                    'courseid'     => $courseid,
-                    'roomid'       => $sched['room_id'],
-                    'slotid'       => $sched['slot_id'],
-                    'teacherid'    => $sched['teacher_id'],
-                ]);
-                $count++;
+                $courseid  = (int)($sched['course_id'] ?? $assignedkey);
+                $roomid    = (int)($sched['room_id'] ?? 0);
+                $slotid    = (int)($sched['slot_id'] ?? 0);
+                $teacherid = (int)($sched['teacher_id'] ?? 0);
+
+                if ($courseid > 0 && $roomid > 0 && $slotid > 0) {
+                    $DB->insert_record('local_att_schedules', (object)[
+                        'schedule_type' => $scheduletype,
+                        'courseid'     => $courseid,
+                        'roomid'       => $roomid,
+                        'slotid'       => $slotid,
+                        'teacherid'    => $teacherid,
+                    ]);
+                    $count++;
+                }
             }
             $label = ($scheduletype === 'exam') ? 'Examination' : 'Class';
             redirect(

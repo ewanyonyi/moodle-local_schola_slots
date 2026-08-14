@@ -140,6 +140,7 @@ class solver {
         if ($index >= count($courselist)) {
             return true;
         }
+        $course = $courselist[$index];
 
         $targettype = $this->slottype;
         $classslots = array_values(array_filter($this->slots, function($s) use ($targettype) {
