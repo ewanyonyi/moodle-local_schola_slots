@@ -83,10 +83,27 @@ if ($action === 'generate' && confirm_sesskey()) {
         );
     }
 
-    // Community edition limit handling: cap courses to limit if on community tier
-    $tier = \local_academic_timetabler\licensing\license_manager::get_tier();
-    if ($tier === \local_academic_timetabler\licensing\license_manager::TIER_COMMUNITY) {
-        $courses = array_slice($courses, 0, \local_academic_timetabler\licensing\license_manager::COMMUNITY_COURSE_LIMIT, true);
+    // Strict License Plan Capacity & Feature Enforcement
+    $coursecount = count($courses);
+    $maxcourses = \local_academic_timetabler\licensing\license_manager::get_max_courses();
+    $tiername = \local_academic_timetabler\licensing\license_manager::get_tier_name();
+
+    if ($maxcourses > 0 && $coursecount > $maxcourses) {
+        redirect(
+            new moodle_url('/local/academic_timetabler/index.php'),
+            "License Capacity Exceeded: Your institution has {$coursecount} active courses, but your {$tiername} plan is limited to {$maxcourses} courses. Please upgrade to Pro University ($499/year) to unlock unlimited course scheduling.",
+            null,
+            \core\output\notification::NOTIFY_ERROR
+        );
+    }
+
+    if ($scheduletype === 'exam' && !\local_academic_timetabler\licensing\license_manager::can_solve_exams()) {
+        redirect(
+            new moodle_url('/local/academic_timetabler/index.php'),
+            "Examination Timetabling Feature Locked: Examination schedule generation requires a Starter or Pro University plan. Please upgrade your license key to unlock exam scheduling.",
+            null,
+            \core\output\notification::NOTIFY_ERROR
+        );
     }
 
     try {

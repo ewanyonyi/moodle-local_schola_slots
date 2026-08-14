@@ -28,11 +28,23 @@ class license_manager {
     /** @var string Community tier identifier. */
     public const TIER_COMMUNITY = 'community';
 
-    /** @var string Enterprise tier identifier. */
-    public const TIER_ENTERPRISE = 'enterprise';
+    /** @var string Starter tier identifier. */
+    public const TIER_STARTER = 'starter';
 
-    /** @var int Course limit for community tier. */
+    /** @var string Pro University tier identifier (highest tier). */
+    public const TIER_PRO = 'pro';
+
+    /** @var int Course limit for Community tier. */
     public const COMMUNITY_COURSE_LIMIT = 30;
+
+    /** @var int Room limit for Community tier. */
+    public const COMMUNITY_ROOM_LIMIT = 10;
+
+    /** @var int Course limit for Starter tier. */
+    public const STARTER_COURSE_LIMIT = 100;
+
+    /** @var int Room limit for Starter tier. */
+    public const STARTER_ROOM_LIMIT = 50;
 
     /** @var string LemonSqueezy validation endpoint. */
     public const LEMONSQUEEZY_VALIDATE_URL = 'https://api.lemonsqueezy.com/v1/licenses/validate';
@@ -53,7 +65,7 @@ class license_manager {
      * Validate key against LemonSqueezy API with 7-day local cache.
      *
      * @param string $licensekey License key string.
-     * @return bool True if valid enterprise license.
+     * @return bool True if valid license.
      */
     public static function validate_lemonsqueezy_key(string $licensekey): bool {
         global $CFG;
@@ -76,8 +88,8 @@ class license_manager {
         $response = $curl->post(self::LEMONSQUEEZY_VALIDATE_URL, $params);
 
         if ($curl->get_errno()) {
-            // Offline fallback: use cached status if API call fails due to network issues.
-            return $cachedkey === $licensekey ? $cachedvalid : str_starts_with($licensekey, 'ATT-ENT-');
+            // Offline fallback: check prefix if API call fails due to network issues.
+            return $cachedkey === $licensekey ? $cachedvalid : str_starts_with(strtoupper($licensekey), 'ATT-');
         }
 
         $data = json_decode($response, true);
@@ -94,7 +106,7 @@ class license_manager {
     /**
      * Get current active license tier.
      *
-     * @return string Active tier ('community' or 'enterprise').
+     * @return string Active tier ('community', 'starter', or 'pro').
      */
     public static function get_tier(): string {
         $licensekey = trim(self::get_license_key());
@@ -102,25 +114,50 @@ class license_manager {
             return self::TIER_COMMUNITY;
         }
 
-        // Allow developer testing prefix fallback immediately.
-        if (str_starts_with($licensekey, 'ATT-ENT-') && strlen($licensekey) >= 15) {
-            return self::TIER_ENTERPRISE;
+        $keyupper = strtoupper($licensekey);
+        if (strpos($keyupper, 'START') !== false) {
+            return self::TIER_STARTER;
         }
 
-        if (self::validate_lemonsqueezy_key($licensekey)) {
-            return self::TIER_ENTERPRISE;
+        // Developer keys starting with ATT- or valid LemonSqueezy key -> Pro University
+        if (str_starts_with($keyupper, 'ATT-') || self::validate_lemonsqueezy_key($licensekey)) {
+            return self::TIER_PRO;
         }
 
         return self::TIER_COMMUNITY;
     }
 
     /**
-     * Check if site is operating on enterprise tier.
+     * Get human-readable active tier name.
      *
-     * @return bool True if enterprise tier active.
+     * @return string Display name of the active tier.
      */
-    public static function is_enterprise(): bool {
-        return self::get_tier() === self::TIER_ENTERPRISE;
+    public static function get_tier_name(): string {
+        $tier = self::get_tier();
+        if ($tier === self::TIER_PRO) {
+            return 'Pro University';
+        } else if ($tier === self::TIER_STARTER) {
+            return 'Starter Edition';
+        }
+        return 'Community Edition';
+    }
+
+    /**
+     * Check if site is operating on Pro University tier.
+     *
+     * @return bool True if Pro University tier active.
+     */
+    public static function is_pro(): bool {
+        return self::get_tier() === self::TIER_PRO;
+    }
+
+    /**
+     * Check if site is operating on Starter tier or higher.
+     *
+     * @return bool True if Starter or Pro tier active.
+     */
+    public static function is_starter_or_higher(): bool {
+        return self::get_tier() !== self::TIER_COMMUNITY;
     }
 
     /**
@@ -129,7 +166,28 @@ class license_manager {
      * @return int Max courses (0 means unlimited).
      */
     public static function get_max_courses(): int {
-        return self::is_enterprise() ? 0 : self::COMMUNITY_COURSE_LIMIT;
+        $tier = self::get_tier();
+        if ($tier === self::TIER_PRO) {
+            return 0; // Unlimited
+        } else if ($tier === self::TIER_STARTER) {
+            return self::STARTER_COURSE_LIMIT;
+        }
+        return self::COMMUNITY_COURSE_LIMIT;
+    }
+
+    /**
+     * Get maximum allowed rooms for current tier.
+     *
+     * @return int Max rooms (0 means unlimited).
+     */
+    public static function get_max_rooms(): int {
+        $tier = self::get_tier();
+        if ($tier === self::TIER_PRO) {
+            return 0; // Unlimited
+        } else if ($tier === self::TIER_STARTER) {
+            return self::STARTER_ROOM_LIMIT;
+        }
+        return self::COMMUNITY_ROOM_LIMIT;
     }
 
     /**
@@ -144,5 +202,23 @@ class license_manager {
             return true;
         }
         return $coursecount <= $maxcourses;
+    }
+
+    /**
+     * Check if site can batch import rooms via CSV.
+     *
+     * @return bool True if allowed under current license.
+     */
+    public static function can_batch_import_rooms(): bool {
+        return self::is_pro();
+    }
+
+    /**
+     * Check if site can generate examination timetables.
+     *
+     * @return bool True if allowed under current license.
+     */
+    public static function can_solve_exams(): bool {
+        return self::is_starter_or_higher();
     }
 }

@@ -96,7 +96,12 @@ class renderer extends plugin_renderer_base {
     public function render_dashboard($page) {
         global $DB;
 
-        $isenterprise = license_manager::is_enterprise();
+        $tier = license_manager::get_tier();
+        $tiername = license_manager::get_tier_name();
+        $ispro = license_manager::is_pro();
+        $isstarter = ($tier === license_manager::TIER_STARTER);
+        $iscommunity = ($tier === license_manager::TIER_COMMUNITY);
+
         $indexurl = new \moodle_url('/local/academic_timetabler/index.php');
         $roomsurl = new \moodle_url('/local/academic_timetabler/rooms.php');
         $slotsurl = new \moodle_url('/local/academic_timetabler/slots.php');
@@ -113,14 +118,25 @@ class renderer extends plugin_renderer_base {
         $schedulecount = $DB->count_records('local_att_schedules');
 
         $maxcourses = license_manager::get_max_courses();
-        $maxlabel = ($maxcourses === 0) ? 'Unlimited' : $maxcourses;
+        $maxcourseslabel = ($maxcourses === 0) ? 'Unlimited' : $maxcourses;
+
+        $iscourseexceeded = ($maxcourses > 0 && $coursecount > $maxcourses);
+
+        $tiernotice = '';
+        if ($ispro) {
+            $tiernotice = 'Pro University Active — UNLIMITED active courses, campus venues, combined exam solver, and batch CSV room import are fully unlocked.';
+        } else if ($isstarter) {
+            $tiernotice = 'Starter Edition Active (Up to 100 courses & 50 campus rooms). Upgrade to Pro University ($499/yr) for unlimited courses and batch room CSV import.';
+        } else {
+            $tiernotice = 'Community Edition Active (Limited to 30 courses). Upgrade to Pro University ($499/yr) to unlock unlimited course scheduling and batch venue importing.';
+        }
 
         $contextdata = [
-            'is_enterprise' => $isenterprise,
-            'tier_name' => $isenterprise ? 'Enterprise Edition' : 'Community Edition',
-            'tier_notice' => $isenterprise
-                ? get_string('license_enterprise_active', 'local_academic_timetabler')
-                : get_string('license_community_notice', 'local_academic_timetabler'),
+            'is_pro' => $ispro,
+            'is_starter' => $isstarter,
+            'is_community' => $iscommunity,
+            'tier_name' => $tiername,
+            'tier_notice' => $tiernotice,
             'index_url' => $indexurl->out(false),
             'rooms_url' => $roomsurl->out(false),
             'slots_url' => $slotsurl->out(false),
@@ -130,9 +146,10 @@ class renderer extends plugin_renderer_base {
             'generate_url' => $generateurl->out(false),
             'buy_url' => 'https://lemonsqueezy.com',
             'course_count' => $coursecount,
-            'max_courses_label' => $maxlabel,
+            'max_courses_label' => $maxcourseslabel,
             'room_count' => $roomcount,
             'schedule_count' => $schedulecount,
+            'is_course_exceeded' => $iscourseexceeded,
         ];
 
         return $this->render_from_template('local_academic_timetabler/dashboard', $contextdata);

@@ -67,6 +67,15 @@ if ($action === 'delete' && $id > 0 && confirm_sesskey()) {
 // Action: Import Rooms from CSV File
 // -------------------------------------------------------------------
 if ($action === 'import_csv' && confirm_sesskey()) {
+    if (!\local_academic_timetabler\licensing\license_manager::can_batch_import_rooms()) {
+        redirect(
+            $url,
+            'Batch CSV Room Import Feature Locked: CSV/Excel bulk room import is exclusive to Pro University. Please upgrade your license key to unlock batch importing.',
+            null,
+            \core\output\notification::NOTIFY_ERROR
+        );
+    }
+
     if (!empty($_FILES['room_file']['tmp_name']) && is_uploaded_file($_FILES['room_file']['tmp_name'])) {
         $handle = fopen($_FILES['room_file']['tmp_name'], 'r');
         if ($handle !== false) {

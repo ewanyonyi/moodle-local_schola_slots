@@ -1,42 +1,50 @@
 <div class="academic-timetabler-dashboard">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0 text-dark fw-bold">Dashboard & System Overview</h4>
-        {{#is_enterprise}}
-            <span class="badge bg-success text-white px-3 py-2 fs-6 rounded-pill shadow-sm">{{tier_name}}</span>
-        {{/is_enterprise}}
-        {{^is_enterprise}}
-            <span class="badge bg-warning text-dark px-3 py-2 fs-6 rounded-pill shadow-sm">{{tier_name}}</span>
-        {{/is_enterprise}}
+        <h4 class="mb-0 text-dark font-weight-bold">Dashboard & System Overview</h4>
+        {{#is_pro}}
+            <span class="badge bg-success text-white px-3 py-2 fs-6 rounded-pill shadow-sm"><i class="fa fa-check-circle me-1"></i> {{tier_name}}</span>
+        {{/is_pro}}
+        {{#is_starter}}
+            <span class="badge bg-info text-white px-3 py-2 fs-6 rounded-pill shadow-sm"><i class="fa fa-layer-group me-1"></i> {{tier_name}}</span>
+        {{/is_starter}}
+        {{#is_community}}
+            <span class="badge bg-secondary text-white px-3 py-2 fs-6 rounded-pill shadow-sm"><i class="fa fa-code-branch me-1"></i> {{tier_name}}</span>
+        {{/is_community}}
     </div>
 
-    <div id="license-notice-alert" class="alert fade show {{#is_enterprise}}alert-success border-success-subtle{{/is_enterprise}}{{^is_enterprise}}alert-info border-info-subtle{{/is_enterprise}} shadow-sm" role="alert">
+    <div id="license-notice-alert" class="alert fade show {{#is_pro}}alert-success border-success-subtle{{/is_pro}}{{#is_starter}}alert-warning border-warning-subtle{{/is_starter}}{{#is_community}}alert-secondary border-secondary-subtle{{/is_community}} shadow-sm mb-4" role="alert">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
             <div>
-                <strong>{{#str}}license_status, local_academic_timetabler{{/str}}:</strong> {{tier_notice}}
+                <strong>License Tier Status:</strong> {{tier_notice}}
             </div>
-            {{^is_enterprise}}
+            {{^is_pro}}
                 <div class="d-flex gap-2 flex-wrap">
-                    <a href="{{settings_url}}" class="btn btn-sm btn-primary">
-                        Enter License Key
+                    <a href="{{settings_url}}" class="btn btn-sm btn-primary font-weight-bold">
+                        <i class="fa fa-key me-1"></i> Enter License Key
                     </a>
-                    <a href="{{buy_url}}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-success">
-                        {{#str}}buy_enterprise_license, local_academic_timetabler{{/str}} &rarr;
+                    <a href="{{buy_url}}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-success font-weight-bold">
+                        Upgrade to Pro University ($499/yr) &rarr;
                     </a>
                     <button type="button" id="btn-continue-community" class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('license-notice-alert').style.display='none';">
-                        {{#str}}continue_community_edition, local_academic_timetabler{{/str}} &times;
+                        Dismiss &times;
                     </button>
                 </div>
-            {{/is_enterprise}}
+            {{/is_pro}}
         </div>
     </div>
 
     <div class="row g-3 my-3">
         <div class="col-md-4">
-            <div class="card border-0 border-top border-4 border-primary shadow-sm h-100 bg-white">
+            <div class="card border-0 border-top border-4 {{#is_course_exceeded}}border-danger{{/is_course_exceeded}}{{^is_course_exceeded}}border-primary{{/is_course_exceeded}} shadow-sm h-100 bg-white">
                 <div class="card-body p-4">
-                    <div class="text-uppercase text-primary font-weight-bold fs-7 mb-1" style="letter-spacing: 0.5px;">Courses Target</div>
+                    <div class="text-uppercase {{#is_course_exceeded}}text-danger{{/is_course_exceeded}}{{^is_course_exceeded}}text-primary{{/is_course_exceeded}} font-weight-bold fs-7 mb-1" style="letter-spacing: 0.5px;">Courses Target</div>
                     <div class="fs-2 font-weight-bold text-dark mb-1">{{course_count}} <span class="fs-6 text-muted font-weight-normal">/ {{max_courses_label}}</span></div>
                     <div class="text-muted small">Auto-synced active Moodle courses</div>
+                    {{#is_course_exceeded}}
+                        <div class="mt-2 text-danger small font-weight-bold">
+                            <i class="fa fa-exclamation-triangle me-1"></i> Capacity Exceeded! Limit is {{max_courses_label}} courses.
+                        </div>
+                    {{/is_course_exceeded}}
                 </div>
             </div>
         </div>
@@ -67,5 +75,4 @@
             </div>
         </div>
     </div>
-
 </div>
