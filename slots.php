@@ -437,7 +437,9 @@ if ($editingprofile) {
 
     // Submit actions
     echo html_writer::start_div('mt-4 pt-3 border-top d-flex align-items-center justify-content-between flex-wrap gap-2');
-    echo html_writer::checkbox('apply_now', '1', true, ' Apply this profile to active time slots immediately upon saving', ['class' => 'form-check-input text-muted']);
+    echo html_writer::start_div('form-check d-flex align-items-center gap-2 mb-0');
+    echo html_writer::checkbox('apply_now', '1', true, ' Apply this profile to active time slots immediately upon saving', ['class' => 'form-check-input me-1', 'id' => 'chk_apply_now']);
+    echo html_writer::end_div();
 
     echo html_writer::start_div('d-flex gap-2');
     echo html_writer::tag('button', 'Save Profile', ['type' => 'submit', 'class' => 'btn btn-primary font-weight-bold px-4 py-2 shadow-sm']);
@@ -641,8 +643,10 @@ echo html_writer::end_div();
 
 echo html_writer::end_div(); // row
 
-echo html_writer::start_div('mt-4 pt-3 border-top d-flex align-items-center justify-content-between');
-echo html_writer::checkbox('wipe_existing', '1', true, ' Wipe existing time slots before applying', ['class' => 'form-check-input text-muted']);
+echo html_writer::start_div('mt-4 pt-3 border-top d-flex align-items-center justify-content-between flex-wrap gap-2');
+echo html_writer::start_div('form-check d-flex align-items-center gap-2 mb-0');
+echo html_writer::checkbox('wipe_existing', '1', true, ' Wipe existing time slots before applying', ['class' => 'form-check-input me-1', 'id' => 'chk_wipe_existing']);
+echo html_writer::end_div();
 echo html_writer::tag('button', 'Apply Bell Schedule', ['type' => 'submit', 'class' => 'btn btn-success font-weight-bold px-4 py-2 shadow-sm']);
 echo html_writer::end_div();
 
