@@ -53,8 +53,8 @@ if ($action === 'generate' && confirm_sesskey()) {
     }
 
     $courses = $DB->get_records_select('course', $select, $params, 'id ASC');
-    $slots   = $DB->get_records('local_att_slots');
-    $rooms   = $DB->get_records('local_att_rooms');
+    $slots   = $DB->get_records('local_academic_timetabler_slots');
+    $rooms   = $DB->get_records('local_academic_timetabler_rooms');
 
     if (empty($rooms)) {
         redirect(
@@ -113,7 +113,7 @@ if ($action === 'generate' && confirm_sesskey()) {
 
         if ($genmode === 'append') {
             // Load ALL existing schedule entries as hard occupied blockouts
-            $existingschedules = $DB->get_records('local_att_schedules');
+            $existingschedules = $DB->get_records('local_academic_timetabler_schedules');
             $solver->load_existing_schedules($existingschedules);
         } else {
             // Overwrite mode: Delete matching schedule type / category entries
@@ -122,14 +122,14 @@ if ($action === 'generate' && confirm_sesskey()) {
                 if (!empty($catcourseids)) {
                     list($insql, $inparams) = $DB->get_in_or_equal($catcourseids, SQL_PARAMS_NAMED);
                     $inparams['stype'] = $scheduletype;
-                    $DB->delete_records_select('local_att_schedules', "schedule_type = :stype AND courseid {$insql}", $inparams);
+                    $DB->delete_records_select('local_academic_timetabler_schedules', "schedule_type = :stype AND courseid {$insql}", $inparams);
                 }
             } else {
-                $DB->delete_records('local_att_schedules', ['schedule_type' => $scheduletype]);
+                $DB->delete_records('local_academic_timetabler_schedules', ['schedule_type' => $scheduletype]);
             }
 
             // Load remaining non-deleted schedules (e.g. Class schedules when generating Exams) as occupied blockouts
-            $othersexisting = $DB->get_records_select('local_att_schedules', 'schedule_type != :stype', ['stype' => $scheduletype]);
+            $othersexisting = $DB->get_records_select('local_academic_timetabler_schedules', 'schedule_type != :stype', ['stype' => $scheduletype]);
             $solver->load_existing_schedules($othersexisting);
         }
 
@@ -146,7 +146,7 @@ if ($action === 'generate' && confirm_sesskey()) {
                 $teacherid = (int)($sched['teacher_id'] ?? 0);
 
                 if ($courseid > 0 && $roomid > 0 && $slotid > 0) {
-                    $DB->insert_record('local_att_schedules', (object)[
+                    $DB->insert_record('local_academic_timetabler_schedules', (object)[
                         'schedule_type' => $scheduletype,
                         'courseid'     => $courseid,
                         'roomid'       => $roomid,

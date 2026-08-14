@@ -59,7 +59,7 @@ if ($action === 'download_template') {
 // Action: Delete Single Room
 // -------------------------------------------------------------------
 if ($action === 'delete' && $id > 0 && confirm_sesskey()) {
-    $DB->delete_records('local_att_rooms', ['id' => $id]);
+    $DB->delete_records('local_academic_timetabler_rooms', ['id' => $id]);
     redirect($url, 'Room deleted successfully.');
 }
 
@@ -116,7 +116,7 @@ if ($action === 'import_csv' && confirm_sesskey()) {
                         'capacity' => $capacity,
                         'is_lab' => $islab,
                     ];
-                    $DB->insert_record('local_att_rooms', $record);
+                    $DB->insert_record('local_academic_timetabler_rooms', $record);
                     $imported++;
                 } else {
                     $skipped++;
@@ -136,7 +136,7 @@ if ($action === 'import_csv' && confirm_sesskey()) {
 
 $editroom = null;
 if ($action === 'edit' && $id > 0) {
-    $editroom = $DB->get_record('local_att_rooms', ['id' => $id]);
+    $editroom = $DB->get_record('local_academic_timetabler_rooms', ['id' => $id]);
 }
 
 // -------------------------------------------------------------------
@@ -157,10 +157,10 @@ if ($data = data_submitted() && confirm_sesskey() && empty($action)) {
 
         if ($editid > 0) {
             $record->id = $editid;
-            $DB->update_record('local_att_rooms', $record);
+            $DB->update_record('local_academic_timetabler_rooms', $record);
             redirect($url, 'Room updated successfully.');
         } else {
-            $DB->insert_record('local_att_rooms', $record);
+            $DB->insert_record('local_academic_timetabler_rooms', $record);
             redirect($url, 'Room added successfully.');
         }
     }
@@ -291,7 +291,7 @@ echo html_writer::end_div(); // row
 // -------------------------------------------------------------------
 // Component: Configured Campus Venues Table
 // -------------------------------------------------------------------
-$rooms = $DB->get_records('local_att_rooms', null, 'id DESC');
+$rooms = $DB->get_records('local_academic_timetabler_rooms', null, 'id DESC');
 
 echo html_writer::start_div('card border-0 shadow-sm bg-white rounded-3');
 echo html_writer::start_div('card-header bg-light p-3 border-bottom d-flex justify-content-between align-items-center');

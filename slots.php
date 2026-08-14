@@ -46,7 +46,7 @@ $PAGE->set_heading('Bell Schedule & Time Slots');
 // Action: Delete Single Time Slot
 // -------------------------------------------------------------------
 if ($action === 'delete' && $id > 0 && confirm_sesskey()) {
-    $DB->delete_records('local_att_slots', ['id' => $id]);
+    $DB->delete_records('local_academic_timetabler_slots', ['id' => $id]);
     redirect($url, 'Time slot deleted successfully.');
 }
 
@@ -54,7 +54,7 @@ if ($action === 'delete' && $id > 0 && confirm_sesskey()) {
 // Action: Clear All Slots
 // -------------------------------------------------------------------
 if ($action === 'clearall' && confirm_sesskey()) {
-    $DB->delete_records('local_att_slots');
+    $DB->delete_records('local_academic_timetabler_slots');
     redirect($url, 'All time slots cleared successfully.');
 }
 
@@ -158,7 +158,7 @@ if ($action === 'build_bell_schedule' && confirm_sesskey()) {
     $wipeexisting = optional_param('wipe_existing', 1, PARAM_INT);
 
     if ($wipeexisting) {
-        $DB->delete_records('local_att_slots');
+        $DB->delete_records('local_academic_timetabler_slots');
     }
 
     $inserted = 0;
@@ -175,7 +175,7 @@ if ($action === 'build_bell_schedule' && confirm_sesskey()) {
         while ($currsec < $endsec) {
             // Check Morning Tea Break
             if ($tstartsec && $tendsec && $currsec >= $tstartsec && $currsec < $tendsec) {
-                $DB->insert_record('local_att_slots', (object)[
+                $DB->insert_record('local_academic_timetabler_slots', (object)[
                     'dayofweek' => $day,
                     'starttime' => date('H:i', $tstartsec),
                     'endtime'   => date('H:i', $tendsec),
@@ -188,7 +188,7 @@ if ($action === 'build_bell_schedule' && confirm_sesskey()) {
 
             // Check Lunch Break
             if ($lstartsec && $lendsec && $currsec >= $lstartsec && $currsec < $lendsec) {
-                $DB->insert_record('local_att_slots', (object)[
+                $DB->insert_record('local_academic_timetabler_slots', (object)[
                     'dayofweek' => $day,
                     'starttime' => date('H:i', $lstartsec),
                     'endtime'   => date('H:i', $lendsec),
@@ -212,7 +212,7 @@ if ($action === 'build_bell_schedule' && confirm_sesskey()) {
                 $nextsec = $lstartsec;
             }
 
-            $DB->insert_record('local_att_slots', (object)[
+            $DB->insert_record('local_academic_timetabler_slots', (object)[
                 'dayofweek' => $day,
                 'starttime' => date('H:i', $currsec),
                 'endtime'   => date('H:i', $nextsec),
@@ -231,7 +231,7 @@ if ($action === 'build_bell_schedule' && confirm_sesskey()) {
 // -------------------------------------------------------------------
 $editslot = null;
 if ($action === 'edit' && $id > 0) {
-    $editslot = $DB->get_record('local_att_slots', ['id' => $id]);
+    $editslot = $DB->get_record('local_academic_timetabler_slots', ['id' => $id]);
 }
 
 if ($data = data_submitted() && confirm_sesskey() && optional_param('save_slot', 0, PARAM_INT)) {
@@ -251,10 +251,10 @@ if ($data = data_submitted() && confirm_sesskey() && optional_param('save_slot',
 
         if ($editslotid > 0) {
             $record->id = $editslotid;
-            $DB->update_record('local_att_slots', $record);
+            $DB->update_record('local_academic_timetabler_slots', $record);
             redirect($url, 'Time slot updated successfully.');
         } else {
-            $DB->insert_record('local_att_slots', $record);
+            $DB->insert_record('local_academic_timetabler_slots', $record);
             redirect($url, 'Time slot added successfully.');
         }
     }
@@ -710,7 +710,7 @@ if ($editslot) {
 // -------------------------------------------------------------------
 // Component 4: Visual Daily Bell Schedule Summary Table
 // -------------------------------------------------------------------
-$slots = $DB->get_records('local_att_slots', null, 'dayofweek ASC, starttime ASC');
+$slots = $DB->get_records('local_academic_timetabler_slots', null, 'dayofweek ASC, starttime ASC');
 
 echo html_writer::start_div('d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2');
 echo html_writer::tag('h4', 'Active Bell Schedule Windows (' . count($slots) . ' Time Slots)', ['class' => 'mb-0 font-weight-bold']);

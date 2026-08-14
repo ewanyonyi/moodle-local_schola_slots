@@ -299,7 +299,7 @@ class profile_manager {
     }
 
     /**
-     * Apply profile time windows to active time slots in database (`local_att_slots`).
+     * Apply profile time windows to active time slots in database (`local_academic_timetabler_slots`).
      *
      * @param string $key
      * @return int Number of inserted time slots
@@ -314,10 +314,10 @@ class profile_manager {
 
         $slots = self::generate_slots_for_profile($profile);
 
-        $DB->delete_records('local_att_slots');
+        $DB->delete_records('local_academic_timetabler_slots');
         $inserted = 0;
         foreach ($slots as $s) {
-            $DB->insert_record('local_att_slots', (object)$s);
+            $DB->insert_record('local_academic_timetabler_slots', (object)$s);
             $inserted++;
         }
 

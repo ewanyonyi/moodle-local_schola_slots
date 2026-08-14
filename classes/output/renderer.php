@@ -114,8 +114,8 @@ class renderer extends plugin_renderer_base {
         ]);
 
         $coursecount = $DB->count_records_select('course', 'id > 1 AND visible = 1');
-        $roomcount = $DB->count_records('local_att_rooms');
-        $schedulecount = $DB->count_records('local_att_schedules');
+        $roomcount = $DB->count_records('local_academic_timetabler_rooms');
+        $schedulecount = $DB->count_records('local_academic_timetabler_schedules');
 
         $maxcourses = license_manager::get_max_courses();
         $maxcourseslabel = ($maxcourses === 0) ? 'Unlimited' : $maxcourses;

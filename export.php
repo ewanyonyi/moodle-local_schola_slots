@@ -68,10 +68,10 @@ $wherestr = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
 $sql = "SELECT s.id, s.schedule_type, c.shortname AS coursecode, c.fullname AS coursename,
                r.name AS roomname, sl.dayofweek, sl.starttime, sl.endtime,
                u.firstname, u.lastname
-          FROM {local_att_schedules} s
+          FROM {local_academic_timetabler_schedules} s
           JOIN {course} c ON c.id = s.courseid
-          JOIN {local_att_rooms} r ON r.id = s.roomid
-          JOIN {local_att_slots} sl ON sl.id = s.slotid
+          JOIN {local_academic_timetabler_rooms} r ON r.id = s.roomid
+          JOIN {local_academic_timetabler_slots} sl ON sl.id = s.slotid
           LEFT JOIN {user} u ON u.id = s.teacherid
           {$wherestr}
       ORDER BY sl.dayofweek ASC, sl.starttime ASC, r.name ASC";
@@ -118,7 +118,7 @@ $maxday = ($currentstrategy === 'mon_to_sat') ? 6 : 5;
 $matrixdays = array_slice($days, 0, $maxday, true);
 
 // Extract unique time windows from configured slots & schedules
-$allslots = $DB->get_records('local_att_slots', null, 'starttime ASC');
+$allslots = $DB->get_records('local_academic_timetabler_slots', null, 'starttime ASC');
 $timeblocks = [];
 $breakwindows = [];
 foreach ($allslots as $sl) {

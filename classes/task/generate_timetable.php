@@ -53,18 +53,18 @@ class generate_timetable extends scheduled_task {
         mtrace("Executing native Course and Exam Timetabling Engine [Tier: " . strtoupper($tier) . "]...");
 
         $courses = $DB->get_records('course', ['visible' => 1]);
-        $slots   = $DB->get_records('local_att_slots');
-        $rooms   = $DB->get_records('local_att_rooms');
+        $slots   = $DB->get_records('local_academic_timetabler_slots');
+        $rooms   = $DB->get_records('local_academic_timetabler_rooms');
 
         $solver = new solver($slots, $rooms);
         $solver->load_courses($courses);
 
         if ($solver->solve_all()) {
             $solution = $solver->get_solution();
-            $DB->delete_records('local_att_schedules');
+            $DB->delete_records('local_academic_timetabler_schedules');
 
             foreach ($solution['classes'] ?? [] as $courseid => $sched) {
-                $DB->insert_record('local_att_schedules', (object)[
+                $DB->insert_record('local_academic_timetabler_schedules', (object)[
                     'schedule_type' => 'class',
                     'courseid'     => $courseid,
                     'roomid'       => $sched['room_id'],
