@@ -317,3 +317,14 @@ phpcs --standard=moodle ~/dev/moodle/local/schola_slots
 ```bash
 phpcs --standard=moodle-extra ~/dev/moodle/local/schola_slots
 ```
+
+---
+
+## ⚖️ Software License
+
+This plugin is free software: you can redistribute it and/or modify it under the terms of the **GNU General Public License (GPL)** as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+* **License**: GNU General Public License v3.0 or later ([GPL-3.0-or-later](http://www.gnu.org/copyleft/gpl.html))
+* **Copyright**: © 2026 Emanuel Dickson Wanyonyi <wanyonyi.d.emanuel@gmail.com>
+* **Moodle Directory Compliance**: Fully compliant with Moodle Plugins Directory open-source publishing guidelines.
+
