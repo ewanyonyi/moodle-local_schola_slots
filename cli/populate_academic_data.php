@@ -1,13 +1,13 @@
 <?php
 /**
- * Academic Timetabler CLI Data Population Script - Institutional Scale
+ * Schola Slots CLI Data Population Script - Institutional Scale
  *
  * Populates Moodle with substantial data representing a busy educational institution:
  * Faculties, Courses, Quizzes (Exams), Teachers, Students, Course Enrollments,
  * Campus Rooms (Auditoriums, Labs, Lecture Halls), and Master Time Slots.
  *
  * @package    local_academic_timetabler
- * @copyright  2026 Academic Timetabler Team
+ * @copyright  2026 Schola Slots Team
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -35,7 +35,7 @@ list($options, $unrecognized) = cli_get_params([
 ]);
 
 if ($options['help']) {
-    $help = "Academic Timetabler Test Data Generator CLI (Busy Institution Scale)
+    $help = "Schola Slots Test Data Generator CLI (Busy Institution Scale)
 
 Populates Moodle with departments, courses, exams, teachers, students,
 course enrollments, and campus infrastructure (rooms & time slots).
@@ -59,7 +59,7 @@ Example:
     exit(0);
 }
 
-cli_heading("Academic Timetabler - Institutional Scale Data Generator");
+cli_heading("Schola Slots - Institutional Scale Data Generator");
 
 global $DB;
 

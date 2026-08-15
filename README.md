@@ -1,6 +1,6 @@
-# Moodle Academic & Exam Timetabler (`local_academic_timetabler`)
+# Schola Slots Moodle Plugin (`local_academic_timetabler`)
 
-**`local_academic_timetabler`** is an enterprise-grade, self-contained Moodle local plugin designed to generate conflict-free schedules for both **weekly course sessions** (lectures, labs) and **examination windows** (midterms, finals).
+**`Schola Slots`** is an enterprise-grade, self-contained Moodle local plugin designed to generate conflict-free schedules for both **weekly course sessions** (lectures, labs) and **examination windows** (midterms, finals).
 
 The entire system executes **100% on-premise** within Moodle's PHP environment with zero external API calls or third-party dependencies.
 
