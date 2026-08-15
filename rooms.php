@@ -175,13 +175,16 @@ $btnlabel = $editroom ? 'Update Room' : 'Save Room';
 
 $templateurl = new moodle_url($url, ['action' => 'download_template']);
 
+$canimport = \local_schola_slots\licensing\license_manager::can_batch_import_rooms();
+
 // -------------------------------------------------------------------
-// Grid Row: Single Room Form (Left) & CSV Import Card (Right)
+// Grid Row: Single Room Form (Left) & CSV Import Card (Right - Pro Tier Only)
 // -------------------------------------------------------------------
 echo html_writer::start_div('row g-4 mb-4');
 
-// Left Column: Manual Form
-echo html_writer::start_div('col-lg-7');
+// Manual Single Room Form Column
+$formcol = $canimport ? 'col-lg-7' : 'col-12';
+echo html_writer::start_div($formcol);
 echo html_writer::start_div('card shadow-sm h-100 bg-white border-0 rounded-3');
 echo html_writer::div(html_writer::tag('h5', '<i class="fa fa-plus-circle me-2 text-primary"></i>' . $cardheader, ['class' => 'mb-0 font-weight-bold']), 'card-header bg-light p-3 border-bottom');
 echo html_writer::start_div('card-body p-4');
@@ -236,55 +239,57 @@ echo html_writer::end_tag('form');
 
 echo html_writer::end_div(); // card-body
 echo html_writer::end_div(); // card
-echo html_writer::end_div(); // col-lg-7
+echo html_writer::end_div(); // form col
 
-// Right Column: Batch CSV Import
-echo html_writer::start_div('col-lg-5');
-echo html_writer::start_div('card shadow-sm h-100 bg-white border-0 rounded-3 position-relative');
-echo html_writer::start_div('card-header bg-primary-subtle p-3 border-bottom d-flex justify-content-between align-items-center');
-echo html_writer::tag('h5', '<i class="fa fa-file-csv me-2 text-primary"></i>Batch CSV Room Import', ['class' => 'mb-0 font-weight-bold text-primary']);
-echo html_writer::link($templateurl, '<i class="fa fa-download me-1"></i> Sample CSV', [
-    'class' => 'btn btn-sm btn-outline-primary font-weight-bold',
-    'title' => 'Download sample CSV template for venue import',
-]);
-echo html_writer::end_div();
+if ($canimport) {
+    // Right Column: Batch CSV Import (Only visible to Pro tier)
+    echo html_writer::start_div('col-lg-5');
+    echo html_writer::start_div('card shadow-sm h-100 bg-white border-0 rounded-3 position-relative');
+    echo html_writer::start_div('card-header bg-primary-subtle p-3 border-bottom d-flex justify-content-between align-items-center');
+    echo html_writer::tag('h5', '<i class="fa fa-file-csv me-2 text-primary"></i>Batch CSV Room Import', ['class' => 'mb-0 font-weight-bold text-primary']);
+    echo html_writer::link($templateurl, '<i class="fa fa-download me-1"></i> Sample CSV', [
+        'class' => 'btn btn-sm btn-outline-primary font-weight-bold',
+        'title' => 'Download sample CSV template for venue import',
+    ]);
+    echo html_writer::end_div();
 
-echo html_writer::start_div('card-body p-4 d-flex flex-column justify-content-between');
+    echo html_writer::start_div('card-body p-4 d-flex flex-column justify-content-between');
 
-echo html_writer::tag('p', 'Upload a structured <code>.csv</code> or Excel CSV file to instantly import your campus rooms and seating capacities in bulk.', ['class' => 'text-muted small mb-3']);
+    echo html_writer::tag('p', 'Upload a structured <code>.csv</code> or Excel CSV file to instantly import your campus rooms and seating capacities in bulk.', ['class' => 'text-muted small mb-3']);
 
-echo html_writer::start_tag('form', [
-    'method' => 'post',
-    'action' => $url->out(false),
-    'enctype' => 'multipart/form-data',
-]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'import_csv']);
+    echo html_writer::start_tag('form', [
+        'method' => 'post',
+        'action' => $url->out(false),
+        'enctype' => 'multipart/form-data',
+    ]);
+    echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
+    echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'import_csv']);
 
-echo html_writer::start_div('mb-3');
-echo html_writer::tag('label', 'Select CSV / Text File', ['class' => 'form-label font-weight-bold small']);
-echo html_writer::empty_tag('input', [
-    'type' => 'file', 'name' => 'room_file', 'class' => 'form-control',
-    'accept' => '.csv,.txt', 'required' => 'required',
-]);
-echo html_writer::end_div();
+    echo html_writer::start_div('mb-3');
+    echo html_writer::tag('label', 'Select CSV / Text File', ['class' => 'form-label font-weight-bold small']);
+    echo html_writer::empty_tag('input', [
+        'type' => 'file', 'name' => 'room_file', 'class' => 'form-control',
+        'accept' => '.csv,.txt', 'required' => 'required',
+    ]);
+    echo html_writer::end_div();
 
-// Required columns box
-echo html_writer::start_div('bg-light p-3 rounded mb-3 border');
-echo html_writer::div('<strong>Required CSV Format:</strong>', 'small text-dark mb-1');
-echo html_writer::div('<code>Name, Capacity, Is Lab</code>', 'small text-primary font-weight-bold mb-1');
-echo html_writer::div('Example: <code>Science Lab 101, 40, 1</code>', 'text-muted extra-small');
-echo html_writer::end_div();
+    // Required columns box
+    echo html_writer::start_div('bg-light p-3 rounded mb-3 border');
+    echo html_writer::div('<strong>Required CSV Format:</strong>', 'small text-dark mb-1');
+    echo html_writer::div('<code>Name, Capacity, Is Lab</code>', 'small text-primary font-weight-bold mb-1');
+    echo html_writer::div('Example: <code>Science Lab 101, 40, 1</code>', 'text-muted extra-small');
+    echo html_writer::end_div();
 
-echo html_writer::tag('button', '<i class="fa fa-upload me-1"></i> Import Rooms from CSV', [
-    'type' => 'submit', 'class' => 'btn btn-primary w-100 font-weight-bold py-2 shadow-sm',
-]);
+    echo html_writer::tag('button', '<i class="fa fa-upload me-1"></i> Import Rooms from CSV', [
+        'type' => 'submit', 'class' => 'btn btn-primary w-100 font-weight-bold py-2 shadow-sm',
+    ]);
 
-echo html_writer::end_tag('form');
+    echo html_writer::end_tag('form');
 
-echo html_writer::end_div(); // card-body
-echo html_writer::end_div(); // card
-echo html_writer::end_div(); // col-lg-5
+    echo html_writer::end_div(); // card-body
+    echo html_writer::end_div(); // card
+    echo html_writer::end_div(); // col-lg-5
+}
 
 echo html_writer::end_div(); // row
 
