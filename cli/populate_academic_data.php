@@ -71,11 +71,17 @@ $generator = new testing_data_generator();
 
 // Clear option handling
 if ($options['clear']) {
-    cli_writeln("Cleaning up previous timetabler infrastructure data...");
+    cli_writeln("Cleaning up previous timetabler infrastructure data and test courses...");
     $DB->delete_records('local_schola_slots_schedules');
     $DB->delete_records('local_schola_slots_rooms');
     $DB->delete_records('local_schola_slots_slots');
-    cli_writeln("Cleaned plugin tables: local_schola_slots_schedules, local_schola_slots_rooms, local_schola_slots_slots.");
+
+    require_once($CFG->dirroot . '/course/lib.php');
+    $testcourses = $DB->get_records_select('course', "id > 1 AND (shortname LIKE 'CS%' OR shortname LIKE 'MATH%' OR shortname LIKE 'ENG%' OR shortname LIKE 'PHYS%' OR shortname LIKE 'BUS%' OR shortname LIKE 'MED%' OR shortname LIKE 'SOC%' OR shortname LIKE 'BIO%' OR shortname LIKE 'LAW%' OR shortname LIKE 'AGR%')");
+    foreach ($testcourses as $tc) {
+        delete_course($tc->id, false);
+    }
+    cli_writeln("Cleaned plugin tables and deleted " . count($testcourses) . " previous test courses.");
 }
 
 // ---------------------------------------------------------

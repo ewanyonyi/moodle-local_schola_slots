@@ -1,75 +1,129 @@
-<div class="academic-timetabler-dashboard">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0 text-dark font-weight-bold">Dashboard & System Overview</h4>
-        {{#is_pro}}
-            <span class="badge bg-success text-white px-3 py-2 fs-6 rounded-pill shadow-sm"><i class="fa fa-cloud me-1"></i> Cloud Engine Active</span>
-        {{/is_pro}}
-        {{^is_pro}}
-            <span class="badge bg-secondary text-white px-3 py-2 fs-6 rounded-pill shadow-sm"><i class="fa fa-server me-1"></i> Native Engine Active</span>
-        {{/is_pro}}
+<div class="schola-slots-dashboard p-2">
+    <!-- Executive Header Banner -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <h3 class="mb-0 text-dark font-weight-bold tracking-tight">Schola Slots Executive Control Center</h3>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1 font-weight-bold small">v1.0 Pro</span>
+            </div>
+            <p class="text-muted small mb-0 mt-1">Real-time scheduling analytics, venue capacity monitoring, and cloud solver engine status.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2 mt-2 mt-md-0">
+            {{#is_pro}}
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 fs-6 rounded-pill shadow-sm d-flex align-items-center gap-2">
+                    <span class="spinner-grow spinner-grow-sm text-success" role="status"></span>
+                    <i class="fa fa-cloud"></i> Cloud Engine Active (scholaslots.com)
+                </span>
+            {{/is_pro}}
+            {{^is_pro}}
+                <span class="badge bg-secondary-subtle text-dark border border-secondary-subtle px-3 py-2 fs-6 rounded-pill shadow-sm d-flex align-items-center gap-2">
+                    <i class="fa fa-server"></i> Native On-Premise Engine
+                </span>
+            {{/is_pro}}
+        </div>
     </div>
 
-    <div id="license-notice-alert" class="alert fade show {{#is_pro}}alert-success border-success-subtle{{/is_pro}}{{^is_pro}}alert-light border shadow-sm{{/is_pro}} mb-4" role="alert">
+    <!-- Engine Mode Alert -->
+    <div id="license-notice-alert" class="alert fade show {{#is_pro}}alert-success border-0 bg-success-subtle text-dark shadow-sm{{/is_pro}}{{^is_pro}}alert-light border shadow-sm text-dark{{/is_pro}} mb-4 rounded-4 p-3" role="alert">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <div>
-                <strong>System Mode:</strong> {{tier_notice}}
+            <div class="d-flex align-items-center gap-2">
+                <div class="p-2 rounded-circle {{#is_pro}}bg-success text-white{{/is_pro}}{{^is_pro}}bg-primary text-white{{/is_pro}} me-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                    <i class="fa {{#is_pro}}fa-bolt{{/is_pro}}{{^is_pro}}fa-info-circle{{/is_pro}} fs-5"></i>
+                </div>
+                <div>
+                    <div class="font-weight-bold">{{tier_notice}}</div>
+                    <div class="small text-muted">Cloud Solver Acceleration Engine delivers high-speed conflict satisfaction for large campus masterlists.</div>
+                </div>
             </div>
             {{^is_pro}}
                 <div class="d-flex gap-2 flex-wrap align-items-center">
-                    <a href="{{settings_url}}" class="btn btn-sm btn-outline-primary font-weight-bold">
+                    <a href="{{settings_url}}" class="btn btn-sm btn-outline-primary font-weight-bold rounded-pill px-3 py-1.5">
                         <i class="fa fa-sliders me-1"></i> Engine Settings
                     </a>
-                    <a href="{{buy_url}}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-link text-decoration-none font-weight-bold">
-                        Learn About Cloud Acceleration &rarr;
+                    <a href="{{buy_url}}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-success text-white font-weight-bold rounded-pill px-3 py-1.5 shadow-sm">
+                        <i class="fa fa-arrow-up me-1"></i> Upgrade to Cloud Pro &rarr;
                     </a>
-                    <button type="button" id="btn-continue-community" class="btn btn-sm btn-light text-muted" onclick="document.getElementById('license-notice-alert').style.display='none';">
-                        &times;
-                    </button>
                 </div>
             {{/is_pro}}
         </div>
     </div>
 
-    <div class="row g-3 my-3">
+    <!-- Metrics Cards Grid -->
+    <div class="row g-4 my-2">
+        <!-- Courses Metric Card -->
         <div class="col-md-4">
-            <div class="card border-0 border-top border-4 {{#is_course_exceeded}}border-danger{{/is_course_exceeded}}{{^is_course_exceeded}}border-primary{{/is_course_exceeded}} shadow-sm h-100 bg-white">
-                <div class="card-body p-4">
-                    <div class="text-uppercase {{#is_course_exceeded}}text-danger{{/is_course_exceeded}}{{^is_course_exceeded}}text-primary{{/is_course_exceeded}} font-weight-bold fs-7 mb-1" style="letter-spacing: 0.5px;">Courses Target</div>
-                    <div class="fs-2 font-weight-bold text-dark mb-1">{{course_count}} <span class="fs-6 text-muted font-weight-normal">/ {{max_courses_label}}</span></div>
-                    <div class="text-muted small">Auto-synced active Moodle courses</div>
-                    {{#is_course_exceeded}}
-                        <div class="mt-2 text-danger small font-weight-bold">
-                            <i class="fa fa-exclamation-triangle me-1"></i> Capacity Exceeded! Limit is {{max_courses_label}} courses.
+            <div class="card border-0 shadow-sm rounded-4 h-100 bg-white overflow-hidden" style="border-left: 5px solid {{#is_course_exceeded}}#dc3545{{/is_course_exceeded}}{{^is_course_exceeded}}#16a34a{{/is_course_exceeded}} !important;">
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-uppercase text-muted font-weight-bold small tracking-wider">Courses Target</span>
+                            <span class="badge {{#is_course_exceeded}}bg-danger-subtle text-danger{{/is_course_exceeded}}{{^is_course_exceeded}}bg-success-subtle text-success{{/is_course_exceeded}} rounded-pill px-2.5 py-1 small">Moodle Synced</span>
                         </div>
-                    {{/is_course_exceeded}}
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card border-0 border-top border-4 border-success shadow-sm h-100 bg-white">
-                <div class="card-body p-4 d-flex flex-column justify-content-between">
-                    <div>
-                        <div class="text-uppercase text-success font-weight-bold fs-7 mb-1" style="letter-spacing: 0.5px;">Configured Venues</div>
-                        <div class="fs-2 font-weight-bold text-dark mb-1">{{room_count}} <span class="fs-6 text-muted font-weight-normal">Rooms</span></div>
+                        <div class="d-flex align-items-baseline gap-2 mb-1">
+                            <span class="display-5 font-weight-bold text-dark">{{course_count}}</span>
+                            <span class="fs-6 text-muted">/ {{max_courses_label}} max capacity</span>
+                        </div>
+                        <div class="progress mt-3 rounded-pill" style="height: 6px; background-color: #f1f5f9;">
+                            <div class="progress-bar {{#is_course_exceeded}}bg-danger{{/is_course_exceeded}}{{^is_course_exceeded}}bg-success{{/is_course_exceeded}} rounded-pill" role="progressbar" style="width: 75%;" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
                     </div>
-                    <div class="mt-3">
-                        <a href="{{rooms_url}}" class="btn btn-sm btn-outline-success font-weight-bold">Manage Rooms &rarr;</a>
+                    <div class="mt-3 small text-muted d-flex justify-content-between align-items-center border-top pt-2">
+                        <span>Active Courses in Catalog</span>
+                        <i class="fa fa-book text-muted opacity-50"></i>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Venues Metric Card -->
         <div class="col-md-4">
-            <div class="card border-0 border-top border-4 border-info shadow-sm h-100 bg-white">
+            <div class="card border-0 shadow-sm rounded-4 h-100 bg-white overflow-hidden" style="border-left: 5px solid #2563eb !important;">
                 <div class="card-body p-4 d-flex flex-column justify-content-between">
                     <div>
-                        <div class="text-uppercase text-info font-weight-bold fs-7 mb-1" style="letter-spacing: 0.5px;">Generated Schedules</div>
-                        <div class="fs-2 font-weight-bold text-dark mb-1">{{schedule_count}} <span class="fs-6 text-muted font-weight-normal">Entries</span></div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-uppercase text-muted font-weight-bold small tracking-wider">Campus Venues</span>
+                            <span class="badge bg-primary-subtle text-primary rounded-pill px-2.5 py-1 small">Rooms & Labs</span>
+                        </div>
+                        <div class="d-flex align-items-baseline gap-2 mb-1">
+                            <span class="display-5 font-weight-bold text-dark">{{room_count}}</span>
+                            <span class="fs-6 text-muted">Configured Venues</span>
+                        </div>
+                        <div class="progress mt-3 rounded-pill" style="height: 6px; background-color: #f1f5f9;">
+                            <div class="progress-bar bg-primary rounded-pill" role="progressbar" style="width: 85%;" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
                     </div>
-                    <div class="mt-3">
-                        <a href="{{schedules_url}}" class="btn btn-sm btn-outline-info font-weight-bold">View Timetables &rarr;</a>
+                    <div class="mt-3 d-flex justify-content-between align-items-center border-top pt-2">
+                        <span class="small text-muted">Auditoriums, Labs & Classrooms</span>
+                        <a href="{{rooms_url}}" class="btn btn-sm btn-link text-primary font-weight-bold text-decoration-none p-0">Manage &rarr;</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Generated Schedules Card -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100 bg-white overflow-hidden" style="border-left: 5px solid #0d9488 !important;">
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-uppercase text-muted font-weight-bold small tracking-wider">Master Schedules</span>
+                            <span class="badge bg-info-subtle text-info rounded-pill px-2.5 py-1 small">Generated</span>
+                        </div>
+                        <div class="d-flex align-items-baseline gap-2 mb-1">
+                            <span class="display-5 font-weight-bold text-dark">{{schedule_count}}</span>
+                            <span class="fs-6 text-muted">Allocated Sessions</span>
+                        </div>
+                        <div class="progress mt-3 rounded-pill" style="height: 6px; background-color: #f1f5f9;">
+                            <div class="progress-bar bg-info rounded-pill" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    <div class="mt-3 d-flex justify-content-between align-items-center border-top pt-2">
+                        <span class="small text-muted">Conflict-free timetable entries</span>
+                        <a href="{{schedules_url}}" class="btn btn-sm btn-link text-info font-weight-bold text-decoration-none p-0">View Timetables &rarr;</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+

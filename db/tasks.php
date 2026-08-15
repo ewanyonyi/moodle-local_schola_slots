@@ -27,7 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $tasks = [
     [
-        'classname' => 'local_schola_slots\task\generate_timetable',
+        'classname' => '\local_schola_slots\task\generate_timetable',
         'blocking' => 0,
         'minute' => '0',
         'hour' => '2',

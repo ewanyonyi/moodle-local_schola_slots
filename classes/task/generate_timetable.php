@@ -44,7 +44,9 @@ class generate_timetable extends scheduled_task {
      * @return void
      */
     public function execute() {
-        global $DB;
+        global $CFG, $DB;
+
+        require_once($CFG->dirroot . '/calendar/lib.php');
 
         \core_php_time_limit::raise(600);
         raise_memory_limit(MEMORY_EXTRA);
@@ -52,7 +54,7 @@ class generate_timetable extends scheduled_task {
         $tier = license_manager::get_tier();
         mtrace("Executing native Course and Exam Timetabling Engine [Tier: " . strtoupper($tier) . "]...");
 
-        $courses = $DB->get_records('course', ['visible' => 1]);
+        $courses = $DB->get_records_select('course', 'id > 1 AND visible = 1');
         $slots   = $DB->get_records('local_schola_slots_slots');
         $rooms   = $DB->get_records('local_schola_slots_rooms');
 

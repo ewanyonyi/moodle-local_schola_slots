@@ -50,4 +50,4 @@ $string['pluginname'] = 'Schola Slots';
 $string['privacy:metadata'] = 'The Schola Slots plugin does not store personal user data directly beyond scheduling assignments.';
 $string['room_name'] = 'Room Name';
 $string['start_time'] = 'Start Time';
-$string['cloud_offline_limit_err'] = 'Schola Slots Cloud Solver Acceleration Engine is currently unreachable. Large institutional datasets (> 50 courses) require active Cloud Engine connectivity. Please check your cloud server connection or contact support at support@timetabler-cloud.com.';
+$string['cloud_offline_limit_err'] = 'Schola Slots Cloud Solver Acceleration Engine is currently unreachable. Large institutional datasets (> 50 courses) require active Cloud Engine connectivity. Please check your cloud server connection or contact support at support@scholaslots.com.';

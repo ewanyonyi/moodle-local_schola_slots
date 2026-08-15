@@ -130,6 +130,76 @@ if (!class_exists('local_schola_slots_admin_setting_pricing')) {
     }
 }
 
+if (!class_exists('local_schola_slots_admin_setting_license_key')) {
+    /**
+     * Custom admin setting element for Cloud Solver API Key / License Key with inline Save button.
+     */
+    class local_schola_slots_admin_setting_license_key extends admin_setting {
+        public function __construct() {
+            parent::__construct(
+                'local_schola_slots/license_key',
+                'Cloud Solver API Key',
+                'Optional. Enter your Cloud Solver API key to connect off-server high-performance solver services.',
+                ''
+            );
+        }
+
+        public function get_setting() {
+            return get_config('local_schola_slots', 'license_key');
+        }
+
+        public function write_setting($data) {
+            if ($data === null) {
+                return '';
+            }
+            $data = trim((string)$data);
+            set_config('license_key', $data, 'local_schola_slots');
+            return '';
+        }
+
+        public function output_html($data, $query = '') {
+            $current = $this->get_setting();
+            if ($current === null || $current === false) {
+                $current = '';
+            }
+
+            $id = $this->get_id();
+            $name = $this->get_full_name();
+
+            $html = '<div class="form-item row mb-3 align-items-center" id="admin-' . $this->name . '">';
+            $html .= '<div class="form-label col-sm-3 text-sm-right">';
+            $html .= '<label for="' . $id . '" class="form-label font-weight-bold mb-0">' . s($this->visiblename) . '</label>';
+            $html .= '<div class="small text-muted">local_schola_slots | license_key</div>';
+            $html .= '</div>';
+            $html .= '<div class="form-setting col-sm-9">';
+            $html .= '<div class="input-group" style="max-width: 550px;">';
+            $html .= '<input type="text" class="form-control p-2" id="' . $id . '" name="' . $name . '" value="' . s($current) . '" placeholder="Enter API Key / License Key">';
+            $html .= '<button type="submit" class="btn btn-primary font-weight-bold px-3">Save Key</button>';
+            $html .= '</div>';
+            if (!empty($this->description)) {
+                $html .= '<div class="form-text text-muted small mt-1">' . $this->description . '</div>';
+            }
+            $html .= '</div>';
+            $html .= '</div>';
+
+            $html .= '<style>
+            #adminsettings form > div.row:last-child,
+            #adminsettings form > div.form-buttons,
+            #adminsettings form > div.form-submit,
+            #adminsettings div.settingsform > div.row:last-child,
+            .settingsform div.form-buttons,
+            .settingsform div.form-submit,
+            #adminsettings button[type="submit"]:not(.input-group *),
+            #adminsettings input[type="submit"]:not(.input-group *) {
+                display: none !important;
+            }
+            </style>';
+
+            return $html;
+        }
+    }
+}
+
 if ($hassiteconfig) {
     $settings = new admin_settingpage(
         'local_schola_slots_settings',
@@ -146,30 +216,9 @@ if ($hassiteconfig) {
             '</div>'
         ));
 
-        $settings->add(new admin_setting_configtext(
-            'local_schola_slots/license_key',
-            'Cloud Solver API Key',
-            'Optional. Enter your Cloud Solver API key to connect off-server high-performance solver services.',
-            '',
-            PARAM_TEXT
-        ));
+        $settings->add(new local_schola_slots_admin_setting_license_key());
 
         $settings->add(new local_schola_slots_admin_setting_pricing());
-
-        $distoptions = [
-            'balanced' => 'Equal 5-Day Load Balancing (Mon - Fri)',
-            'mon_to_sat' => '6-Day Institution Schedule (Mon - Sat)',
-            'mon_to_thu' => '4-Day Compact Schedule (Mon - Thu)',
-            'frontload' => 'Sequential Day Frontloading (Mon - Fri)',
-        ];
-
-        $settings->add(new admin_setting_configselect(
-            'local_schola_slots/day_distribution',
-            'Weekly Day Distribution Strategy',
-            'Select how the solver engine spreads course sessions across weekdays.',
-            'balanced',
-            $distoptions
-        ));
     }
 
     $ADMIN->add('localplugins', $settings);
