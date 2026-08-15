@@ -2,17 +2,18 @@
 
 **`Schola Slots`** is an enterprise-grade, self-contained Moodle local plugin designed to generate conflict-free schedules for both **weekly course sessions** (lectures, labs) and **examination windows** (midterms, finals).
 
-The entire system executes **100% on-premise** within Moodle's PHP environment with zero external API calls or third-party dependencies.
+The plugin is submitted to the **Moodle Plugins Directory** as a **Free Plugin** released under the **GNU General Public License v3 (GPLv3)**.
+
+The core solver engine executes **100% on-premise** within Moodle's native PHP environment with zero required external dependencies or mandatory fees.
 
 ---
 
-## 💳 Commercial Licensing & Tiered Plans
+## 📜 Licensing & Cloud Acceleration
 
-`local_schola_slots` follows a transparent commercial licensing model backed by automated **LemonSqueezy** license key validation:
+`local_schola_slots` is distributed as a free plugin for Moodle:
 
-* **Community Edition (Free)**: Standard single-venue course scheduling, manual room management, basic schedule profile, community forum support.
-* **Starter Plan ($199 / year)**: Up to 100 active courses, 50 campus rooms, high school & department schedule profiles, standard email support.
-* **Pro University ($499 / year — *Highest Tier*)**: **UNLIMITED** active courses, campus rooms, & faculty, combined Course & Exam Solver, background adhoc task execution, custom break windows, batch room CSV importer, priority support.
+* **Native On-Premise Engine (100% Free)**: Full weekly class timetabling, examination schedule generation, room/venue capacity management, bell schedule wizard, and CLI data generator running entirely on your Moodle server under GPLv3.
+* **Cloud Solver Acceleration (Optional API)**: For large universities with massive multi-department masterlists, institutions can optionally connect to the off-server **Schola Slots Cloud Solver Engine** ([scholaslots.com](https://scholaslots.com)) via API key for ultra-fast high-performance solving.
 
 ---
 
