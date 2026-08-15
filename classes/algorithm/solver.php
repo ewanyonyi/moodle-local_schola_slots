@@ -14,14 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace local_academic_timetabler\algorithm;
+namespace local_schola_slots\algorithm;
 
-use local_academic_timetabler\licensing\license_manager;
+use local_schola_slots\licensing\license_manager;
 
 /**
- * Constraint solver algorithm for local_academic_timetabler.
+ * Constraint solver algorithm for local_schola_slots.
  *
- * @package     local_academic_timetabler
+ * @package     local_schola_slots
  * @copyright   2026 Emanuel Dickson Wanyonyi <wanyonyi.d.emanuel@gmail.com>
  * @author      Emanuel Dickson Wanyonyi <wanyonyi.d.emanuel@gmail.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -66,7 +66,7 @@ class solver {
             $limit = license_manager::STARTER_COURSE_LIMIT;
             throw new \moodle_exception(
                 'license_err_limit',
-                'local_academic_timetabler',
+                'local_schola_slots',
                 '',
                 [$coursecount, $limit]
             );
@@ -133,7 +133,7 @@ class solver {
             if (count($this->courses) > license_manager::STARTER_COURSE_LIMIT) {
                 throw new \moodle_exception(
                     'cloud_offline_limit_err',
-                    'local_academic_timetabler'
+                    'local_schola_slots'
                 );
             }
         }
@@ -191,7 +191,7 @@ class solver {
             'rooms' => $roomspayload,
             'slots' => $slotspayload,
             'options' => [
-                'day_distribution' => get_config('local_academic_timetabler', 'day_distribution') ?: 'balanced',
+                'day_distribution' => get_config('local_schola_slots', 'day_distribution') ?: 'balanced',
                 'max_iterations' => 100000,
             ]
         ];
@@ -257,7 +257,7 @@ class solver {
             return ($targettype === 'exam' && $s->type === 'class');
         }));
 
-        $strategy = get_config('local_academic_timetabler', 'day_distribution') ?: 'balanced';
+        $strategy = get_config('local_schola_slots', 'day_distribution') ?: 'balanced';
 
         if ($strategy === 'mon_to_sat') {
             $targetday = ($index % 6) + 1;

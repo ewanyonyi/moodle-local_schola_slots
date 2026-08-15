@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Admin settings definition for local_academic_timetabler.
+ * Admin settings definition for local_schola_slots.
  *
- * @package     local_academic_timetabler
+ * @package     local_schola_slots
  * @copyright   2026 Emanuel Dickson Wanyonyi <wanyonyi.d.emanuel@gmail.com>
  * @author      Emanuel Dickson Wanyonyi <wanyonyi.d.emanuel@gmail.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -25,14 +25,14 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-if (!class_exists('local_academic_timetabler_admin_setting_pricing')) {
+if (!class_exists('local_schola_slots_admin_setting_pricing')) {
     /**
      * Custom admin setting element to render clean System Performance & Cloud Solver Information.
      */
-    class local_academic_timetabler_admin_setting_pricing extends admin_setting {
+    class local_schola_slots_admin_setting_pricing extends admin_setting {
         public function __construct() {
             $this->nosave = true;
-            parent::__construct('local_academic_timetabler/commercial_plans', '', '', '');
+            parent::__construct('local_schola_slots/commercial_plans', '', '', '');
         }
 
         public function get_setting() {
@@ -48,11 +48,11 @@ if (!class_exists('local_academic_timetabler_admin_setting_pricing')) {
         }
 
         public function output_html($data, $query = '') {
-            $licensekey = get_config('local_academic_timetabler', 'license_key');
+            $licensekey = get_config('local_schola_slots', 'license_key');
             $licensekey = trim((string)$licensekey);
 
             $iscloudactive = !empty($licensekey);
-            $checkouturl = \local_academic_timetabler\licensing\license_manager::get_checkout_url();
+            $checkouturl = \local_schola_slots\licensing\license_manager::get_checkout_url();
 
             $statuscard = '';
             if ($iscloudactive) {
@@ -132,29 +132,29 @@ if (!class_exists('local_academic_timetabler_admin_setting_pricing')) {
 
 if ($hassiteconfig) {
     $settings = new admin_settingpage(
-        'local_academic_timetabler_settings',
-        get_string('pluginname', 'local_academic_timetabler')
+        'local_schola_slots_settings',
+        get_string('pluginname', 'local_schola_slots')
     );
 
     if ($ADMIN->fulltree) {
         $settings->add(new admin_setting_heading(
-            'local_academic_timetabler/dashboard_heading',
+            'local_schola_slots/dashboard_heading',
             '',
             '<div class="alert alert-info d-flex align-items-center justify-content-between my-2">' .
             '<div><strong>Schola Slots</strong> is installed and operational.</div>' .
-            '<a href="' . new moodle_url('/local/academic_timetabler/index.php') . '" class="btn btn-primary font-weight-bold">Open Schola Slots Dashboard</a>' .
+            '<a href="' . new moodle_url('/local/schola_slots/index.php') . '" class="btn btn-primary font-weight-bold">Open Schola Slots Dashboard</a>' .
             '</div>'
         ));
 
         $settings->add(new admin_setting_configtext(
-            'local_academic_timetabler/license_key',
+            'local_schola_slots/license_key',
             'Cloud Solver API Key',
             'Optional. Enter your Cloud Solver API key to connect off-server high-performance solver services.',
             '',
             PARAM_TEXT
         ));
 
-        $settings->add(new local_academic_timetabler_admin_setting_pricing());
+        $settings->add(new local_schola_slots_admin_setting_pricing());
 
         $distoptions = [
             'balanced' => 'Equal 5-Day Load Balancing (Mon - Fri)',
@@ -164,7 +164,7 @@ if ($hassiteconfig) {
         ];
 
         $settings->add(new admin_setting_configselect(
-            'local_academic_timetabler/day_distribution',
+            'local_schola_slots/day_distribution',
             'Weekly Day Distribution Strategy',
             'Select how the solver engine spreads course sessions across weekdays.',
             'balanced',
@@ -175,9 +175,9 @@ if ($hassiteconfig) {
     $ADMIN->add('localplugins', $settings);
 
     $ADMIN->add('localplugins', new admin_externalpage(
-        'local_academic_timetabler_dashboard',
-        get_string('manage_timetabler', 'local_academic_timetabler'),
-        new moodle_url('/local/academic_timetabler/index.php'),
-        'local/academic_timetabler:manage'
+        'local_schola_slots_dashboard',
+        get_string('manage_timetabler', 'local_schola_slots'),
+        new moodle_url('/local/schola_slots/index.php'),
+        'local/schola_slots:manage'
     ));
 }

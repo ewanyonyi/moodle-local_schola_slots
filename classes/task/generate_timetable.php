@@ -14,16 +14,16 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace local_academic_timetabler\task;
+namespace local_schola_slots\task;
 
 use core\task\scheduled_task;
-use local_academic_timetabler\algorithm\solver;
-use local_academic_timetabler\licensing\license_manager;
+use local_schola_slots\algorithm\solver;
+use local_schola_slots\licensing\license_manager;
 
 /**
  * Scheduled task runner for timetabling generation.
  *
- * @package     local_academic_timetabler
+ * @package     local_schola_slots
  * @copyright   2026 Emanuel Dickson Wanyonyi <wanyonyi.d.emanuel@gmail.com>
  * @author      Emanuel Dickson Wanyonyi <wanyonyi.d.emanuel@gmail.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -35,7 +35,7 @@ class generate_timetable extends scheduled_task {
      * @return string Human-readable task name.
      */
     public function get_name() {
-        return get_string('pluginname', 'local_academic_timetabler');
+        return get_string('pluginname', 'local_schola_slots');
     }
 
     /**
@@ -53,18 +53,18 @@ class generate_timetable extends scheduled_task {
         mtrace("Executing native Course and Exam Timetabling Engine [Tier: " . strtoupper($tier) . "]...");
 
         $courses = $DB->get_records('course', ['visible' => 1]);
-        $slots   = $DB->get_records('local_academic_timetabler_slots');
-        $rooms   = $DB->get_records('local_academic_timetabler_rooms');
+        $slots   = $DB->get_records('local_schola_slots_slots');
+        $rooms   = $DB->get_records('local_schola_slots_rooms');
 
         $solver = new solver($slots, $rooms);
         $solver->load_courses($courses);
 
         if ($solver->solve_all()) {
             $solution = $solver->get_solution();
-            $DB->delete_records('local_academic_timetabler_schedules');
+            $DB->delete_records('local_schola_slots_schedules');
 
             foreach ($solution['classes'] ?? [] as $courseid => $sched) {
-                $DB->insert_record('local_academic_timetabler_schedules', (object)[
+                $DB->insert_record('local_schola_slots_schedules', (object)[
                     'schedule_type' => 'class',
                     'courseid'     => $courseid,
                     'roomid'       => $sched['room_id'],

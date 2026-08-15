@@ -14,12 +14,12 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace local_academic_timetabler\privacy;
+namespace local_schola_slots\privacy;
 
 /**
- * Privacy API provider for local_academic_timetabler.
+ * Privacy API provider for local_schola_slots.
  *
- * @package     local_academic_timetabler
+ * @package     local_schola_slots
  * @copyright   2026 Emanuel Dickson Wanyonyi <wanyonyi.d.emanuel@gmail.com>
  * @author      Emanuel Dickson Wanyonyi <wanyonyi.d.emanuel@gmail.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later

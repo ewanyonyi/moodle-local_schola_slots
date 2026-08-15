@@ -14,15 +14,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace local_academic_timetabler\output;
+namespace local_schola_slots\output;
 
-use local_academic_timetabler\licensing\license_manager;
+use local_schola_slots\licensing\license_manager;
 use plugin_renderer_base;
 
 /**
- * Output renderer for local_academic_timetabler.
+ * Output renderer for local_schola_slots.
  *
- * @package     local_academic_timetabler
+ * @package     local_schola_slots
  * @copyright   2026 Emanuel Dickson Wanyonyi <wanyonyi.d.emanuel@gmail.com>
  * @author      Emanuel Dickson Wanyonyi <wanyonyi.d.emanuel@gmail.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -37,11 +37,11 @@ class renderer extends plugin_renderer_base {
      * @return string Rendered HTML header bar.
      */
     public static function render_nav_header(string $activepage = 'index', bool $showclearall = false, string $scheduletype = 'all'): string {
-        $indexurl = new \moodle_url('/local/academic_timetabler/index.php');
-        $roomsurl = new \moodle_url('/local/academic_timetabler/rooms.php');
-        $slotsurl = new \moodle_url('/local/academic_timetabler/slots.php');
-        $schedulesurl = new \moodle_url('/local/academic_timetabler/schedules.php');
-        $generateurl = new \moodle_url('/local/academic_timetabler/index.php', [
+        $indexurl = new \moodle_url('/local/schola_slots/index.php');
+        $roomsurl = new \moodle_url('/local/schola_slots/rooms.php');
+        $slotsurl = new \moodle_url('/local/schola_slots/slots.php');
+        $schedulesurl = new \moodle_url('/local/schola_slots/schedules.php');
+        $generateurl = new \moodle_url('/local/schola_slots/index.php', [
             'action' => 'generate',
             'sesskey' => sesskey(),
         ]);
@@ -102,20 +102,20 @@ class renderer extends plugin_renderer_base {
         $isstarter = ($tier === license_manager::TIER_STARTER);
         $iscommunity = ($tier === license_manager::TIER_STARTER);
 
-        $indexurl = new \moodle_url('/local/academic_timetabler/index.php');
-        $roomsurl = new \moodle_url('/local/academic_timetabler/rooms.php');
-        $slotsurl = new \moodle_url('/local/academic_timetabler/slots.php');
-        $schedulesurl = new \moodle_url('/local/academic_timetabler/schedules.php');
-        $settingsurl = new \moodle_url('/admin/settings.php', ['section' => 'local_academic_timetabler_settings']);
+        $indexurl = new \moodle_url('/local/schola_slots/index.php');
+        $roomsurl = new \moodle_url('/local/schola_slots/rooms.php');
+        $slotsurl = new \moodle_url('/local/schola_slots/slots.php');
+        $schedulesurl = new \moodle_url('/local/schola_slots/schedules.php');
+        $settingsurl = new \moodle_url('/admin/settings.php', ['section' => 'local_schola_slots_settings']);
         $tasksurl = new \moodle_url('/admin/settings.php', ['section' => 'scheduledtasks']);
-        $generateurl = new \moodle_url('/local/academic_timetabler/index.php', [
+        $generateurl = new \moodle_url('/local/schola_slots/index.php', [
             'action' => 'generate',
             'sesskey' => sesskey(),
         ]);
 
         $coursecount = $DB->count_records_select('course', 'id > 1 AND visible = 1');
-        $roomcount = $DB->count_records('local_academic_timetabler_rooms');
-        $schedulecount = $DB->count_records('local_academic_timetabler_schedules');
+        $roomcount = $DB->count_records('local_schola_slots_rooms');
+        $schedulecount = $DB->count_records('local_schola_slots_schedules');
 
         $maxcourses = license_manager::get_max_courses();
         $maxcourseslabel = ($maxcourses === 0) ? 'Unlimited' : $maxcourses;
@@ -150,6 +150,6 @@ class renderer extends plugin_renderer_base {
             'is_course_exceeded' => $iscourseexceeded,
         ];
 
-        return $this->render_from_template('local_academic_timetabler/dashboard', $contextdata);
+        return $this->render_from_template('local_schola_slots/dashboard', $contextdata);
     }
 }

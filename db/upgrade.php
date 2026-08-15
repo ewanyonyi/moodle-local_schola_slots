@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Upgrade routines for local_academic_timetabler.
+ * Upgrade routines for local_schola_slots.
  *
- * @package     local_academic_timetabler
+ * @package     local_schola_slots
  * @copyright   2026 Emanuel Dickson Wanyonyi <wanyonyi.d.emanuel@gmail.com>
  * @author      Emanuel Dickson Wanyonyi <wanyonyi.d.emanuel@gmail.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -29,15 +29,15 @@
  * @param int $oldversion The old version number.
  * @return bool True on success.
  */
-function xmldb_local_academic_timetabler_upgrade($oldversion) {
+function xmldb_local_schola_slots_upgrade($oldversion) {
     global $DB;
     $dbman = $DB->get_manager();
 
     if ($oldversion < 2026081300) {
-        // Define table local_academic_timetabler_templates to be created.
-        $table = new xmldb_table('local_academic_timetabler_templates');
+        // Define table local_schola_slots_templates to be created.
+        $table = new xmldb_table('local_schola_slots_templates');
 
-        // Adding fields to table local_academic_timetabler_templates.
+        // Adding fields to table local_schola_slots_templates.
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
         $table->add_field('name', XMLDB_TYPE_CHAR, '100', null, XMLDB_NOTNULL, null, null);
         $table->add_field('description', XMLDB_TYPE_TEXT, null, null, null, null, null);
@@ -45,19 +45,19 @@ function xmldb_local_academic_timetabler_upgrade($oldversion) {
         $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
         $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
 
-        // Adding keys to table local_academic_timetabler_templates.
+        // Adding keys to table local_schola_slots_templates.
         $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
 
-        // Conditionally launch create table for local_academic_timetabler_templates.
+        // Conditionally launch create table for local_schola_slots_templates.
         upgrade_plugin_savepoint(true, 2026081300, 'local', 'academic_timetabler');
     }
 
     if ($oldversion < 2026081401) {
         $renames = [
-            'local_att_rooms'     => 'local_academic_timetabler_rooms',
-            'local_att_slots'     => 'local_academic_timetabler_slots',
-            'local_att_schedules' => 'local_academic_timetabler_schedules',
-            'local_att_templates' => 'local_academic_timetabler_templates',
+            'local_ss_rooms'     => 'local_schola_slots_rooms',
+            'local_ss_slots'     => 'local_schola_slots_slots',
+            'local_ss_schedules' => 'local_schola_slots_schedules',
+            'local_ss_templates' => 'local_schola_slots_templates',
         ];
 
         foreach ($renames as $oldname => $newname) {
@@ -69,7 +69,7 @@ function xmldb_local_academic_timetabler_upgrade($oldversion) {
         }
 
         // Create missing tables if they don't exist yet
-        $rooms = new xmldb_table('local_academic_timetabler_rooms');
+        $rooms = new xmldb_table('local_schola_slots_rooms');
         if (!$dbman->table_exists($rooms)) {
             $rooms->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
             $rooms->add_field('name', XMLDB_TYPE_CHAR, '100', null, XMLDB_NOTNULL, null, null);
@@ -79,7 +79,7 @@ function xmldb_local_academic_timetabler_upgrade($oldversion) {
             $dbman->create_table($rooms);
         }
 
-        $slots = new xmldb_table('local_academic_timetabler_slots');
+        $slots = new xmldb_table('local_schola_slots_slots');
         if (!$dbman->table_exists($slots)) {
             $slots->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
             $slots->add_field('type', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, 'class');
@@ -91,7 +91,7 @@ function xmldb_local_academic_timetabler_upgrade($oldversion) {
             $dbman->create_table($slots);
         }
 
-        $schedules = new xmldb_table('local_academic_timetabler_schedules');
+        $schedules = new xmldb_table('local_schola_slots_schedules');
         if (!$dbman->table_exists($schedules)) {
             $schedules->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
             $schedules->add_field('schedule_type', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, null);
@@ -104,7 +104,7 @@ function xmldb_local_academic_timetabler_upgrade($oldversion) {
             $dbman->create_table($schedules);
         }
 
-        $templates = new xmldb_table('local_academic_timetabler_templates');
+        $templates = new xmldb_table('local_schola_slots_templates');
         if (!$dbman->table_exists($templates)) {
             $templates->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
             $templates->add_field('name', XMLDB_TYPE_CHAR, '100', null, XMLDB_NOTNULL, null, null);

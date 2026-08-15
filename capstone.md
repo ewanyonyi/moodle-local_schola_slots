@@ -1,7 +1,7 @@
-# CAPSTONE PROJECT SPECIFICATION: Moodle Academic & Exam Timetabler (`local_academic_timetabler`)
+# CAPSTONE PROJECT SPECIFICATION: Moodle Academic & Exam Timetabler (`local_schola_slots`)
 
 ## Executive Summary
-**`local_academic_timetabler`** is an enterprise-grade, fully self-contained Moodle local plugin designed to solve both **routine course/class scheduling** (weekly recurring lectures, labs, seminars) and **exam timetabling** (midterms, finals) directly inside a Moodle server environment.
+**`local_schola_slots`** is an enterprise-grade, fully self-contained Moodle local plugin designed to solve both **routine course/class scheduling** (weekly recurring lectures, labs, seminars) and **exam timetabling** (midterms, finals) directly inside a Moodle server environment.
 
 The solution operates with **zero external API dependencies, third-party microservices, or cloud calls**, adhering strictly to on-premise execution, Moodle Frankensytle standards, GPL-3.0 licensing, and native PHP algorithms.
 
@@ -25,7 +25,7 @@ The solution operates with **zero external API dependencies, third-party microse
 ## 2. Directory & Component Architecture
 
 ```text
-moodle/local/academic_timetabler/
+moodle/local/schola_slots/
 ├── classes/
 │   ├── algorithm/
 │   │   └── solver.php               # Native PHP Constraint Solver Engine
@@ -36,13 +36,13 @@ moodle/local/academic_timetabler/
 │   └── privacy/
 │       └── provider.php             # GDPR Privacy API Compliance
 ├── db/
-│   ├── access.php                   # Capability Definitions (local/academic_timetabler:manage)
+│   ├── access.php                   # Capability Definitions (local/schola_slots:manage)
 │   ├── install.xml                  # XMLDB Database Schema
 │   ├── tasks.php                    # Task Registration
 │   └── upgrade.php                  # Database Upgrade Handler
 ├── lang/
 │   └── en/
-│       └── local_academic_timetabler.php # English Language Strings
+│       └── local_schola_slots.php # English Language Strings
 ├── templates/
 │   └── dashboard.mustache           # HTML/Mustache Admin Interface
 ├── index.php                        # Admin Controller View
@@ -57,10 +57,10 @@ moodle/local/academic_timetabler/
 
 ```xml
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="local/academic_timetabler/db" VERSION="20260812" COMMENT="Schema for unified course and exam timetabler">
+<XMLDB PATH="local/schola_slots/db" VERSION="20260812" COMMENT="Schema for unified course and exam timetabler">
   <TABLES>
     <!-- Physical Campus Infrastructure -->
-    <TABLE NAME="local_att_rooms" COMMENT="Campus rooms and capabilities">
+    <TABLE NAME="local_ss_rooms" COMMENT="Campus rooms and capabilities">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="name" TYPE="char" LENGTH="100" NOTNULL="true"/>
@@ -73,7 +73,7 @@ moodle/local/academic_timetabler/
     </TABLE>
 
     <!-- Master Time Slots (Classes and Exams) -->
-    <TABLE NAME="local_att_slots" COMMENT="Available time windows">
+    <TABLE NAME="local_ss_slots" COMMENT="Available time windows">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="type" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="class" COMMENT="class or exam"/>
@@ -88,7 +88,7 @@ moodle/local/academic_timetabler/
     </TABLE>
 
     <!-- Unified Schedule Persistence -->
-    <TABLE NAME="local_att_schedules" COMMENT="Generated master schedule">
+    <TABLE NAME="local_ss_schedules" COMMENT="Generated master schedule">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="schedule_type" TYPE="char" LENGTH="20" NOTNULL="true" COMMENT="class or exam"/>
@@ -115,7 +115,7 @@ moodle/local/academic_timetabler/
 <?php
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'local_academic_timetabler'; 
+$plugin->component = 'local_schola_slots'; 
 $plugin->version   = 2026081200;              // YYYYMMDDXX format
 $plugin->requires  = 2024042200;              // Minimum Moodle 4.4+
 $plugin->maturity  = MATURITY_STABLE;
@@ -128,7 +128,7 @@ $plugin->release   = '1.0.0';
 defined('MOODLE_INTERNAL') || die();
 
 $capabilities = [
-    'local/academic_timetabler:manage' => [
+    'local/schola_slots:manage' => [
         'riskbitmask' => RISK_CONFIG | RISK_DATALOSS,
         'captype' => 'write',
         'contextlevel' => CONTEXT_SYSTEM,
@@ -141,7 +141,7 @@ $capabilities = [
 
 ### 4.3 Native PHP Solver Engine (`classes/algorithm/solver.php`)
 ```php
-namespace local_academic_timetabler\algorithm;
+namespace local_schola_slots\algorithm;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -239,12 +239,12 @@ class solver {
 
 ### 4.4 Background Task Processor (`classes/task/generate_timetable.php`)
 ```php
-namespace local_academic_timetabler\task;
+namespace local_schola_slots\task;
 
 defined('MOODLE_INTERNAL') || die();
 
 use core\task\adhoc_task;
-use local_academic_timetabler\algorithm\solver;
+use local_schola_slots\algorithm\solver;
 
 class generate_timetable extends adhoc_task {
 
@@ -257,18 +257,18 @@ class generate_timetable extends adhoc_task {
         mtrace("Executing native Course and Exam Timetabling Engine...");
 
         $courses = $DB->get_records('course', ['visible' => 1]);
-        $slots   = $DB->get_records('local_att_slots');
-        $rooms   = $DB->get_records('local_att_rooms');
+        $slots   = $DB->get_records('local_ss_slots');
+        $rooms   = $DB->get_records('local_ss_rooms');
 
         $solver = new solver($slots, $rooms);
         $solver->load_courses($courses);
 
         if ($solver->solve_all()) {
             $solution = $solver->get_solution();
-            $DB->delete_records('local_att_schedules');
+            $DB->delete_records('local_ss_schedules');
 
             foreach ($solution['classes'] ?? [] as $courseid => $sched) {
-                $DB->insert_record('local_att_schedules', (object)[
+                $DB->insert_record('local_ss_schedules', (object)[
                     'schedule_type' => 'class',
                     'courseid'     => $courseid,
                     'roomid'       => $sched['room_id'],
@@ -312,7 +312,7 @@ class generate_timetable extends adhoc_task {
    ```
 2. **Execute Moodle Code Checker (PHPCS):**
    ```bash
-   vendor/bin/phpcs --standard=moodle local/academic_timetabler
+   vendor/bin/phpcs --standard=moodle local/schola_slots
    ```
 3. **Execute Solver Task in Background CLI:**
    ```bash

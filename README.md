@@ -1,4 +1,4 @@
-# Schola Slots Moodle Plugin (`local_academic_timetabler`)
+# Schola Slots Moodle Plugin (`local_schola_slots`)
 
 **`Schola Slots`** is an enterprise-grade, self-contained Moodle local plugin designed to generate conflict-free schedules for both **weekly course sessions** (lectures, labs) and **examination windows** (midterms, finals).
 
@@ -8,7 +8,7 @@ The entire system executes **100% on-premise** within Moodle's PHP environment w
 
 ## 💳 Commercial Licensing & Tiered Plans
 
-`local_academic_timetabler` follows a transparent commercial licensing model backed by automated **LemonSqueezy** license key validation:
+`local_schola_slots` follows a transparent commercial licensing model backed by automated **LemonSqueezy** license key validation:
 
 * **Community Edition (Free)**: Standard single-venue course scheduling, manual room management, basic schedule profile, community forum support.
 * **Starter Plan ($199 / year)**: Up to 100 active courses, 50 campus rooms, high school & department schedule profiles, standard email support.
@@ -97,7 +97,7 @@ EXIT;
 
 2. **Create Plugin Folder Directly in the Dev Tree:**
    ```bash
-   mkdir -p ~/dev/moodle/local/academic_timetabler
+   mkdir -p ~/dev/moodle/local/schola_slots
    ```
 
 3. **Run Non-Interactive Automated Moodle CLI Installation:**
@@ -236,7 +236,7 @@ To test the timetabling engine under realistic conditions, populate your Moodle 
 
 ```bash
 cd ~/dev/moodle
-php local/academic_timetabler/cli/populate_academic_data.php
+php local/schola_slots/cli/populate_academic_data.php
 ```
 
 #### Custom Scale Parameters
@@ -245,13 +245,13 @@ You can specify custom parameters to represent smaller testing scopes or massive
 
 ```bash
 # Populate a large institution (100 Courses, 50 Faculty, 500 Students)
-php local/academic_timetabler/cli/populate_academic_data.php --courses=100 --teachers=50 --students=500
+php local/schola_slots/cli/populate_academic_data.php --courses=100 --teachers=50 --students=500
 
 # Reset/clear existing rooms and time slots before populating
-php local/academic_timetabler/cli/populate_academic_data.php --clear
+php local/schola_slots/cli/populate_academic_data.php --clear
 
 # View all CLI flags and options
-php local/academic_timetabler/cli/populate_academic_data.php --help
+php local/schola_slots/cli/populate_academic_data.php --help
 ```
 
 #### Generated Resources Overview
@@ -260,8 +260,8 @@ php local/academic_timetabler/cli/populate_academic_data.php --help
 * **Faculty Accounts**: `faculty_1` .. `faculty_N` *(Password: `Password123!`)*.
 * **Student Accounts**: `student_1` .. `student_N` *(Password: `Password123!`)*.
 * **Exams**: 1 Midterm Exam and 1 Final Exam Quiz automatically created per course.
-* **Campus Rooms (`local_att_rooms`)**: Auditoriums (300–500 capacity), Lecture Halls (120–180 capacity), Specialized Computer & Science Labs, Classrooms.
-* **Time Slots (`local_att_slots`)**: Mon–Fri recurring class time windows + Morning/Afternoon Exam windows.
+* **Campus Rooms (`local_ss_rooms`)**: Auditoriums (300–500 capacity), Lecture Halls (120–180 capacity), Specialized Computer & Science Labs, Classrooms.
+* **Time Slots (`local_ss_slots`)**: Mon–Fri recurring class time windows + Morning/Afternoon Exam windows.
 
 
 ---
@@ -308,11 +308,11 @@ Run the Moodle standard code check against your local plugin workspace:
 
 # Standard check
 ```bash
-phpcs --standard=moodle ~/dev/moodle/local/academic_timetabler
+phpcs --standard=moodle ~/dev/moodle/local/schola_slots
 ```
 
 # Extended check (optional)
 
 ```bash
-phpcs --standard=moodle-extra ~/dev/moodle/local/academic_timetabler
+phpcs --standard=moodle-extra ~/dev/moodle/local/schola_slots
 ```

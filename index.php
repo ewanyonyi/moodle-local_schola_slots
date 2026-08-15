@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Main admin dashboard and timetable generation view for local_academic_timetabler.
+ * Main admin dashboard and timetable generation view for local_schola_slots.
  *
- * @package     local_academic_timetabler
+ * @package     local_schola_slots
  * @copyright   2026 Emanuel Dickson Wanyonyi <wanyonyi.d.emanuel@gmail.com>
  * @author      Emanuel Dickson Wanyonyi <wanyonyi.d.emanuel@gmail.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -27,12 +27,12 @@ require_once(__DIR__ . '/../../config.php');
 
 require_login();
 $context = context_system::instance();
-require_capability('local/academic_timetabler:manage', $context);
+require_capability('local/schola_slots:manage', $context);
 
-$PAGE->set_url(new moodle_url('/local/academic_timetabler/index.php'));
+$PAGE->set_url(new moodle_url('/local/schola_slots/index.php'));
 $PAGE->set_context($context);
-$PAGE->set_title(get_string('pluginname', 'local_academic_timetabler'));
-$PAGE->set_heading(get_string('pluginname', 'local_academic_timetabler'));
+$PAGE->set_title(get_string('pluginname', 'local_schola_slots'));
+$PAGE->set_heading(get_string('pluginname', 'local_schola_slots'));
 
 $action = optional_param('action', '', PARAM_ALPHA);
 if ($action === 'generate' && confirm_sesskey()) {
@@ -53,12 +53,12 @@ if ($action === 'generate' && confirm_sesskey()) {
     }
 
     $courses = $DB->get_records_select('course', $select, $params, 'id ASC');
-    $slots   = $DB->get_records('local_academic_timetabler_slots');
-    $rooms   = $DB->get_records('local_academic_timetabler_rooms');
+    $slots   = $DB->get_records('local_schola_slots_slots');
+    $rooms   = $DB->get_records('local_schola_slots_rooms');
 
     if (empty($rooms)) {
         redirect(
-            new moodle_url('/local/academic_timetabler/rooms.php'),
+            new moodle_url('/local/schola_slots/rooms.php'),
             'Please configure at least one room before generating timetables.',
             null,
             \core\output\notification::NOTIFY_WARNING
@@ -67,7 +67,7 @@ if ($action === 'generate' && confirm_sesskey()) {
 
     if (empty($slots)) {
         redirect(
-            new moodle_url('/local/academic_timetabler/slots.php'),
+            new moodle_url('/local/schola_slots/slots.php'),
             'Please configure time slots before generating timetables.',
             null,
             \core\output\notification::NOTIFY_WARNING
@@ -76,7 +76,7 @@ if ($action === 'generate' && confirm_sesskey()) {
 
     if (empty($courses)) {
         redirect(
-            new moodle_url('/local/academic_timetabler/index.php'),
+            new moodle_url('/local/schola_slots/index.php'),
             'No active courses found in the selected department category.',
             null,
             \core\output\notification::NOTIFY_WARNING
@@ -85,21 +85,21 @@ if ($action === 'generate' && confirm_sesskey()) {
 
     // Strict License Plan Capacity & Feature Enforcement
     $coursecount = count($courses);
-    $maxcourses = \local_academic_timetabler\licensing\license_manager::get_max_courses();
-    $tiername = \local_academic_timetabler\licensing\license_manager::get_tier_name();
+    $maxcourses = \local_schola_slots\licensing\license_manager::get_max_courses();
+    $tiername = \local_schola_slots\licensing\license_manager::get_tier_name();
 
     if ($maxcourses > 0 && $coursecount > $maxcourses) {
         redirect(
-            new moodle_url('/local/academic_timetabler/index.php'),
+            new moodle_url('/local/schola_slots/index.php'),
             "License Capacity Exceeded: Your institution has {$coursecount} active courses, but your {$tiername} plan is limited to {$maxcourses} courses. Please upgrade to Pro University ($499/year) to unlock unlimited course scheduling.",
             null,
             \core\output\notification::NOTIFY_ERROR
         );
     }
 
-    if ($scheduletype === 'exam' && !\local_academic_timetabler\licensing\license_manager::can_solve_exams()) {
+    if ($scheduletype === 'exam' && !\local_schola_slots\licensing\license_manager::can_solve_exams()) {
         redirect(
-            new moodle_url('/local/academic_timetabler/index.php'),
+            new moodle_url('/local/schola_slots/index.php'),
             "Examination Timetabling Feature Locked: Examination schedule generation requires a Starter or Pro University plan. Please upgrade your license key to unlock exam scheduling.",
             null,
             \core\output\notification::NOTIFY_ERROR
@@ -107,13 +107,13 @@ if ($action === 'generate' && confirm_sesskey()) {
     }
 
     try {
-        $solver = new \local_academic_timetabler\algorithm\solver($slots, $rooms);
+        $solver = new \local_schola_slots\algorithm\solver($slots, $rooms);
         $solver->set_slot_type($scheduletype);
         $solver->load_courses($courses);
 
         if ($genmode === 'append') {
             // Load ALL existing schedule entries as hard occupied blockouts
-            $existingschedules = $DB->get_records('local_academic_timetabler_schedules');
+            $existingschedules = $DB->get_records('local_schola_slots_schedules');
             $solver->load_existing_schedules($existingschedules);
         } else {
             // Overwrite mode: Delete matching schedule type / category entries
@@ -122,14 +122,14 @@ if ($action === 'generate' && confirm_sesskey()) {
                 if (!empty($catcourseids)) {
                     list($insql, $inparams) = $DB->get_in_or_equal($catcourseids, SQL_PARAMS_NAMED);
                     $inparams['stype'] = $scheduletype;
-                    $DB->delete_records_select('local_academic_timetabler_schedules', "schedule_type = :stype AND courseid {$insql}", $inparams);
+                    $DB->delete_records_select('local_schola_slots_schedules', "schedule_type = :stype AND courseid {$insql}", $inparams);
                 }
             } else {
-                $DB->delete_records('local_academic_timetabler_schedules', ['schedule_type' => $scheduletype]);
+                $DB->delete_records('local_schola_slots_schedules', ['schedule_type' => $scheduletype]);
             }
 
             // Load remaining non-deleted schedules (e.g. Class schedules when generating Exams) as occupied blockouts
-            $othersexisting = $DB->get_records_select('local_academic_timetabler_schedules', 'schedule_type != :stype', ['stype' => $scheduletype]);
+            $othersexisting = $DB->get_records_select('local_schola_slots_schedules', 'schedule_type != :stype', ['stype' => $scheduletype]);
             $solver->load_existing_schedules($othersexisting);
         }
 
@@ -146,7 +146,7 @@ if ($action === 'generate' && confirm_sesskey()) {
                 $teacherid = (int)($sched['teacher_id'] ?? 0);
 
                 if ($courseid > 0 && $roomid > 0 && $slotid > 0) {
-                    $DB->insert_record('local_academic_timetabler_schedules', (object)[
+                    $DB->insert_record('local_schola_slots_schedules', (object)[
                         'schedule_type' => $scheduletype,
                         'courseid'     => $courseid,
                         'roomid'       => $roomid,
@@ -158,14 +158,14 @@ if ($action === 'generate' && confirm_sesskey()) {
             }
             $label = ($scheduletype === 'exam') ? 'Examination' : 'Class';
             redirect(
-                new moodle_url('/local/academic_timetabler/schedules.php', ['type' => $scheduletype, 'categoryid' => $categoryid]),
+                new moodle_url('/local/schola_slots/schedules.php', ['type' => $scheduletype, 'categoryid' => $categoryid]),
                 "{$label} Timetable generated successfully! {$count} course sessions assigned conflict-free.",
                 null,
                 \core\output\notification::NOTIFY_SUCCESS
             );
         } else {
             redirect(
-                new moodle_url('/local/academic_timetabler/index.php'),
+                new moodle_url('/local/schola_slots/index.php'),
                 "Notice: Solver could not assign all courses without conflicts. Try adding more rooms or time slots.",
                 null,
                 \core\output\notification::NOTIFY_ERROR
@@ -173,7 +173,7 @@ if ($action === 'generate' && confirm_sesskey()) {
         }
     } catch (\Exception $e) {
         redirect(
-            new moodle_url('/local/academic_timetabler/index.php'),
+            new moodle_url('/local/schola_slots/index.php'),
             "Error running timetable generator: " . $e->getMessage(),
             null,
             \core\output\notification::NOTIFY_ERROR
@@ -182,9 +182,9 @@ if ($action === 'generate' && confirm_sesskey()) {
 }
 
 echo $OUTPUT->header();
-echo \local_academic_timetabler\output\renderer::render_nav_header('index');
+echo \local_schola_slots\output\renderer::render_nav_header('index');
 
-$output = $PAGE->get_renderer('local_academic_timetabler');
+$output = $PAGE->get_renderer('local_schola_slots');
 echo $output->render_dashboard([]);
 
 // -------------------------------------------------------------------
@@ -194,7 +194,7 @@ echo html_writer::start_div('card border-0 shadow-sm my-4 bg-white');
 echo html_writer::div(html_writer::tag('h5', 'Automated CSP Solver & Timetable Generator', ['class' => 'mb-0 font-weight-bold']), 'card-header bg-dark text-white p-3');
 echo html_writer::start_div('card-body p-4');
 
-echo html_writer::start_tag('form', ['method' => 'post', 'action' => (new moodle_url('/local/academic_timetabler/index.php'))->out(false)]);
+echo html_writer::start_tag('form', ['method' => 'post', 'action' => (new moodle_url('/local/schola_slots/index.php'))->out(false)]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'generate']);
 
