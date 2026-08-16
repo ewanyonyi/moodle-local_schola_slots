@@ -12,7 +12,7 @@ This plugin is available on the **Moodle Marketplace** under dual licensing:
 
 * **Official Website**: [https://scholaslots.com](https://scholaslots.com)
 * **Customer Support Email**: [support@scholaslots.com](mailto:support@scholaslots.com)
-* **Repository**: [https://github.com/moodlehq/moodle-local_schola_slots](https://github.com/moodlehq/moodle-local_schola_slots)
+* **Repository**: [https://github.com/ewanyonyi/moodle-local_schola_slots](https://github.com/ewanyonyi/moodle-local_schola_slots)
 
 ---
 
