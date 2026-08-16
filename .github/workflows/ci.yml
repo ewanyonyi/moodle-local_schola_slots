@@ -41,8 +41,12 @@ jobs:
           coverage: none
 
       - name: Setup moodle-plugin-ci
+        env:
+          COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{ secrets.GITHUB_TOKEN }}"}}'
         run: |
           git config --global url."https://github.com/".insteadOf "git://github.com/"
+          composer global config repositories.moodle-local_ci vcs https://github.com/moodlehq/moodle-local_ci.git
+          composer global config repositories.moodle-plugin-ci vcs https://github.com/moodlehq/moodle-plugin-ci.git
           composer global config minimum-stability dev
           composer global config prefer-stable true
           composer global require moodlehq/moodle-plugin-ci:^4
