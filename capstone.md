@@ -3,13 +3,13 @@
 ## Executive Summary
 **`local_schola_slots`** is an enterprise-grade, fully self-contained Moodle local plugin designed to solve both **routine course/class scheduling** (weekly recurring lectures, labs, seminars) and **exam timetabling** (midterms, finals) directly inside a Moodle server environment.
 
-The solution operates with **zero external API dependencies, third-party microservices, or cloud calls**, adhering strictly to on-premise execution, Moodle Frankensytle standards, GPL-3.0 licensing, and native PHP algorithms.
+The solution provides an on-premise native PHP solver engine adhering strictly to Moodle Frankensytle standards, GPL-3.0 licensing, and GDPR privacy compliance, with optional cloud solver acceleration (scholaslots.com) for large university workloads.
 
 ---
 
 ## 1. System Requirements & Constraints
 
-* **Strict On-Premise Execution:** All computation executes within Moodle's native PHP environment. No outbound HTTP/REST calls to external solvers.
+* **Native On-Premise Execution:** Standard computation executes within Moodle's native PHP environment. Large university datasets can optionally connect to the off-server cloud solver engine (scholaslots.com).
 * **Asynchronous Background Processing:** Heavy constraint-solving routines execute via Moodle's Task API (`\core\task\adhoc_task`) executed via CLI `cron`, preventing web request timeouts (`max_execution_time`).
 * **Zero Student & Teacher Conflicts (Hard Constraints):**
   * No student can be scheduled for two overlapping classes or exams.

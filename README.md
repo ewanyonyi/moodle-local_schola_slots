@@ -28,7 +28,7 @@ This plugin is available on the **Moodle Marketplace** under dual licensing:
 
 ## Local Development Setup (`~/dev/moodle` — Ubuntu 24.04 LTS)
 
-This setup runs Moodle **v5.2.2** and your plugin directly out of your user development directory (`/home/ewanyonyi/dev`), eliminating all `sudo` permission conflicts during development.
+This setup runs Moodle **v5.2.2** and your plugin directly out of your user development directory (`~/dev`), eliminating all `sudo` permission conflicts during development.
 
 ### 1. Install & Configure LAMP Dependencies
 
@@ -64,7 +64,7 @@ Log into MariaDB and create a clean database for Moodle 5.2.2:
 
 ```sql
 CREATE DATABASE moodle DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'moodleuser'@'localhost' IDENTIFIED BY 'Password123!';
+CREATE USER 'moodleuser'@'localhost' IDENTIFIED BY 'YourSecurePassword123!';
 GRANT ALL PRIVILEGES ON moodle.* TO 'moodleuser'@'localhost';
 FLUSH PRIVILEGES;
 EXIT;
@@ -93,12 +93,12 @@ EXIT;
    php admin/cli/install.php \
      --lang=en \
      --wwwroot=http://localhost \
-     --dataroot=/home/ewanyonyi/dev/moodledata \
+     --dataroot=$HOME/dev/moodledata \
      --dbtype=mariadb \
      --dbhost=localhost \
      --dbname=moodle \
      --dbuser=moodleuser \
-     --dbpass='Password123!' \
+     --dbpass='YourSecurePassword123!' \
      --fullname="Moodle Dev Site" \
      --shortname="moodle-dev" \
      --adminuser=admin \
@@ -135,9 +135,9 @@ EXIT;
    ```apache
    <VirtualHost *:80>
        ServerName localhost
-       DocumentRoot /home/ewanyonyi/dev/moodle/public
+       DocumentRoot /home/username/dev/moodle/public
 
-       <Directory /home/ewanyonyi/dev/moodle/public>
+       <Directory /home/username/dev/moodle/public>
            Options Indexes FollowSymLinks
            AllowOverride All
            Require all granted
@@ -150,9 +150,9 @@ EXIT;
    <IfModule mod_ssl.c>
    <VirtualHost *:443>
        ServerName localhost
-       DocumentRoot /home/ewanyonyi/dev/moodle/public
+       DocumentRoot /home/username/dev/moodle/public
 
-       <Directory /home/ewanyonyi/dev/moodle/public>
+       <Directory /home/username/dev/moodle/public>
            Options Indexes FollowSymLinks
            AllowOverride All
            Require all granted
@@ -171,8 +171,8 @@ EXIT;
 3. **Set Permissions & Enable Virtual Host:**
    ```bash
    # Grant directory traversal & file permissions to Apache (www-data)
-   chmod 755 /home/ewanyonyi
-   chmod 755 /home/ewanyonyi/dev
+   chmod 755 $HOME
+   chmod 755 $HOME/dev
    chmod 644 ~/dev/moodle/config.php
    chmod -R 777 ~/dev/moodledata
 
@@ -199,7 +199,7 @@ EXIT;
 
 ### 5. CLI Installation & Testing Workflow (No `sudo` Required)
 
-Once web setup is complete at `http://localhost/`, manage database upgrades, CLI tasks, and coding directly as user `ewanyonyi`:
+Once web setup is complete at `http://localhost/`, manage database upgrades, CLI tasks, and coding directly in your user environment:
 
 * **Run Moodle Upgrade / Schema Install:**
   ```bash
