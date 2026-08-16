@@ -17,10 +17,11 @@ jobs:
       mariadb:
         image: mariadb:10.11
         env:
+          MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 'true'
           MYSQL_ALLOW_EMPTY_PASSWORD: 'true'
         ports:
           - 3306:3306
-        options: --health-cmd="healthcheck.sh --connect --innodb_bytes_inserted" --health-interval 10s --health-timeout 5s --health-retries 3
+        options: --health-cmd="healthcheck.sh --su-mysql --connect --innodb_initialized" --health-interval 10s --health-timeout 5s --health-retries 5
     strategy:
       matrix:
         moodle-branch: ['MOODLE_405_STABLE', 'main']
