@@ -336,14 +336,14 @@ if ($editingprofile) {
 
     // Color Theme
     echo html_writer::start_div('col-md-2');
-    echo html_writer::tag('label', 'Color Theme', ['class' => 'form-label font-weight-bold text-dark']);
+    echo html_writer::tag('label', get_string('color_theme', 'local_schola_slots'), ['class' => 'form-label font-weight-bold text-dark']);
     $themeoptions = [
-        'primary' => 'Primary Blue',
-        'success' => 'Emerald Green',
-        'info'    => 'Teal / Cyan',
-        'purple'  => 'Modular Purple',
-        'warning' => 'Amber / Gold',
-        'dark'    => 'Night Dark',
+        'primary' => get_string('theme_primary', 'local_schola_slots'),
+        'success' => get_string('theme_success', 'local_schola_slots'),
+        'info'    => get_string('theme_info', 'local_schola_slots'),
+        'purple'  => get_string('theme_purple', 'local_schola_slots'),
+        'warning' => get_string('theme_warning', 'local_schola_slots'),
+        'dark'    => get_string('theme_dark', 'local_schola_slots'),
     ];
     echo html_writer::select($themeoptions, 'theme', $editingprofile['theme'] ?? 'primary', false, ['class' => 'form-select p-2']);
     echo html_writer::end_div();

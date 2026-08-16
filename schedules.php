@@ -211,7 +211,7 @@ if ($editschedule) {
 
 // Fetch options for filter dropdowns
 $allrooms = $DB->get_records('local_schola_slots_rooms', null, 'name ASC');
-$roomoptions = [0 => '-- All Campus Venues --'];
+$roomoptions = [0 => get_string('all_campus_venues', 'local_schola_slots')];
 foreach ($allrooms as $r) {
     $roomoptions[$r->id] = $r->name . ' (' . $r->capacity . ' seats)';
 }
@@ -220,29 +220,29 @@ $allteachers = $DB->get_records_sql("SELECT DISTINCT u.id, u.firstname, u.lastna
                                       FROM {user} u
                                       JOIN {local_schola_slots_schedules} s ON s.teacherid = u.id
                                   ORDER BY u.lastname ASC");
-$teacheroptions = [0 => '-- All Faculty Members --'];
+$teacheroptions = [0 => get_string('all_faculty_members', 'local_schola_slots')];
 foreach ($allteachers as $t) {
     $teacheroptions[$t->id] = fullname($t);
 }
 
 // Categories / Departments filter options
 $categories = $DB->get_records_menu('course_categories', null, 'name ASC', 'id, name');
-$catoptions = [0 => '-- All Departments --'] + $categories;
+$catoptions = [0 => get_string('all_departments_filter', 'local_schola_slots')] + $categories;
 
 // Type filter options
 $typefilteroptions = [
-    'all'   => 'Profile: All Timetables',
-    'class' => 'Profile: Class Timetables Only',
-    'exam'  => 'Profile: Exam Timetables Only',
+    'all'   => get_string('profile_all_timetables', 'local_schola_slots'),
+    'class' => get_string('profile_class_only', 'local_schola_slots'),
+    'exam'  => get_string('profile_exam_only', 'local_schola_slots'),
 ];
 
 // Strategy options
 $currentstrategy = get_config('local_schola_slots', 'day_distribution') ?: 'balanced';
 $strategyoptions = [
-    'balanced'   => 'Strategy: Balanced 5-Day (Mon-Fri)',
-    'mon_to_sat' => 'Strategy: 6-Day Schedule (Mon-Sat)',
-    'mon_to_thu' => 'Strategy: 4-Day Compact (Mon-Thu)',
-    'frontload'   => 'Strategy: Sequential Frontload',
+    'balanced'   => get_string('strategy_balanced', 'local_schola_slots'),
+    'mon_to_sat' => get_string('strategy_6day', 'local_schola_slots'),
+    'mon_to_thu' => get_string('strategy_4day', 'local_schola_slots'),
+    'frontload'  => get_string('strategy_frontload', 'local_schola_slots'),
 ];
 
 // Summary counts
@@ -274,8 +274,8 @@ echo html_writer::start_div('card-body d-flex flex-wrap align-items-center justi
 
 // Left side: Export / Print Action Buttons
 echo html_writer::start_div('d-flex gap-2 flex-wrap');
-echo html_writer::link($csvexporturl, 'Export to CSV', ['class' => 'btn btn-outline-success font-weight-bold']);
-echo html_writer::link($pdfexporturl, 'Print / Save to PDF', ['class' => 'btn btn-outline-primary font-weight-bold', 'target' => '_blank']);
+echo html_writer::link($csvexporturl, get_string('export_csv', 'local_schola_slots'), ['class' => 'btn btn-outline-success font-weight-bold']);
+echo html_writer::link($pdfexporturl, get_string('print_pdf', 'local_schola_slots'), ['class' => 'btn btn-outline-primary font-weight-bold', 'target' => '_blank']);
 echo html_writer::end_div();
 
 // Strategy selector form
@@ -289,8 +289,8 @@ echo html_writer::end_tag('form');
 echo html_writer::start_div('btn-group', ['role' => 'group']);
 $gridactive = ($view === 'grid') ? 'btn-primary' : 'btn-outline-primary';
 $tableactive = ($view === 'table') ? 'btn-primary' : 'btn-outline-primary';
-echo html_writer::link(new moodle_url($url, ['view' => 'grid']), 'Weekly Matrix', ['class' => "btn btn-sm {$gridactive}"]);
-echo html_writer::link(new moodle_url($url, ['view' => 'table']), 'Master List', ['class' => "btn btn-sm {$tableactive}"]);
+echo html_writer::link(new moodle_url($url, ['view' => 'grid']), get_string('weekly_matrix', 'local_schola_slots'), ['class' => "btn btn-sm {$gridactive}"]);
+echo html_writer::link(new moodle_url($url, ['view' => 'table']), get_string('master_list', 'local_schola_slots'), ['class' => "btn btn-sm {$tableactive}"]);
 echo html_writer::end_div();
 
 // Right side: Filter Controls (Type, Department, Room, Teacher)
@@ -302,7 +302,7 @@ echo html_writer::select($roomoptions, 'roomid', $roomid, false, ['class' => 'fo
 echo html_writer::select($teacheroptions, 'teacherid', $teacherid, false, ['class' => 'form-select form-select-sm', 'onchange' => 'this.form.submit()']);
 
 if ($roomid > 0 || $teacherid > 0 || $categoryid > 0 || $scheduletype !== 'all') {
-    echo html_writer::link(new moodle_url($url, ['roomid' => 0, 'teacherid' => 0, 'categoryid' => 0, 'type' => 'all']), 'Reset Filters', ['class' => 'btn btn-sm btn-outline-secondary']);
+    echo html_writer::link(new moodle_url($url, ['roomid' => 0, 'teacherid' => 0, 'categoryid' => 0, 'type' => 'all']), get_string('reset_filters', 'local_schola_slots'), ['class' => 'btn btn-sm btn-outline-secondary']);
 }
 echo html_writer::end_tag('form');
 

@@ -191,7 +191,7 @@ echo $output->render_dashboard([]);
 // Multi-Timetable Generator Options Card
 // -------------------------------------------------------------------
 echo html_writer::start_div('card border-0 shadow-sm my-4 bg-white');
-echo html_writer::div(html_writer::tag('h5', 'Automated CSP Solver & Timetable Generator', ['class' => 'mb-0 font-weight-bold']), 'card-header bg-dark text-white p-3');
+echo html_writer::div(html_writer::tag('h5', get_string('csp_generator_heading', 'local_schola_slots'), ['class' => 'mb-0 font-weight-bold']), 'card-header bg-dark text-white p-3');
 echo html_writer::start_div('card-body p-4');
 
 echo html_writer::start_tag('form', ['method' => 'post', 'action' => (new moodle_url('/local/schola_slots/index.php'))->out(false)]);
@@ -200,38 +200,38 @@ echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'v
 
 // Fetch course categories (departments)
 $categories = $DB->get_records_menu('course_categories', null, 'name ASC', 'id, name');
-$catoptions = [0 => '-- Entire Institution (All Departments) --'] + $categories;
+$catoptions = [0 => get_string('all_departments', 'local_schola_slots')] + $categories;
 
 $typeoptions = [
-    'class' => 'Regular Semester Class Schedule',
-    'exam'  => 'Examination Schedule',
+    'class' => get_string('regular_class_schedule', 'local_schola_slots'),
+    'exam'  => get_string('examination_schedule', 'local_schola_slots'),
 ];
 
 $modeoptions = [
-    'overwrite' => 'Overwrite Existing Timetables of Selected Type',
-    'append'    => 'Append Mode (Preserve Existing Timetables & Schedule Around Them)',
+    'overwrite' => get_string('overwrite_existing_mode', 'local_schola_slots'),
+    'append'    => get_string('append_existing_mode', 'local_schola_slots'),
 ];
 
 echo html_writer::start_div('row g-3');
 echo html_writer::start_div('col-md-4');
-echo html_writer::tag('label', 'Timetable Profile / Type', ['class' => 'form-label font-weight-bold text-dark']);
+echo html_writer::tag('label', get_string('timetable_profile_type', 'local_schola_slots'), ['class' => 'form-label font-weight-bold text-dark']);
 echo html_writer::select($typeoptions, 'scheduletype', 'class', false, ['class' => 'form-select p-2']);
 echo html_writer::end_div();
 
 echo html_writer::start_div('col-md-4');
-echo html_writer::tag('label', 'Department / Course Category Scope', ['class' => 'form-label font-weight-bold text-dark']);
+echo html_writer::tag('label', get_string('department_scope', 'local_schola_slots'), ['class' => 'form-label font-weight-bold text-dark']);
 echo html_writer::select($catoptions, 'categoryid', 0, false, ['class' => 'form-select p-2']);
 echo html_writer::end_div();
 
 echo html_writer::start_div('col-md-4');
-echo html_writer::tag('label', 'Generation & Conflict Mode', ['class' => 'form-label font-weight-bold text-dark']);
+echo html_writer::tag('label', get_string('generation_conflict_mode', 'local_schola_slots'), ['class' => 'form-label font-weight-bold text-dark']);
 echo html_writer::select($modeoptions, 'mode', 'overwrite', false, ['class' => 'form-select p-2']);
 echo html_writer::end_div();
 echo html_writer::end_div();
 
 echo html_writer::start_div('mt-4 pt-3 border-top d-flex align-items-center justify-content-between flex-wrap gap-2');
-echo html_writer::tag('button', 'Run Solver & Generate Timetable', ['type' => 'submit', 'class' => 'btn btn-success font-weight-bold px-4 py-2 shadow-sm fs-6']);
-echo html_writer::tag('span', 'Cross-schedule conflict prevention will automatically protect active venue and instructor bookings.', ['class' => 'text-muted small']);
+echo html_writer::tag('button', get_string('run_solver_button', 'local_schola_slots'), ['type' => 'submit', 'class' => 'btn btn-success font-weight-bold px-4 py-2 shadow-sm fs-6']);
+echo html_writer::tag('span', get_string('conflict_prevention_notice', 'local_schola_slots'), ['class' => 'text-muted small']);
 echo html_writer::end_div();
 
 echo html_writer::end_tag('form');

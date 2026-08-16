@@ -199,11 +199,17 @@ class solver {
         require_once($CFG->libdir . '/filelib.php');
         $curl = new \curl(['CURLOPT_TIMEOUT' => 5, 'CURLOPT_CONNECTTIMEOUT' => 3]);
         $curl->setHeader('Content-Type: application/json');
-        $cloudurl = 'http://localhost:8080/api/v1/solve';
+        $configuredhost = get_config('local_schola_slots', 'solver_url');
+        $cloudurl = !empty($configuredhost) ? trim((string)$configuredhost) : 'https://scholaslots.com/api/v1/solve';
 
         $response = $curl->post($cloudurl, json_encode($payload));
         if ($curl->get_errno() || empty($response)) {
-            return false;
+            // Fallback for local development environments running Rust solver locally
+            $localurl = 'http://localhost:8080/api/v1/solve';
+            $response = $curl->post($localurl, json_encode($payload));
+            if ($curl->get_errno() || empty($response)) {
+                return false;
+            }
         }
 
         $data = json_decode($response, true);

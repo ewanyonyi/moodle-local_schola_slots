@@ -1,44 +1,30 @@
 # Schola Slots Moodle Plugin (`local_schola_slots`)
 
-**`Schola Slots`** is an enterprise-grade, self-contained Moodle local plugin designed to generate conflict-free schedules for both **weekly course sessions** (lectures, labs) and **examination windows** (midterms, finals).
+**`Schola Slots`** is an enterprise-grade Moodle local plugin designed to generate conflict-free schedules for both **weekly course sessions** (lectures, labs) and **examination windows** (midterms, finals).
 
-The plugin is submitted to the **Moodle Plugins Directory** as a **Free Plugin** released under the **GNU General Public License v3 (GPLv3)**.
+This plugin is available on the **Moodle Marketplace** under dual licensing:
+* **Starter Edition (Free Open Source)**: Built-in native PHP solver engine for up to 50 active courses and 25 campus rooms under GPLv3.
+* **Pro Cloud Acceleration Edition (Commercial Subscription)**: Off-server high-performance Rust Constraint Satisfaction Problem (CSP) solver engine at [scholaslots.com](https://scholaslots.com) for unlimited course datasets, batch venue imports, and priority computation.
 
-The core solver engine executes **100% on-premise** within Moodle's native PHP environment with zero required external dependencies or mandatory fees.
+---
+
+## 🎧 Support & Contact Channels
+
+* **Official Website**: [https://scholaslots.com](https://scholaslots.com)
+* **Customer Support Email**: [support@scholaslots.com](mailto:support@scholaslots.com)
+* **Repository**: [https://github.com/moodlehq/moodle-local_schola_slots](https://github.com/moodlehq/moodle-local_schola_slots)
 
 ---
 
 ## 📜 Licensing & Cloud Acceleration
 
-`local_schola_slots` is distributed as a free plugin for Moodle:
+`local_schola_slots` is published as a Moodle Marketplace submission:
 
-* **Native On-Premise Engine (100% Free)**: Full weekly class timetabling, examination schedule generation, room/venue capacity management, bell schedule wizard, and CLI data generator running entirely on your Moodle server under GPLv3.
-* **Cloud Solver Acceleration (Optional API)**: For large universities with massive multi-department masterlists, institutions can optionally connect to the off-server **Schola Slots Cloud Solver Engine** ([scholaslots.com](https://scholaslots.com)) via API key for ultra-fast high-performance solving.
-
----
-
-## Uninstalling Legacy Moodle Setup (`/var/www/html/moodle`)
-
-Before migrating your development workspace to `~/dev/moodle`, purge the previous installation from `/var/www/html` and drop the existing MariaDB database.
-
-1. **Remove Existing Web Directory & Moodledata:**
-   ```bash
-   sudo rm -rf /var/www/html/moodle
-   sudo rm -rf /var/www/moodledata
-   ```
-
-2. **Drop Existing Moodle Database & User:**
-   ```bash
-   sudo mysql -u root -e "DROP DATABASE IF EXISTS moodle; DROP USER IF EXISTS 'moodleuser'@'localhost';"
-   ```
-
-3. **Clean Up Apache Default Configurations:**
-   ```bash
-   sudo a2dissite 000-default.conf
-   sudo systemctl reload apache2
-   ```
+* **Native On-Premise Engine (Free / Community)**: Full weekly class timetabling, examination schedule generation, room/venue capacity management, bell schedule wizard, and CLI data generator running entirely on your Moodle server under GPLv3.
+* **Cloud Solver Acceleration (Pro Commercial)**: For large universities with massive multi-department masterlists, institutions can connect to the off-server **Schola Slots Cloud Solver Engine** ([scholaslots.com](https://scholaslots.com)) via LemonSqueezy commercial API key for high-speed solving.
 
 ---
+
 
 ## Local Development Setup (`~/dev/moodle` — Ubuntu 24.04 LTS)
 

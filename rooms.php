@@ -170,8 +170,8 @@ echo $OUTPUT->header();
 
 echo \local_schola_slots\output\renderer::render_nav_header('rooms');
 
-$cardheader = $editroom ? 'Edit Campus Room / Venue' : 'Add Single Campus Room';
-$btnlabel = $editroom ? 'Update Room' : 'Save Room';
+$cardheader = $editroom ? get_string('edit_campus_room', 'local_schola_slots') : get_string('add_single_room', 'local_schola_slots');
+$btnlabel = $editroom ? get_string('update_room', 'local_schola_slots') : get_string('save_room', 'local_schola_slots');
 
 $templateurl = new moodle_url($url, ['action' => 'download_template']);
 

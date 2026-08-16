@@ -47,10 +47,10 @@ class renderer extends plugin_renderer_base {
         ]);
 
         $navitems = [
-            'index'     => ['label' => 'Overview', 'url' => $indexurl],
-            'rooms'     => ['label' => 'Manage Rooms', 'url' => $roomsurl],
-            'slots'     => ['label' => 'Bell Schedule & Slots', 'url' => $slotsurl],
-            'schedules' => ['label' => 'View Timetables', 'url' => $schedulesurl],
+            'index'     => ['label' => get_string('nav_overview', 'local_schola_slots'), 'url' => $indexurl],
+            'rooms'     => ['label' => get_string('nav_rooms', 'local_schola_slots'), 'url' => $roomsurl],
+            'slots'     => ['label' => get_string('nav_slots', 'local_schola_slots'), 'url' => $slotsurl],
+            'schedules' => ['label' => get_string('nav_schedules', 'local_schola_slots'), 'url' => $schedulesurl],
         ];
 
         $html = \html_writer::start_div('bg-white border rounded shadow-sm p-3 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-3');
@@ -68,16 +68,19 @@ class renderer extends plugin_renderer_base {
 
         // Action Buttons Group
         $html .= \html_writer::start_div('d-flex align-items-center gap-2 flex-wrap');
-        $html .= \html_writer::link($generateurl, 'Generate Timetable', [
+        $html .= \html_writer::link($generateurl, get_string('generate_timetable', 'local_schola_slots'), [
             'class' => 'btn btn-success font-weight-bold px-3 py-2 shadow-sm',
         ]);
 
         if ($showclearall) {
             $clearurl = new \moodle_url($schedulesurl, ['action' => 'clearall', 'type' => $scheduletype, 'sesskey' => sesskey()]);
-            $cleartitle = ($scheduletype !== 'all') ? 'Clear ' . strtoupper($scheduletype) . ' Timetables' : 'Clear All Timetables';
+            $cleartitle = ($scheduletype !== 'all')
+                ? get_string('clear_timetables', 'local_schola_slots') . ' (' . strtoupper($scheduletype) . ')'
+                : get_string('clear_timetables', 'local_schola_slots');
+            $confirmmsg = s(get_string('confirm_clear_timetables', 'local_schola_slots'));
             $html .= \html_writer::link($clearurl, $cleartitle, [
                 'class' => 'btn btn-outline-danger font-weight-bold px-3 py-2',
-                'onclick' => 'return confirm("Are you sure you want to delete selected generated schedule entries?");',
+                'onclick' => 'return confirm("' . $confirmmsg . '");',
             ]);
         }
         $html .= \html_writer::end_div();

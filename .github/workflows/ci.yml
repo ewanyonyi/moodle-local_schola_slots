@@ -1,0 +1,51 @@
+name: Moodle Plugin CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  moodle-plugin-ci:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        moodle-branch: ['MOODLE_405_STABLE', 'main']
+        php: ['8.2', '8.3']
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, pgsql, mysqli, gd, xml, zip, curl, intl, soap
+          coverage: none
+
+      - name: Setup moodle-plugin-ci
+        run: |
+          composer global config minimum-stability dev
+          composer global require moodlehq/moodle-plugin-ci
+          echo "$HOME/.composer/vendor/bin" >> $GITHUB_PATH
+
+      - name: Install Moodle CI environment
+        run: |
+          moodle-plugin-ci install --plugin local_schola_slots --moodle ${{ matrix.moodle-branch }}
+
+      - name: Run PHP lint check
+        run: moodle-plugin-ci phplint
+
+      - name: Run CodeSniffer
+        run: moodle-plugin-ci phpcs
+
+      - name: Run PHPMD
+        run: moodle-plugin-ci phpmd
+
+      - name: Run Moodle code checker
+        run: moodle-plugin-ci validate
