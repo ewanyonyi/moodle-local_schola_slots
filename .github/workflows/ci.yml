@@ -13,6 +13,14 @@ on:
 jobs:
   moodle-plugin-ci:
     runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'true'
+        ports:
+          - 3306:3306
+        options: --health-cmd="healthcheck.sh --connect --innodb_bytes_inserted" --health-interval 10s --health-timeout 5s --health-retries 3
     strategy:
       matrix:
         moodle-branch: ['MOODLE_405_STABLE', 'main']
@@ -28,7 +36,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: mbstring, pgsql, mysqli, gd, xml, zip, curl, intl, soap
+          extensions: mbstring, mysqli, gd, xml, zip, curl, intl, soap
           coverage: none
 
       - name: Setup moodle-plugin-ci
@@ -39,7 +47,7 @@ jobs:
 
       - name: Install Moodle CI environment
         run: |
-          moodle-plugin-ci install --plugin ./plugin --branch ${{ github.ref_name }} --moodle ${{ matrix.moodle-branch }}
+          moodle-plugin-ci install --plugin ./plugin --db-type mysqli --db-host 127.0.0.1 --db-user root --branch ${{ github.ref_name }} --moodle ${{ matrix.moodle-branch }}
 
       - name: Run PHP lint check
         run: moodle-plugin-ci phplint
