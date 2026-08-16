@@ -21,7 +21,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          path: local_schola_slots
+          path: plugin
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -38,7 +38,7 @@ jobs:
 
       - name: Install Moodle CI environment
         run: |
-          moodle-plugin-ci install --plugin local_schola_slots --moodle ${{ matrix.moodle-branch }}
+          moodle-plugin-ci install --plugin plugin --moodle ${{ matrix.moodle-branch }}
 
       - name: Run PHP lint check
         run: moodle-plugin-ci phplint
