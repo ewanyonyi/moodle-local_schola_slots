@@ -22,6 +22,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: plugin
+          fetch-depth: 0
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -38,7 +39,7 @@ jobs:
 
       - name: Install Moodle CI environment
         run: |
-          moodle-plugin-ci install --plugin plugin --moodle ${{ matrix.moodle-branch }}
+          moodle-plugin-ci install --plugin ./plugin --branch ${{ github.ref_name }} --moodle ${{ matrix.moodle-branch }}
 
       - name: Run PHP lint check
         run: moodle-plugin-ci phplint
