@@ -89,18 +89,22 @@ if ($action === 'generate' && confirm_sesskey()) {
     $tiername = \local_schola_slots\licensing\license_manager::get_tier_name();
 
     if ($maxcourses > 0 && $coursecount > $maxcourses) {
+        $msg = "License Capacity Exceeded: Your institution has {$coursecount} active courses, but your {$tiername} " .
+            "plan is limited to {$maxcourses} courses. Please upgrade to Pro University to unlock unlimited scheduling.";
         redirect(
             new moodle_url('/local/schola_slots/index.php'),
-            "License Capacity Exceeded: Your institution has {$coursecount} active courses, but your {$tiername} plan is limited to {$maxcourses} courses. Please upgrade to Pro University ($499/year) to unlock unlimited course scheduling.",
+            $msg,
             null,
             \core\output\notification::NOTIFY_ERROR
         );
     }
 
     if ($scheduletype === 'exam' && !\local_schola_slots\licensing\license_manager::can_solve_exams()) {
+        $msg = "Examination Timetabling Feature Locked: Examination schedule generation requires a Starter or " .
+            "Pro University plan. Please upgrade your license key to unlock exam scheduling.";
         redirect(
             new moodle_url('/local/schola_slots/index.php'),
-            "Examination Timetabling Feature Locked: Examination schedule generation requires a Starter or Pro University plan. Please upgrade your license key to unlock exam scheduling.",
+            $msg,
             null,
             \core\output\notification::NOTIFY_ERROR
         );
@@ -120,7 +124,7 @@ if ($action === 'generate' && confirm_sesskey()) {
             if ($categoryid > 0) {
                 $catcourseids = array_keys($courses);
                 if (!empty($catcourseids)) {
-                    list($insql, $inparams) = $DB->get_in_or_equal($catcourseids, SQL_PARAMS_NAMED);
+                    [$insql, $inparams] = $DB->get_in_or_equal($catcourseids, SQL_PARAMS_NAMED);
                     $inparams['stype'] = $scheduletype;
                     $DB->delete_records_select('local_schola_slots_schedules', "schedule_type = :stype AND courseid {$insql}", $inparams);
                 }
@@ -191,7 +195,8 @@ echo $output->render_dashboard([]);
 // Multi-Timetable Generator Options Card
 // -------------------------------------------------------------------
 echo html_writer::start_div('card border-0 shadow-sm my-4 bg-white');
-echo html_writer::div(html_writer::tag('h5', get_string('csp_generator_heading', 'local_schola_slots'), ['class' => 'mb-0 font-weight-bold']), 'card-header bg-dark text-white p-3');
+$cardheading = html_writer::tag('h5', get_string('csp_generator_heading', 'local_schola_slots'), ['class' => 'mb-0 font-weight-bold']);
+echo html_writer::div($cardheading, 'card-header bg-dark text-white p-3');
 echo html_writer::start_div('card-body p-4');
 
 echo html_writer::start_tag('form', ['method' => 'post', 'action' => (new moodle_url('/local/schola_slots/index.php'))->out(false)]);
@@ -230,7 +235,8 @@ echo html_writer::end_div();
 echo html_writer::end_div();
 
 echo html_writer::start_div('mt-4 pt-3 border-top d-flex align-items-center justify-content-between flex-wrap gap-2');
-echo html_writer::tag('button', get_string('run_solver_button', 'local_schola_slots'), ['type' => 'submit', 'class' => 'btn btn-success font-weight-bold px-4 py-2 shadow-sm fs-6']);
+$btnlabel = get_string('run_solver_button', 'local_schola_slots');
+echo html_writer::tag('button', $btnlabel, ['type' => 'submit', 'class' => 'btn btn-success font-weight-bold px-4 py-2 shadow-sm fs-6']);
 echo html_writer::tag('span', get_string('conflict_prevention_notice', 'local_schola_slots'), ['class' => 'text-muted small']);
 echo html_writer::end_div();
 

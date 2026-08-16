@@ -185,8 +185,9 @@ echo html_writer::start_div('row g-4 mb-4');
 // Manual Single Room Form Column
 $formcol = $canimport ? 'col-lg-7' : 'col-12';
 echo html_writer::start_div($formcol);
-echo html_writer::start_div('card shadow-sm h-100 bg-white border-0 rounded-3');
-echo html_writer::div(html_writer::tag('h5', '<i class="fa fa-plus-circle me-2 text-primary"></i>' . $cardheader, ['class' => 'mb-0 font-weight-bold']), 'card-header bg-light p-3 border-bottom');
+echo html_writer::start_div('card shadow-sm h-100');
+$cardheaderhtml = html_writer::tag('h5', '<i class="fa fa-plus-circle me-2 text-primary"></i>' . $cardheader, ['class' => 'mb-0 font-weight-bold']);
+echo html_writer::div($cardheaderhtml, 'card-header bg-light p-3 border-bottom');
 echo html_writer::start_div('card-body p-4');
 
 echo html_writer::start_tag('form', ['method' => 'post', 'action' => $url->out(false)]);
@@ -255,7 +256,9 @@ if ($canimport) {
 
     echo html_writer::start_div('card-body p-4 d-flex flex-column justify-content-between');
 
-    echo html_writer::tag('p', 'Upload a structured <code>.csv</code> or Excel CSV file to instantly import your campus rooms and seating capacities in bulk.', ['class' => 'text-muted small mb-3']);
+    $importdesc = 'Upload a structured <code>.csv</code> or Excel CSV file to instantly import ' .
+        'your campus rooms and seating capacities in bulk.';
+    echo html_writer::tag('p', $importdesc, ['class' => 'text-muted small mb-3']);
 
     echo html_writer::start_tag('form', [
         'method' => 'post',

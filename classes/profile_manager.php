@@ -27,7 +27,6 @@ defined('MOODLE_INTERNAL') || die();
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class profile_manager {
-
     /**
      * Get built-in default institutional schedule profiles.
      *
@@ -243,9 +242,9 @@ class profile_manager {
             $endsec  = strtotime("2026-01-01 " . $dayend);
 
             $tstartsec = (!empty($teastart)) ? strtotime("2026-01-01 " . $teastart) : 0;
-            $tendsec   = (!empty($teaend))   ? strtotime("2026-01-01 " . $teaend)   : 0;
+            $tendsec   = (!empty($teaend)) ? strtotime("2026-01-01 " . $teaend) : 0;
             $lstartsec = (!empty($lunchstart)) ? strtotime("2026-01-01 " . $lunchstart) : 0;
-            $lendsec   = (!empty($lunchend))   ? strtotime("2026-01-01 " . $lunchend)   : 0;
+            $lendsec   = (!empty($lunchend)) ? strtotime("2026-01-01 " . $lunchend) : 0;
 
             while ($currsec < $endsec) {
                 // Check Morning Tea Break

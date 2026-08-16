@@ -145,13 +145,19 @@ foreach ($schedules as $s) {
     $matrix[$window][$s->dayofweek][] = $s;
 }
 
-?>
-<!DOCTYPE html>
+$cssurl = (new moodle_url('/theme/styles.php/boost/1/all'))->out(false);
+$csvurl = new moodle_url('/local/schola_slots/export.php', [
+    'action' => 'csv',
+    'type' => $scheduletype,
+    'categoryid' => $categoryid,
+]);
+
+echo '<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Academic Timetable - <?php echo s($site->fullname); ?></title>
-    <link rel="stylesheet" href="<?php echo (new moodle_url('/theme/styles.php/boost/1/all'))->out(false); ?>">
+    <title>Academic Timetable - ' . s($site->fullname) . '</title>
+    <link rel="stylesheet" href="' . $cssurl . '">
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #fff; color: #000; padding: 20px; }
         .header-print { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
@@ -175,7 +181,7 @@ foreach ($schedules as $s) {
     <button onclick="window.print();" class="btn btn-primary font-weight-bold">
         Print / Save as PDF
     </button>
-    <a href="<?php echo (new moodle_url('/local/schola_slots/export.php', ['action' => 'csv', 'type' => $scheduletype, 'categoryid' => $categoryid]))->out(false); ?>" class="btn btn-success font-weight-bold">
+    <a href="' . $csvurl->out(false) . '" class="btn btn-success font-weight-bold">
         Export to CSV
     </a>
     <button onclick="window.close();" class="btn btn-outline-secondary">
@@ -184,68 +190,63 @@ foreach ($schedules as $s) {
 </div>
 
 <div class="header-print">
-    <h2><?php echo s($site->fullname); ?></h2>
-    <p><strong>Official Academic Schedule Profile: <?php echo strtoupper($scheduletype); ?></strong> | Generated on <?php echo date('F j, Y, g:i a'); ?></p>
-</div>
+    <h2>' . s($site->fullname) . '</h2>
+    <p><strong>Official Academic Schedule Profile: ' . strtoupper($scheduletype) . '</strong> | Generated on ' . date('F j, Y, g:i a') . '</p>
+</div>';
 
-<?php if (empty($schedules)): ?>
-    <div class="alert alert-warning text-center">No schedule allocations found matching the selected criteria.</div>
-<?php else: ?>
-    <table class="table-matrix">
+if (empty($schedules)) {
+    echo '<div class="alert alert-warning text-center">No schedule allocations found matching the selected criteria.</div>';
+} else {
+    echo '<table class="table-matrix">
         <thead>
             <tr>
-                <th style="width: 12%;">Time Window</th>
-                <?php foreach ($matrixdays as $dayname): ?>
-                    <th><?php echo s($dayname); ?></th>
-                <?php endforeach; ?>
-            </tr>
+                <th style="width: 12%;">Time Window</th>';
+    foreach ($matrixdays as $dayname) {
+        echo '<th>' . s($dayname) . '</th>';
+    }
+    echo '  </tr>
         </thead>
-        <tbody>
-            <?php foreach ($timeblocks as $timeblock): 
-                $isbreak = isset($breakwindows[$timeblock]);
-            ?>
-                <tr>
-                    <td style="background:#f9f9f9; font-weight:bold;"><?php echo s($timeblock); ?></td>
-                    <?php if ($isbreak): ?>
-                        <td colspan="<?php echo count($matrixdays); ?>" style="background:#f1f5f9; color:#64748b; font-weight:bold; font-style:italic; padding:10px;">
-                            INSTITUTIONAL BREAK / BLOCKOUT &mdash; NO CLASSES OR EXAMS
-                        </td>
-                    <?php else: ?>
-                        <?php foreach (array_keys($matrixdays) as $day): ?>
-                            <td>
-                                <?php 
-                                $entries = $matrix[$timeblock][$day] ?? [];
-                                if (empty($entries)): 
-                                    echo '&mdash;';
-                                else:
-                                    foreach ($entries as $e):
-                                        $teacher = (!empty($e->firstname) || !empty($e->lastname)) ? fullname($e) : 'Unassigned';
-                                        ?>
-                                        <div class="cell-entry">
-                                            <strong><?php echo s($e->coursecode); ?></strong>
-                                            <small><?php echo s($e->roomname); ?></small>
-                                            <small><?php echo s($teacher); ?></small>
-                                        </div>
-                                        <?php
-                                    endforeach;
-                                endif;
-                                ?>
-                            </td>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-<?php endif; ?>
+        <tbody>';
+    foreach ($timeblocks as $timeblock) {
+        $isbreak = isset($breakwindows[$timeblock]);
+        echo '<tr>
+            <td style="background:#f9f9f9; font-weight:bold;">' . s($timeblock) . '</td>';
+        if ($isbreak) {
+            echo '<td colspan="' . count($matrixdays) . '" style="background:#f1f5f9; color:#64748b; font-weight:bold; font-style:italic; padding:10px;">
+                    INSTITUTIONAL BREAK / BLOCKOUT &mdash; NO CLASSES OR EXAMS
+                </td>';
+        } else {
+            foreach (array_keys($matrixdays) as $day) {
+                echo '<td>';
+                $entries = $matrix[$timeblock][$day] ?? [];
+                if (empty($entries)) {
+                    echo '&mdash;';
+                } else {
+                    foreach ($entries as $e) {
+                        $teacher = (!empty($e->firstname) || !empty($e->lastname)) ? fullname($e) : 'Unassigned';
+                        echo '<div class="cell-entry">
+                            <strong>' . s($e->coursecode) . '</strong>
+                            <small>' . s($e->roomname) . '</small>
+                            <small>' . s($teacher) . '</small>
+                        </div>';
+                    }
+                }
+                echo '</td>';
+            }
+        }
+        echo '</tr>';
+    }
+    echo '</tbody>
+    </table>';
+}
 
-<?php if ($autoprint): ?>
-    <script>
-        window.addEventListener('DOMContentLoaded', () => {
+if ($autoprint) {
+    echo '<script>
+        window.addEventListener("DOMContentLoaded", () => {
             window.print();
         });
-    </script>
-<?php endif; ?>
+    </script>';
+}
 
-</body>
-</html>
+echo '</body>
+</html>';

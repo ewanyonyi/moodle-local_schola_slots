@@ -30,11 +30,7 @@ use core_privacy\local\request\userlist;
  * @author      Emanuel Dickson Wanyonyi <wanyonyi.d.emanuel@gmail.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class provider implements
-    \core_privacy\local\metadata\provider,
-    \core_privacy\local\request\plugin\provider,
-    \core_privacy\local\request\core_user_data_provider {
-
+class provider implements \core_privacy\local\metadata\provider, \core_privacy\local\request\core_user_data_provider, \core_privacy\local\request\plugin\provider {
     /**
      * Document database tables and external disclosures.
      *
@@ -206,7 +202,7 @@ class provider implements
             return;
         }
 
-        list($insql, $inparams) = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
+        [$insql, $inparams] = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
         $inparams['courseid'] = $context->instanceid;
 
         $DB->delete_records_select('local_schola_slots_schedules', "courseid = :courseid AND teacherid {$insql}", $inparams);

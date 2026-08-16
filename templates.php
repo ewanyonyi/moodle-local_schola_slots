@@ -270,22 +270,22 @@ echo html_writer::end_div();
 echo html_writer::end_div();
 
 // Inline JavaScript for dynamic slot row builder
-?>
+echo '
 <script>
-function addSlotRow(day = 0, start = '08:00', end = '09:30', type = 'class') {
-    const container = document.getElementById('slot-rows-container');
-    const tr = document.createElement('tr');
+function addSlotRow(day = 0, start = "08:00", end = "09:30", type = "class") {
+    const container = document.getElementById("slot-rows-container");
+    const tr = document.createElement("tr");
     tr.innerHTML = `
         <td>
             <select name="slot_day[]" class="form-select form-select-sm">
-                <option value="0" ${day == 0 ? 'selected' : ''}>All Weekdays (Mon-Fri)</option>
-                <option value="1" ${day == 1 ? 'selected' : ''}>Monday</option>
-                <option value="2" ${day == 2 ? 'selected' : ''}>Tuesday</option>
-                <option value="3" ${day == 3 ? 'selected' : ''}>Wednesday</option>
-                <option value="4" ${day == 4 ? 'selected' : ''}>Thursday</option>
-                <option value="5" ${day == 5 ? 'selected' : ''}>Friday</option>
-                <option value="6" ${day == 6 ? 'selected' : ''}>Saturday</option>
-                <option value="7" ${day == 7 ? 'selected' : ''}>Sunday</option>
+                <option value="0" ${day == 0 ? "selected" : ""}>All Weekdays (Mon-Fri)</option>
+                <option value="1" ${day == 1 ? "selected" : ""}>Monday</option>
+                <option value="2" ${day == 2 ? "selected" : ""}>Tuesday</option>
+                <option value="3" ${day == 3 ? "selected" : ""}>Wednesday</option>
+                <option value="4" ${day == 4 ? "selected" : ""}>Thursday</option>
+                <option value="5" ${day == 5 ? "selected" : ""}>Friday</option>
+                <option value="6" ${day == 6 ? "selected" : ""}>Saturday</option>
+                <option value="7" ${day == 7 ? "selected" : ""}>Sunday</option>
             </select>
         </td>
         <td>
@@ -296,34 +296,33 @@ function addSlotRow(day = 0, start = '08:00', end = '09:30', type = 'class') {
         </td>
         <td>
             <select name="slot_type[]" class="form-select form-select-sm">
-                <option value="class" ${type === 'class' ? 'selected' : ''}>Class Lecture (Standard Teaching Window)</option>
-                <option value="lab" ${type === 'lab' ? 'selected' : ''}>Laboratory Practical (Extended Block)</option>
-                <option value="break" ${type === 'break' ? 'selected' : ''}>Break / Blockout (Lunch, Tea Break, Assembly)</option>
-                <option value="exam" ${type === 'exam' ? 'selected' : ''}>Examination Period (Dedicated Exam Block)</option>
+                <option value="class" ${type === "class" ? "selected" : ""}>Class Lecture (Standard Teaching Window)</option>
+                <option value="lab" ${type === "lab" ? "selected" : ""}>Laboratory Practical (Extended Block)</option>
+                <option value="break" ${type === "break" ? "selected" : ""}>Break / Blockout (Lunch, Tea Break, Assembly)</option>
+                <option value="exam" ${type === "exam" ? "selected" : ""}>Examination Period (Dedicated Exam Block)</option>
             </select>
         </td>
         <td class="text-center">
-            <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2" onclick="this.closest('tr').remove();" title="Remove slot window">&times;</button>
+            <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2" onclick="this.closest(\'tr\').remove();" title="Remove slot window">&times;</button>
         </td>
     `;
     container.appendChild(tr);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const initialData = <?php echo json_encode($initialrows); ?>;
+document.addEventListener("DOMContentLoaded", () => {
+    const initialData = ' . json_encode($initialrows) . ';
     if (initialData && initialData.length > 0) {
         initialData.forEach(r => addSlotRow(r.day, r.start, r.end, r.type));
     } else {
-        addSlotRow(0, '07:00', '08:30', 'class');
-        addSlotRow(0, '08:30', '10:00', 'class');
-        addSlotRow(0, '10:00', '10:30', 'break');
-        addSlotRow(0, '10:30', '12:00', 'class');
-        addSlotRow(0, '12:00', '13:30', 'break');
-        addSlotRow(0, '13:30', '15:00', 'class');
+        addSlotRow(0, "07:00", "08:30", "class");
+        addSlotRow(0, "08:30", "10:00", "class");
+        addSlotRow(0, "10:00", "10:30", "break");
+        addSlotRow(0, "10:30", "12:00", "class");
+        addSlotRow(0, "12:00", "13:30", "break");
+        addSlotRow(0, "13:30", "15:00", "class");
     }
 });
-</script>
-<?php
+</script>';
 
 // -------------------------------------------------------------------
 // Saved Schedule Templates Repository Table

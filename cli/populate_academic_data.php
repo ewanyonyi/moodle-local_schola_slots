@@ -1,4 +1,19 @@
 <?php
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
 /**
  * Schola Slots CLI Data Population Script - Institutional Scale
  *
@@ -21,7 +36,7 @@ require_once($CFG->dirroot . '/lib/testing/generator/lib.php');
 $CFG->noemailever = true;
 
 // Parse CLI options
-list($options, $unrecognized) = cli_get_params([
+[$options, $unrecognized] = cli_get_params([
     'help'      => false,
     'courses'   => 60,
     'teachers'  => 35,
@@ -76,8 +91,10 @@ if ($options['clear']) {
     $DB->delete_records('local_schola_slots_rooms');
     $DB->delete_records('local_schola_slots_slots');
 
-    require_once($CFG->dirroot . '/course/lib.php');
-    $testcourses = $DB->get_records_select('course', "id > 1 AND (shortname LIKE 'CS%' OR shortname LIKE 'MATH%' OR shortname LIKE 'ENG%' OR shortname LIKE 'PHYS%' OR shortname LIKE 'BUS%' OR shortname LIKE 'MED%' OR shortname LIKE 'SOC%' OR shortname LIKE 'BIO%' OR shortname LIKE 'LAW%' OR shortname LIKE 'AGR%')");
+    $selectsql = "id > 1 AND (shortname LIKE 'CS%' OR shortname LIKE 'MATH%' OR shortname LIKE 'ENG%' " .
+        "OR shortname LIKE 'PHYS%' OR shortname LIKE 'BUS%' OR shortname LIKE 'MED%' " .
+        "OR shortname LIKE 'SOC%' OR shortname LIKE 'BIO%' OR shortname LIKE 'LAW%' OR shortname LIKE 'AGR%')";
+    $testcourses = $DB->get_records_select('course', $selectsql);
     foreach ($testcourses as $tc) {
         delete_course($tc->id, false);
     }
@@ -99,7 +116,7 @@ $departments = [
     'School of Humanities & Social Sciences',
     'Department of Biological Sciences',
     'School of Law & Public Policy',
-    'Department of Agricultural Sciences'
+    'Department of Agricultural Sciences',
 ];
 
 $categoryids = [];
@@ -134,7 +151,7 @@ for ($i = 1; $i <= $numteachers; $i++) {
             'password'  => 'Password123!',
             'firstname' => "Dr.",
             'lastname'  => "FacultyMember_$i",
-            'email'     => "faculty_$i@university.edu"
+            'email'     => "faculty_$i@university.edu",
         ]);
         $teacherids[] = $user->id;
     }
@@ -153,7 +170,7 @@ for ($i = 1; $i <= $numstudents; $i++) {
             'password'  => 'Password123!',
             'firstname' => "Student",
             'lastname'  => "Learner_$i",
-            'email'     => "student_$i@university.edu"
+            'email'     => "student_$i@university.edu",
         ]);
         $studentids[] = $user->id;
     }
@@ -176,7 +193,7 @@ for ($i = 1; $i <= $numcourses; $i++) {
     $level = (int)(($i - 1) / count($courseprefixes)) + 1; // 100, 200, 300, 400 level
     $code = "{$prefix}" . sprintf("%03d", ($level * 100) + ($i % 10));
     $fullname = "{$prefix} Course: {$code} - Advanced Module {$i}";
-    
+
     $catid = $categoryids[$prefixindex % count($categoryids)];
 
     $existing = $DB->get_record('course', ['shortname' => $code]);
@@ -231,40 +248,40 @@ cli_writeln("\n[4/5] Populating Campus Rooms (local_schola_slots_rooms)...");
 
 $allrooms = [
     // Major Auditoriums
-    ['name' => 'Main Auditorium',          'capacity' => 500, 'is_lab' => 0],
-    ['name' => 'Great Hall A',             'capacity' => 400, 'is_lab' => 0],
-    ['name' => 'Science Theater B',        'capacity' => 300, 'is_lab' => 0],
+    ['name' => 'Main Auditorium', 'capacity' => 500, 'is_lab' => 0],
+    ['name' => 'Great Hall A', 'capacity' => 400, 'is_lab' => 0],
+    ['name' => 'Science Theater B', 'capacity' => 300, 'is_lab' => 0],
     ['name' => 'Engineering Lecture Theater', 'capacity' => 250, 'is_lab' => 0],
-    
+
     // Lecture Halls
-    ['name' => 'Lecture Hall 101',         'capacity' => 180, 'is_lab' => 0],
-    ['name' => 'Lecture Hall 102',         'capacity' => 180, 'is_lab' => 0],
-    ['name' => 'Lecture Hall 103',         'capacity' => 150, 'is_lab' => 0],
-    ['name' => 'Lecture Hall 104',         'capacity' => 150, 'is_lab' => 0],
-    ['name' => 'Lecture Hall 105',         'capacity' => 120, 'is_lab' => 0],
+    ['name' => 'Lecture Hall 101', 'capacity' => 180, 'is_lab' => 0],
+    ['name' => 'Lecture Hall 102', 'capacity' => 180, 'is_lab' => 0],
+    ['name' => 'Lecture Hall 103', 'capacity' => 150, 'is_lab' => 0],
+    ['name' => 'Lecture Hall 104', 'capacity' => 150, 'is_lab' => 0],
+    ['name' => 'Lecture Hall 105', 'capacity' => 120, 'is_lab' => 0],
 
     // Specialized Computer & Hardware Labs
-    ['name' => 'Computer Lab 1 (AI/ML)',   'capacity' => 50,  'is_lab' => 1],
-    ['name' => 'Computer Lab 2 (Software)','capacity' => 50,  'is_lab' => 1],
-    ['name' => 'Computer Lab 3 (Networks)', 'capacity' => 45,  'is_lab' => 1],
-    ['name' => 'Computer Lab 4 (Cyber)',    'capacity' => 40,  'is_lab' => 1],
+    ['name' => 'Computer Lab 1 (AI/ML)', 'capacity' => 50, 'is_lab' => 1],
+    ['name' => 'Computer Lab 2 (Software)', 'capacity' => 50, 'is_lab' => 1],
+    ['name' => 'Computer Lab 3 (Networks)', 'capacity' => 45, 'is_lab' => 1],
+    ['name' => 'Computer Lab 4 (Cyber)', 'capacity' => 40, 'is_lab' => 1],
     ['name' => 'Robotics & Mechatronics Studio', 'capacity' => 35, 'is_lab' => 1],
 
     // Science & Medical Labs
-    ['name' => 'Advanced Physics Lab',     'capacity' => 40,  'is_lab' => 1],
-    ['name' => 'Organic Chemistry Lab',    'capacity' => 35,  'is_lab' => 1],
-    ['name' => 'Molecular Biology Lab',    'capacity' => 35,  'is_lab' => 1],
-    ['name' => 'Medical Simulation Lab',   'capacity' => 30,  'is_lab' => 1],
+    ['name' => 'Advanced Physics Lab', 'capacity' => 40, 'is_lab' => 1],
+    ['name' => 'Organic Chemistry Lab', 'capacity' => 35, 'is_lab' => 1],
+    ['name' => 'Molecular Biology Lab', 'capacity' => 35, 'is_lab' => 1],
+    ['name' => 'Medical Simulation Lab', 'capacity' => 30, 'is_lab' => 1],
 
     // Standard Classrooms & Seminar Rooms
-    ['name' => 'Classroom 201',            'capacity' => 70,  'is_lab' => 0],
-    ['name' => 'Classroom 202',            'capacity' => 70,  'is_lab' => 0],
-    ['name' => 'Classroom 203',            'capacity' => 60,  'is_lab' => 0],
-    ['name' => 'Classroom 204',            'capacity' => 60,  'is_lab' => 0],
-    ['name' => 'Classroom 205',            'capacity' => 60,  'is_lab' => 0],
-    ['name' => 'Seminar Room 301',         'capacity' => 30,  'is_lab' => 0],
-    ['name' => 'Seminar Room 302',         'capacity' => 30,  'is_lab' => 0],
-    ['name' => 'Moot Court Room',          'capacity' => 40,  'is_lab' => 0],
+    ['name' => 'Classroom 201', 'capacity' => 70, 'is_lab' => 0],
+    ['name' => 'Classroom 202', 'capacity' => 70, 'is_lab' => 0],
+    ['name' => 'Classroom 203', 'capacity' => 60, 'is_lab' => 0],
+    ['name' => 'Classroom 204', 'capacity' => 60, 'is_lab' => 0],
+    ['name' => 'Classroom 205', 'capacity' => 60, 'is_lab' => 0],
+    ['name' => 'Seminar Room 301', 'capacity' => 30, 'is_lab' => 0],
+    ['name' => 'Seminar Room 302', 'capacity' => 30, 'is_lab' => 0],
+    ['name' => 'Moot Court Room', 'capacity' => 40, 'is_lab' => 0],
     ['name' => 'Agriculture Greenhouse Lab', 'capacity' => 30, 'is_lab' => 1],
 ];
 
@@ -346,7 +363,7 @@ for ($s = 0; $s < $numslots; $s++) {
         'starttime' => $slotdata['starttime'],
         'endtime'   => $slotdata['endtime'],
         'dayofweek' => $slotdata['dayofweek'],
-        'exactdate' => $slotdata['exactdate']
+        'exactdate' => $slotdata['exactdate'],
     ]);
     if (!$existing) {
         $DB->insert_record('local_schola_slots_slots', (object)$slotdata);

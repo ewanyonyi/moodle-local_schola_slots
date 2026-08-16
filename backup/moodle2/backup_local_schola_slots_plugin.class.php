@@ -25,7 +25,6 @@ defined('MOODLE_INTERNAL') || die();
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class backup_local_schola_slots_plugin extends backup_local_plugin {
-
     /**
      * Define the course backup structure for local_schola_slots.
      *

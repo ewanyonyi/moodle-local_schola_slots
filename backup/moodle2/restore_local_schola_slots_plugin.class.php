@@ -25,7 +25,6 @@ defined('MOODLE_INTERNAL') || die();
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class restore_local_schola_slots_plugin extends restore_local_plugin {
-
     /**
      * Define the course restore structure for local_schola_slots.
      *

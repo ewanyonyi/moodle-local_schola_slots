@@ -321,7 +321,7 @@ if ($editingprofile) {
     echo html_writer::tag('label', 'Profile Name / Title', ['class' => 'form-label font-weight-bold text-dark']);
     echo html_writer::empty_tag('input', [
         'type' => 'text', 'name' => 'name', 'value' => s($editingprofile['name']),
-        'class' => 'form-control p-2', 'placeholder' => 'e.g. University Standard', 'required' => 'required'
+        'class' => 'form-control p-2', 'placeholder' => 'e.g. University Standard', 'required' => 'required',
     ]);
     echo html_writer::end_div();
 
@@ -330,7 +330,7 @@ if ($editingprofile) {
     echo html_writer::tag('label', 'Badge Subtitle', ['class' => 'form-label font-weight-bold text-dark']);
     echo html_writer::empty_tag('input', [
         'type' => 'text', 'name' => 'badge', 'value' => s($editingprofile['badge'] ?? ''),
-        'class' => 'form-control p-2', 'placeholder' => 'e.g. 60-Min Periods'
+        'class' => 'form-control p-2', 'placeholder' => 'e.g. 60-Min Periods',
     ]);
     echo html_writer::end_div();
 
@@ -368,19 +368,27 @@ if ($editingprofile) {
     echo html_writer::tag('label', 'Profile Description', ['class' => 'form-label font-weight-bold text-dark']);
     echo html_writer::empty_tag('input', [
         'type' => 'text', 'name' => 'description', 'value' => s($editingprofile['description'] ?? ''),
-        'class' => 'form-control p-2', 'placeholder' => 'e.g. Standard 60-minute university lecture blocks with morning tea and lunch breaks.'
+        'class' => 'form-control p-2', 'placeholder' => 'e.g. Standard 60-minute university lecture blocks with morning tea and lunch breaks.',
     ]);
     echo html_writer::end_div();
 
     // Day Start & End
     echo html_writer::start_div('col-md-3');
     echo html_writer::tag('label', 'Daily Day Start Time', ['class' => 'form-label font-weight-bold text-dark']);
-    echo html_writer::empty_tag('input', ['type' => 'time', 'name' => 'day_start', 'value' => s($editingprofile['day_start'] ?? '08:00'), 'class' => 'form-control p-2', 'required' => 'required']);
+    echo html_writer::empty_tag('input', [
+        'type' => 'time', 'name' => 'day_start',
+        'value' => s($editingprofile['day_start'] ?? '08:00'),
+        'class' => 'form-control p-2', 'required' => 'required',
+    ]);
     echo html_writer::end_div();
 
     echo html_writer::start_div('col-md-3');
     echo html_writer::tag('label', 'Daily Day End Time', ['class' => 'form-label font-weight-bold text-dark']);
-    echo html_writer::empty_tag('input', ['type' => 'time', 'name' => 'day_end', 'value' => s($editingprofile['day_end'] ?? '17:00'), 'class' => 'form-control p-2', 'required' => 'required']);
+    echo html_writer::empty_tag('input', [
+        'type' => 'time', 'name' => 'day_end',
+        'value' => s($editingprofile['day_end'] ?? '17:00'),
+        'class' => 'form-control p-2', 'required' => 'required',
+    ]);
     echo html_writer::end_div();
 
     // Period Duration
@@ -438,7 +446,13 @@ if ($editingprofile) {
     // Submit actions
     echo html_writer::start_div('mt-4 pt-3 border-top d-flex align-items-center justify-content-between flex-wrap gap-2');
     echo html_writer::start_div('form-check d-flex align-items-center gap-2 mb-0');
-    echo html_writer::checkbox('apply_now', '1', true, ' Apply this profile to active time slots immediately upon saving', ['class' => 'form-check-input me-1', 'id' => 'chk_apply_now']);
+    echo html_writer::checkbox(
+        'apply_now',
+        '1',
+        true,
+        ' Apply this profile to active time slots immediately upon saving',
+        ['class' => 'form-check-input me-1', 'id' => 'chk_apply_now']
+    );
     echo html_writer::end_div();
 
     echo html_writer::start_div('d-flex gap-2');
@@ -479,7 +493,9 @@ echo html_writer::end_div();
 echo html_writer::end_div();
 
 echo html_writer::start_div('card-body p-4');
-echo html_writer::div('Select an official school structure profile to instantly configure your institution\'s weekly timetabling slots, or click <strong>Edit Profile</strong> to customize period lengths and break windows:', 'text-muted mb-4');
+$profilemsg = 'Select an official school structure profile to instantly configure your institution\'s ' .
+    'weekly timetabling slots, or click <strong>Edit Profile</strong> to customize period lengths and break windows:';
+echo html_writer::div($profilemsg, 'text-muted mb-4');
 
 echo html_writer::start_div('row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3');
 
@@ -725,7 +741,9 @@ if (!empty($slots)) {
 echo html_writer::end_div();
 
 if (empty($slots)) {
-    echo html_writer::div('No bell schedule time windows configured yet. Use the <strong>Guided Bell Schedule Wizard</strong> or select an <strong>Institutional Schedule Profile</strong> above to get started instantly.', 'alert alert-info shadow-sm p-4 text-center fs-6 rounded-3');
+    $noslotmsg = 'No bell schedule time windows configured yet. Use the <strong>Guided Bell Schedule Wizard</strong> ' .
+        'or select an <strong>Institutional Schedule Profile</strong> above to get started instantly.';
+    echo html_writer::div($noslotmsg, 'alert alert-info shadow-sm p-4 text-center fs-6 rounded-3');
 } else {
     $days = [1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday'];
 
@@ -751,10 +769,14 @@ if (empty($slots)) {
             default => '<span class="badge att-badge-class"><i class="fa fa-book me-1"></i> CLASS LECTURE</span>',
         };
 
+        $timestr = s($slot->starttime) . ' &mdash; ' . s($slot->endtime);
+        $timebadge = '<span class="badge bg-light text-dark border px-3 py-2 fs-6 font-weight-bold">' .
+            '<i class="fa fa-clock me-1 text-primary"></i> ' . $timestr . '</span>';
+
         $table->data[] = [
             '<span class="font-weight-bold text-dark">#' . $slot->id . '</span>',
             '<strong class="text-dark fs-6">' . $dayname . '</strong>',
-            '<span class="badge bg-light text-dark border px-3 py-2 fs-6 font-weight-bold"><i class="fa fa-clock me-1 text-primary"></i> ' . s($slot->starttime) . ' &mdash; ' . s($slot->endtime) . '</span>',
+            $timebadge,
             $typebadge,
             $editbtn . $delbtn,
         ];

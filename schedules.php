@@ -302,7 +302,8 @@ echo html_writer::select($roomoptions, 'roomid', $roomid, false, ['class' => 'fo
 echo html_writer::select($teacheroptions, 'teacherid', $teacherid, false, ['class' => 'form-select form-select-sm', 'onchange' => 'this.form.submit()']);
 
 if ($roomid > 0 || $teacherid > 0 || $categoryid > 0 || $scheduletype !== 'all') {
-    echo html_writer::link(new moodle_url($url, ['roomid' => 0, 'teacherid' => 0, 'categoryid' => 0, 'type' => 'all']), get_string('reset_filters', 'local_schola_slots'), ['class' => 'btn btn-sm btn-outline-secondary']);
+    $reseturl = new moodle_url($url, ['roomid' => 0, 'teacherid' => 0, 'categoryid' => 0, 'type' => 'all']);
+    echo html_writer::link($reseturl, get_string('reset_filters', 'local_schola_slots'), ['class' => 'btn btn-sm btn-outline-secondary']);
 }
 echo html_writer::end_tag('form');
 
@@ -402,7 +403,9 @@ if (empty($schedules)) {
         echo html_writer::start_tag('tr');
 
         if ($isbreak) {
-            echo html_writer::tag('td', '<strong>' . $timeblock . '</strong><br><span class="badge att-badge-break text-white mt-1">BREAK WINDOW</span>', ['class' => 'bg-light font-weight-bold align-middle']);
+            $breakcontent = '<strong>' . $timeblock . '</strong><br>' .
+                '<span class="badge att-badge-break text-white mt-1">BREAK WINDOW</span>';
+            echo html_writer::tag('td', $breakcontent, ['class' => 'bg-light font-weight-bold align-middle']);
             echo html_writer::tag('td', '<span class="text-muted fw-semibold">INSTITUTIONAL BREAK / BLOCKOUT &mdash; NO CLASSES OR EXAMS</span>', [
                 'colspan' => count($matrixdays),
                 'class'   => 'bg-light text-secondary text-center py-2 align-middle',
@@ -447,7 +450,6 @@ if (empty($schedules)) {
     echo html_writer::end_tag('tbody');
     echo html_writer::end_tag('table');
     echo html_writer::end_div();
-
 } else {
     // -------------------------------------------------------------------
     // Master List Table View

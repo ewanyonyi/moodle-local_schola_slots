@@ -112,8 +112,8 @@ class solver {
                 'course_id' => $s->courseid,
                 'slot_id'   => $s->slotid,
                 'room_id'   => $s->roomid,
-                'teacher_id'=> $s->teacherid,
-                'note'      => 'Existing Blockout'
+                'teacher_id' => $s->teacherid,
+                'note'      => 'Existing Blockout',
             ];
         }
     }
@@ -193,7 +193,7 @@ class solver {
             'options' => [
                 'day_distribution' => get_config('local_schola_slots', 'day_distribution') ?: 'balanced',
                 'max_iterations' => 100000,
-            ]
+            ],
         ];
 
         require_once($CFG->libdir . '/filelib.php');
@@ -224,8 +224,8 @@ class solver {
                     'course_id' => $cid,
                     'slot_id'   => $assign['slot_id'],
                     'room_id'   => $assign['room_id'],
-                    'teacher_id'=> $this->courses[$cid]->teacher_id ?? 0,
-                    'note'      => 'Rust Cloud Acceleration Engine'
+                    'teacher_id' => $this->courses[$cid]->teacher_id ?? 0,
+                    'note'      => 'Rust Cloud Acceleration Engine',
                 ];
             }
             return true;
@@ -248,7 +248,7 @@ class solver {
         $course = $courselist[$index];
 
         $targettype = $this->slottype;
-        $classslots = array_values(array_filter($this->slots, function($s) use ($targettype) {
+        $classslots = array_values(array_filter($this->slots, function ($s) use ($targettype) {
             // Strictly exclude break / blockout slots from scheduling
             if ($s->type === 'break') {
                 return false;
@@ -267,24 +267,27 @@ class solver {
 
         if ($strategy === 'mon_to_sat') {
             $targetday = ($index % 6) + 1;
-            usort($classslots, function($a, $b) use ($targetday) {
+            usort($classslots, function ($a, $b) use ($targetday) {
                 $adist = ($a->dayofweek == $targetday) ? 0 : 1;
                 $bdist = ($b->dayofweek == $targetday) ? 0 : 1;
                 return ($adist !== $bdist) ? ($adist <=> $bdist) : ($a->dayofweek <=> $b->dayofweek);
             });
         } else if ($strategy === 'mon_to_thu') {
             $targetday = ($index % 4) + 1;
-            usort($classslots, function($a, $b) use ($targetday) {
+            usort($classslots, function ($a, $b) use ($targetday) {
                 $adist = ($a->dayofweek == $targetday) ? 0 : 1;
                 $bdist = ($b->dayofweek == $targetday) ? 0 : 1;
                 return ($adist !== $bdist) ? ($adist <=> $bdist) : ($a->dayofweek <=> $b->dayofweek);
             });
         } else if ($strategy === 'frontload') {
-            // Preserve standard sequential dayofweek order (1..5)
+            // Preserve standard sequential dayofweek order (1..5).
+            usort($classslots, function ($a, $b) {
+                return $a->dayofweek <=> $b->dayofweek;
+            });
         } else {
             // Default 'balanced': Distribute across 5 days (1 to 5)
             $targetday = ($index % 5) + 1;
-            usort($classslots, function($a, $b) use ($targetday) {
+            usort($classslots, function ($a, $b) use ($targetday) {
                 $adist = ($a->dayofweek == $targetday) ? 0 : 1;
                 $bdist = ($b->dayofweek == $targetday) ? 0 : 1;
                 return ($adist !== $bdist) ? ($adist <=> $bdist) : ($a->dayofweek <=> $b->dayofweek);
@@ -303,15 +306,15 @@ class solver {
                             'course_id' => $course->id,
                             'slot_id'   => $slot->id,
                             'room_id'   => $room->id,
-                            'teacher_id'=> $course->teacher_id,
-                            'note'      => 'Double Lesson (Block 1)'
+                            'teacher_id' => $course->teacher_id,
+                            'note'      => 'Double Lesson (Block 1)',
                         ];
                         $this->solution['classes'][$course->id . '_2'] = [
                             'course_id' => $course->id,
                             'slot_id'   => $nextslot->id,
                             'room_id'   => $room->id,
-                            'teacher_id'=> $course->teacher_id,
-                            'note'      => 'Double Lesson (Block 2)'
+                            'teacher_id' => $course->teacher_id,
+                            'note'      => 'Double Lesson (Block 2)',
                         ];
 
                         if ($this->backtrack_classes($index + 1)) {
@@ -327,8 +330,8 @@ class solver {
                             'course_id' => $course->id,
                             'slot_id'   => $slot->id,
                             'room_id'   => $room->id,
-                            'teacher_id'=> $course->teacher_id,
-                            'note'      => 'Single Session'
+                            'teacher_id' => $course->teacher_id,
+                            'note'      => 'Single Session',
                         ];
 
                         if ($this->backtrack_classes($index + 1)) {
