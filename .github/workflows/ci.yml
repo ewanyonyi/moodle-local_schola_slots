@@ -20,6 +20,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          path: local_schola_slots
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
