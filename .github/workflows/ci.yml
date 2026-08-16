@@ -42,6 +42,7 @@ jobs:
 
       - name: Setup moodle-plugin-ci
         run: |
+          git config --global url."https://github.com/".insteadOf "git://github.com/"
           composer global config minimum-stability dev
           composer global require moodlehq/moodle-plugin-ci
           echo "$HOME/.composer/vendor/bin" >> $GITHUB_PATH
