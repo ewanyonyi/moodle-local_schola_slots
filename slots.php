@@ -223,7 +223,9 @@ if ($action === 'build_bell_schedule' && confirm_sesskey()) {
         }
     }
 
-    redirect($url, "Bell Schedule applied successfully! {$inserted} time windows generated across " . count($activedays) . " operating days.");
+    $goto = optional_param('redirect_to', '', PARAM_ALPHAEXT);
+    $targeturl = !empty($goto) ? new moodle_url('/local/schola_slots/' . $goto) : $url;
+    redirect($targeturl, "Bell Schedule applied successfully! {$inserted} time windows generated across " . count($activedays) . " operating days.");
 }
 
 // -------------------------------------------------------------------

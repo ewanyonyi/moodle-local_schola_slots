@@ -40,6 +40,7 @@ class renderer extends plugin_renderer_base {
         $indexurl = new \moodle_url('/local/schola_slots/index.php');
         $roomsurl = new \moodle_url('/local/schola_slots/rooms.php');
         $slotsurl = new \moodle_url('/local/schola_slots/slots.php');
+        $breaksurl = new \moodle_url('/local/schola_slots/breaks.php');
         $schedulesurl = new \moodle_url('/local/schola_slots/schedules.php');
         $generateurl = new \moodle_url('/local/schola_slots/index.php', [
             'action' => 'generate',
@@ -50,6 +51,7 @@ class renderer extends plugin_renderer_base {
             'index'     => ['label' => get_string('nav_overview', 'local_schola_slots'), 'url' => $indexurl],
             'rooms'     => ['label' => get_string('nav_rooms', 'local_schola_slots'), 'url' => $roomsurl],
             'slots'     => ['label' => get_string('nav_slots', 'local_schola_slots'), 'url' => $slotsurl],
+            'breaks'    => ['label' => get_string('nav_breaks', 'local_schola_slots'), 'url' => $breaksurl],
             'schedules' => ['label' => get_string('nav_schedules', 'local_schola_slots'), 'url' => $schedulesurl],
         ];
 

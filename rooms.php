@@ -325,9 +325,14 @@ if (empty($rooms)) {
             'onclick' => 'return confirm("Are you sure you want to delete this room?");',
         ]);
 
-        $typebadge = $room->is_lab
-            ? '<span class="badge att-badge-lab"><i class="fa fa-flask me-1"></i> Lab / Studio</span>'
-            : '<span class="badge att-badge-lecture"><i class="fa fa-chalkboard me-1"></i> Lecture Hall</span>';
+        $isonline = (stripos($room->name, 'online') !== false || stripos($room->name, 'virtual') !== false || stripos($room->name, 'zoom') !== false || stripos($room->name, 'teams') !== false);
+        if ($isonline) {
+            $typebadge = '<span class="badge online-room-badge"><i class="fa fa-globe me-1"></i> Virtual / Online Space</span>';
+        } else {
+            $typebadge = $room->is_lab
+                ? '<span class="badge att-badge-lab"><i class="fa fa-flask me-1"></i> Lab / Studio</span>'
+                : '<span class="badge att-badge-lecture"><i class="fa fa-chalkboard me-1"></i> Lecture Hall</span>';
+        }
 
         $table->data[] = [
             '<span class="font-weight-bold text-dark">#' . $room->id . '</span>',

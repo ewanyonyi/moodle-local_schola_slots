@@ -25,6 +25,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+global $CFG;
+require_once($CFG->dirroot . '/local/schola_slots/classes/admin_setting_license_key.php');
+require_once($CFG->dirroot . '/local/schola_slots/classes/admin_setting_pricing.php');
+
 if ($hassiteconfig) {
     $settings = new admin_settingpage(
         'local_schola_slots_settings',

@@ -23,6 +23,7 @@
         <FIELD NAME="exactdate" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Unix timestamp for specific exam dates"/>
         <FIELD NAME="starttime" TYPE="char" LENGTH="5" NOTNULL="true" COMMENT="HH:MM"/>
         <FIELD NAME="endtime" TYPE="char" LENGTH="5" NOTNULL="true" COMMENT="HH:MM"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="100" NOTNULL="false" COMMENT="Optional title e.g. Tea Break, Lunch Break"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>

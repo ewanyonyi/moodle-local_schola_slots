@@ -244,3 +244,219 @@
     background-color: #2563eb !important;
 }
 
+/* Sticky Headers & Matrix Controls for Timetable Grid */
+.schola-slots-matrix-table th.sticky-top-th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #f8fafc !important;
+    color: #475569 !important;
+    font-weight: 700 !important;
+    border-bottom: 2px solid #e2e8f0 !important;
+}
+
+/* Card Edit/Delete Action Buttons - Hidden by default unless Edit Mode is active */
+.cell-action-buttons {
+    display: none !important;
+}
+
+.edit-mode-active .cell-action-buttons {
+    display: flex !important;
+}
+
+.schola-slots-matrix-table td.venue-sticky-td {
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    background-color: #f8fafc !important;
+    font-weight: 700;
+}
+
+.online-room-badge {
+    background-color: #dcfce7 !important;
+    color: #166534 !important;
+    border: 1px solid #86efac !important;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 9999px;
+    padding: 0.2rem 0.5rem;
+}
+
+.break-column-strip {
+    background-color: #f1f5f9 !important;
+    border-left: 1px dashed #cbd5e1 !important;
+    border-right: 1px dashed #cbd5e1 !important;
+}
+
+.search-filter-input {
+    height: 36px !important;
+    font-size: 0.85rem !important;
+    border-radius: 8px !important;
+}
+
+/* Schola Slots Rust Matrix Grid Architectural Styling */
+.day-banner-cell {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+    font-size: 0.85rem !important;
+    letter-spacing: 1px !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    border-top: 2px solid #cbd5e1 !important;
+    border-bottom: 2px solid #cbd5e1 !important;
+    padding: 0.5rem 1rem !important;
+}
+
+.grid-cell-card {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    padding: 6px 8px !important;
+    min-height: 52px !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+}
+
+.grid-cell-card:hover {
+    border-color: #16a34a !important;
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.15) !important;
+}
+
+.grid-cell-course {
+    font-weight: 700 !important;
+    font-size: 0.82rem !important;
+    color: #0f172a !important;
+    line-height: 1.1 !important;
+}
+
+.grid-cell-lecturer {
+    font-size: 0.72rem !important;
+    color: #475569 !important;
+    font-weight: 500 !important;
+}
+
+.break-column-vertical {
+    writing-mode: vertical-lr !important;
+    text-orientation: upright !important;
+    color: #059669 !important;
+    font-weight: 800 !important;
+    font-size: 13px !important;
+    letter-spacing: 4px !important;
+    text-transform: uppercase !important;
+    margin: 0 auto !important;
+    padding: 1.5rem 0 !important;
+    opacity: 0.9 !important;
+}
+
+/* Brand Buttons matching Schola Slots Rust design */
+.btn-emerald {
+    background-color: #059669 !important;
+    border-color: #059669 !important;
+    color: #ffffff !important;
+    border-radius: 9999px !important;
+    font-weight: 700 !important;
+    padding: 0.45rem 1.25rem !important;
+    transition: all 0.2s ease !important;
+}
+
+.btn-emerald:hover {
+    background-color: #047857 !important;
+    border-color: #047857 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25) !important;
+}
+
+.btn-outline-emerald {
+    background-color: #ffffff !important;
+    border: 1.5px solid #10b981 !important;
+    color: #059669 !important;
+    border-radius: 9999px !important;
+    font-weight: 700 !important;
+    padding: 0.45rem 1.25rem !important;
+    transition: all 0.2s ease !important;
+}
+
+.btn-outline-emerald:hover {
+    background-color: #ecfdf5 !important;
+    color: #047857 !important;
+    border-color: #059669 !important;
+}
+
+.btn-outline-red {
+    background-color: #ffffff !important;
+    border: 1.5px solid #f87171 !important;
+    color: #dc2626 !important;
+    border-radius: 9999px !important;
+    font-weight: 700 !important;
+    padding: 0.45rem 1.25rem !important;
+    transition: all 0.2s ease !important;
+}
+
+.btn-outline-red:hover {
+    background-color: #fef2f2 !important;
+    color: #991b1b !important;
+    border-color: #dc2626 !important;
+}
+
+.btn-outline-slate {
+    background-color: #ffffff !important;
+    border: 1.5px solid #cbd5e1 !important;
+    color: #475569 !important;
+    border-radius: 9999px !important;
+    font-weight: 700 !important;
+    padding: 0.45rem 1.25rem !important;
+    transition: all 0.2s ease !important;
+}
+
+.btn-outline-slate:hover {
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
+    border-color: #94a3b8 !important;
+}
+
+/* Badges matching Schola Slots Rust brand colors */
+.badge-fitness-score {
+    background-color: #ecfdf5 !important;
+    color: #047857 !important;
+    border: 1px solid #a7f3d0 !important;
+    font-family: monospace;
+    font-weight: 700 !important;
+    font-size: 0.82rem !important;
+    border-radius: 9999px !important;
+    padding: 0.35rem 0.85rem !important;
+}
+
+.badge-id-num {
+    background-color: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 1px solid #cbd5e1 !important;
+    font-family: monospace;
+    font-weight: 700 !important;
+    font-size: 0.82rem !important;
+    border-radius: 9999px !important;
+    padding: 0.35rem 0.85rem !important;
+}
+
+.badge-class-schedule {
+    background-color: #059669 !important;
+    color: #ffffff !important;
+    font-family: monospace;
+    font-weight: 700 !important;
+    font-size: 0.78rem !important;
+    border-radius: 6px !important;
+    padding: 0.35rem 0.75rem !important;
+    text-transform: uppercase !important;
+}
+
+.badge-license-key {
+    background-color: #fef3c7 !important;
+    color: #b45309 !important;
+    font-family: monospace;
+    font-weight: 700 !important;
+    padding: 0.15rem 0.4rem !important;
+    border-radius: 4px !important;
+}
+
+
+
+
