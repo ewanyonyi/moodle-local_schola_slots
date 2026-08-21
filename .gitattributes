@@ -1,0 +1,8 @@
+# Export ignores for packaging release archives
+.github export-ignore
+.gitignore export-ignore
+.gitattributes export-ignore
+capstone.md export-ignore
+issues.md export-ignore
+*.pdf export-ignore
+*.zip export-ignore
