@@ -49,9 +49,6 @@ $PAGE->set_context($context);
 $PAGE->set_title(get_string('manage_schedules', 'local_schola_slots'));
 $PAGE->set_heading(get_string('manage_schedules', 'local_schola_slots'));
 
-// Render unified executive navigation header
-echo local_schola_slots\output\renderer::render_nav_header('schedules', true, $scheduletype);
-
 // -------------------------------------------------------------------
 // Action: Clear All Timetables
 // -------------------------------------------------------------------

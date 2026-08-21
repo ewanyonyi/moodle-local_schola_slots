@@ -457,6 +457,32 @@
     border-radius: 4px !important;
 }
 
+/* Tighten top spacing between main page navigation and page heading for Schola Slots */
+#page.path-local-schola_slots #page-header,
+body.path-local-schola_slots #page-header,
+.path-local-schola_slots #page-header {
+    margin-top: 0.25rem !important;
+    padding-top: 0.25rem !important;
+    margin-bottom: 0.75rem !important;
+    padding-bottom: 0 !important;
+}
+
+#page.path-local-schola_slots #page-header .h2,
+#page.path-local-schola_slots #page-header h2,
+.path-local-schola_slots #page-header .page-header-headings h1 {
+    margin-top: 0 !important;
+    margin-bottom: 0.25rem !important;
+}
+
+#page.path-local-schola_slots #page-content,
+.path-local-schola_slots #page-content,
+.path-local-schola_slots #region-main-box,
+.path-local-schola_slots #region-main {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+
 
 
 
