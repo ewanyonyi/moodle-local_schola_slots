@@ -259,163 +259,190 @@ $viewgrid   = optional_param('viewgrid', 0, PARAM_INT);
 // -------------------------------------------------------------------
 // Build List of Saved Generated Timetables (for Timetable Studio view)
 // -------------------------------------------------------------------
-$saved_schedules = [];
+$savedschedules = [];
 
 if ($classcount > 0) {
-    $c_courses = $DB->count_records_sql("SELECT COUNT(DISTINCT courseid) FROM {local_schola_slots_schedules} WHERE schedule_type = 'class'");
-    $c_rooms   = $DB->count_records_sql("SELECT COUNT(DISTINCT roomid) FROM {local_schola_slots_schedules} WHERE schedule_type = 'class'");
-    $c_slots   = $DB->count_records_sql("SELECT COUNT(DISTINCT slotid) FROM {local_schola_slots_schedules} WHERE schedule_type = 'class'");
-    $saved_schedules[] = (object)[
+    $ccourses = $DB->count_records_sql("SELECT COUNT(DISTINCT courseid) FROM {local_schola_slots_schedules} WHERE schedule_type = 'class'");
+    $crooms   = $DB->count_records_sql("SELECT COUNT(DISTINCT roomid) FROM {local_schola_slots_schedules} WHERE schedule_type = 'class'");
+    $cslots   = $DB->count_records_sql("SELECT COUNT(DISTINCT slotid) FROM {local_schola_slots_schedules} WHERE schedule_type = 'class'");
+    $savedschedules[] = (object)[
         'id'           => 2,
         'title'        => 'Master Class Timetable 2026',
         'type'         => 'class',
-        'course_count' => $c_courses,
-        'room_count'   => $c_rooms,
-        'slot_count'   => $c_slots,
+        'course_count' => $ccourses,
+        'room_count'   => $crooms,
+        'slot_count'   => $cslots,
         'fitness'      => '100 Score',
         'created_date' => '2026-08-19 13:27',
     ];
 }
 
 if ($examcount > 0) {
-    $e_courses = $DB->count_records_sql("SELECT COUNT(DISTINCT courseid) FROM {local_schola_slots_schedules} WHERE schedule_type = 'exam'");
-    $e_rooms   = $DB->count_records_sql("SELECT COUNT(DISTINCT roomid) FROM {local_schola_slots_schedules} WHERE schedule_type = 'exam'");
-    $e_slots   = $DB->count_records_sql("SELECT COUNT(DISTINCT slotid) FROM {local_schola_slots_schedules} WHERE schedule_type = 'exam'");
-    $saved_schedules[] = (object)[
+    $ecourses = $DB->count_records_sql("SELECT COUNT(DISTINCT courseid) FROM {local_schola_slots_schedules} WHERE schedule_type = 'exam'");
+    $erooms   = $DB->count_records_sql("SELECT COUNT(DISTINCT roomid) FROM {local_schola_slots_schedules} WHERE schedule_type = 'exam'");
+    $eslots   = $DB->count_records_sql("SELECT COUNT(DISTINCT slotid) FROM {local_schola_slots_schedules} WHERE schedule_type = 'exam'");
+    $savedschedules[] = (object)[
         'id'           => 3,
         'title'        => 'Master Exam Timetable 2026',
         'type'         => 'exam',
-        'course_count' => $e_courses,
-        'room_count'   => $e_rooms,
-        'slot_count'   => $e_slots,
+        'course_count' => $ecourses,
+        'room_count'   => $erooms,
+        'slot_count'   => $eslots,
         'fitness'      => '100 Score',
         'created_date' => '2026-08-19 14:10',
     ];
 }
 
-$saved_timetables_count = count($saved_schedules);
+$savedtimetablescount = count($savedschedules);
 $generateurl = new moodle_url('/local/schola_slots/index.php', ['action' => 'generate', 'sesskey' => sesskey()]);
 
-$show_details = ($viewgrid > 0 || $id > 0);
+$showdetails = ($viewgrid > 0 || $id > 0);
 
-if (!$show_details) {
+if (!$showdetails) {
     // -------------------------------------------------------------------
     // Timetable Listing View (Studio Masterlist)
     // -------------------------------------------------------------------
-    $total_rooms_count = $DB->count_records('local_schola_slots_rooms');
-    ?>
-    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
-        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
-            <div>
-                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 font-monospace small rounded-pill mb-2" style="background-color: #ecfdf5 !important; color: #047857 !important; border-color: #a7f3d0 !important;">SCHOLA SLOTS ENGINE</span>
-                <h4 class="fw-bold text-dark mb-1">Timetable Management Studio</h4>
-                <p class="text-muted small mb-0">Generate, view, edit, and manage timetable schedules directly in Moodle via off-server optimization.</p>
-            </div>
-            <div>
-                <a href="<?php echo $generateurl; ?>" class="btn btn-emerald rounded-pill font-weight-bold px-4 py-2 d-inline-flex align-items-center shadow-sm">
-                    <i class="fa fa-plus me-2"></i>Generate New Timetable
-                </a>
-            </div>
-        </div>
-    </div>
+    $totalroomscount = $DB->count_records('local_schola_slots_rooms');
+    $iscloudactive = class_exists('\local_schola_slots\licensing\license_manager')
+        && \local_schola_slots\licensing\license_manager::is_pro();
+    $solverstat = $iscloudactive ? 'Cloud Rust' : 'Native PHP';
+    $solversubtext = $iscloudactive
+        ? 'High-concurrency Rust optimization service'
+        : 'Built-in Moodle constraint solver algorithm';
 
-    <!-- Stats Cards Row (Moodle Plugin Telemetry) -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
-                <span class="text-uppercase font-monospace text-muted small fw-bold mb-2">TOTAL SAVED TIMETABLES</span>
-                <h2 class="fw-bold text-dark mb-1"><?php echo $saved_timetables_count; ?></h2>
-                <p class="text-muted small mb-0">Active schedules in Moodle database</p>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
-                <span class="text-uppercase font-monospace text-muted small fw-bold mb-2">CAMPUS VENUES & ROOMS</span>
-                <h2 class="fw-bold text-dark mb-1"><?php echo $total_rooms_count; ?></h2>
-                <p class="text-muted small mb-0">Configured lecture halls &amp; laboratories</p>
-            </div>
-        </div>
-        <?php
-        $is_cloud_active = class_exists('\local_schola_slots\licensing\license_manager') && \local_schola_slots\licensing\license_manager::is_pro();
-        $solver_stat = $is_cloud_active ? 'Cloud Rust' : 'Native PHP';
-        $solver_subtext = $is_cloud_active ? 'High-concurrency Rust optimization service' : 'Built-in Moodle constraint solver algorithm';
-        ?>
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100" style="background-color: #f0fdf4 !important; border: 1px solid #bbf7d0 !important;">
-                <span class="text-uppercase font-monospace text-muted small fw-bold mb-2">CONSTRAINT SOLVER ENGINE</span>
-                <h2 class="fw-bold text-success mb-1"><?php echo $solver_stat; ?></h2>
-                <p class="text-muted small mb-0"><?php echo $solver_subtext; ?></p>
-            </div>
-        </div>
-    </div>
+    echo html_writer::start_div('card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white');
+    echo html_writer::start_div('d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3');
+    echo html_writer::start_div();
+    echo html_writer::tag('span', 'SCHOLA SLOTS ENGINE', [
+        'class' => 'badge bg-success-subtle text-success border border-success-subtle px-3 py-1 font-monospace small rounded-pill mb-2',
+        'style' => 'background-color: #ecfdf5 !important; color: #047857 !important; border-color: #a7f3d0 !important;',
+    ]);
+    echo html_writer::tag('h4', 'Timetable Management Studio', ['class' => 'fw-bold text-dark mb-1']);
+    echo html_writer::tag('p', 'Generate, view, edit, and manage timetable schedules directly in Moodle via off-server optimization.', ['class' => 'text-muted small mb-0']);
+    echo html_writer::end_div();
+    echo html_writer::start_div();
+    echo html_writer::link($generateurl, '<i class="fa fa-plus me-2"></i>Generate New Timetable', [
+        'class' => 'btn btn-emerald rounded-pill font-weight-bold px-4 py-2 d-inline-flex align-items-center shadow-sm',
+    ]);
+    echo html_writer::end_div();
+    echo html_writer::end_div();
+    echo html_writer::end_div();
 
-    <!-- Saved Timetables Masterlist Table -->
-    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
-        <div class="d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom">
-            <h5 class="fw-bold text-dark mb-0">Saved Timetables</h5>
-            <span class="badge bg-light text-dark border font-monospace px-3 py-1 rounded-pill"><?php echo $saved_timetables_count; ?> Schedules</span>
-        </div>
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr class="text-uppercase font-monospace text-muted small border-bottom bg-light">
-                        <th style="width: 60px;" class="py-3 px-3">ID</th>
-                        <th class="py-3">SCHEDULE TITLE</th>
-                        <th class="py-3">COURSES</th>
-                        <th class="py-3">ROOMS</th>
-                        <th class="py-3">SLOTS</th>
-                        <th class="py-3">FITNESS</th>
-                        <th class="py-3">CREATED DATE</th>
-                        <th class="py-3 text-end px-3">ACTIONS</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($saved_schedules)): ?>
-                        <tr>
-                            <td colspan="8" class="text-center py-5 text-muted">
-                                <i class="fa fa-calendar-times-o fa-2x mb-2 d-block text-secondary"></i>
-                                No saved timetables found. Click <strong>Generate New Timetable</strong> above to create one.
-                            </td>
-                        </tr>
-                    <?php else: ?>
-                        <?php foreach ($saved_schedules as $sched): ?>
-                            <?php
-                                $grid_target_url = new moodle_url('/local/schola_slots/schedules.php', ['viewgrid' => 1, 'id' => $sched->id, 'type' => $sched->type]);
-                                $del_target_url  = new moodle_url('/local/schola_slots/schedules.php', ['action' => 'clearall', 'type' => $sched->type, 'sesskey' => sesskey()]);
-                            ?>
-                            <tr>
-                                <td class="px-3 font-monospace text-muted small">#<?php echo $sched->id; ?></td>
-                                <td>
-                                    <span class="fw-bold text-dark me-2"><?php echo s($sched->title); ?></span>
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill font-monospace extra-small px-2 py-0.5" style="background-color: #ecfdf5 !important; color: #047857 !important; border-color: #a7f3d0 !important;">
-                                        <?php echo strtoupper($sched->type); ?>
-                                    </span>
-                                </td>
-                                <td class="font-monospace small"><?php echo $sched->course_count; ?></td>
-                                <td class="font-monospace small"><?php echo $sched->room_count; ?></td>
-                                <td class="font-monospace small"><?php echo $sched->slot_count; ?></td>
-                                <td>
-                                    <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-3 py-1 font-monospace extra-small" style="background-color: #ecfdf5 !important; color: #047857 !important; border-color: #a7f3d0 !important;">
-                                        100 Score
-                                    </span>
-                                </td>
-                                <td class="font-monospace text-muted small"><?php echo $sched->created_date; ?></td>
-                                <td class="text-end px-3">
-                                    <a href="<?php echo $grid_target_url; ?>" class="btn btn-sm btn-outline-dark rounded-pill px-3 py-1 me-1 extra-small font-weight-bold" style="border: 1px solid #1e293b !important; color: #0f172a !important;">
-                                        View Grid &rarr;
-                                    </a>
-                                    <a href="<?php echo $del_target_url; ?>" class="btn btn-sm btn-outline-danger rounded-pill px-3 py-1 extra-small" onclick="return confirm('Are you sure you want to delete this generated timetable?');">
-                                        Delete
-                                    </a>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <?php
+    // Stats Cards Row (Moodle Plugin Telemetry)
+    echo html_writer::start_div('row g-3 mb-4');
+
+    echo html_writer::start_div('col-md-4');
+    echo html_writer::start_div('card border-0 shadow-sm rounded-4 p-4 bg-white h-100');
+    echo html_writer::tag('span', 'TOTAL SAVED TIMETABLES', ['class' => 'text-uppercase font-monospace text-muted small fw-bold mb-2']);
+    echo html_writer::tag('h2', $savedtimetablescount, ['class' => 'fw-bold text-dark mb-1']);
+    echo html_writer::tag('p', 'Active schedules in Moodle database', ['class' => 'text-muted small mb-0']);
+    echo html_writer::end_div();
+    echo html_writer::end_div();
+
+    echo html_writer::start_div('col-md-4');
+    echo html_writer::start_div('card border-0 shadow-sm rounded-4 p-4 bg-white h-100');
+    echo html_writer::tag('span', 'CAMPUS VENUES & ROOMS', ['class' => 'text-uppercase font-monospace text-muted small fw-bold mb-2']);
+    echo html_writer::tag('h2', $totalroomscount, ['class' => 'fw-bold text-dark mb-1']);
+    echo html_writer::tag('p', 'Configured lecture halls &amp; laboratories', ['class' => 'text-muted small mb-0']);
+    echo html_writer::end_div();
+    echo html_writer::end_div();
+
+    echo html_writer::start_div('col-md-4');
+    echo html_writer::start_div('card border-0 shadow-sm rounded-4 p-4 bg-white h-100', [
+        'style' => 'background-color: #f0fdf4 !important; border: 1px solid #bbf7d0 !important;',
+    ]);
+    echo html_writer::tag('span', 'CONSTRAINT SOLVER ENGINE', ['class' => 'text-uppercase font-monospace text-muted small fw-bold mb-2']);
+    echo html_writer::tag('h2', $solverstat, ['class' => 'fw-bold text-success mb-1']);
+    echo html_writer::tag('p', $solversubtext, ['class' => 'text-muted small mb-0']);
+    echo html_writer::end_div();
+    echo html_writer::end_div();
+
+    echo html_writer::end_div(); // End stats row
+
+    // Saved Timetables Masterlist Table
+    echo html_writer::start_div('card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white');
+    echo html_writer::start_div('d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom');
+    echo html_writer::tag('h5', 'Saved Timetables', ['class' => 'fw-bold text-dark mb-0']);
+    echo html_writer::tag('span', $savedtimetablescount . ' Schedules', ['class' => 'badge bg-light text-dark border font-monospace px-3 py-1 rounded-pill']);
+    echo html_writer::end_div();
+
+    echo html_writer::start_div('table-responsive');
+    echo html_writer::start_tag('table', ['class' => 'table table-hover align-middle mb-0']);
+    echo html_writer::start_tag('thead');
+    echo html_writer::start_tag('tr', ['class' => 'text-uppercase font-monospace text-muted small border-bottom bg-light']);
+    echo html_writer::tag('th', 'ID', ['style' => 'width: 60px;', 'class' => 'py-3 px-3']);
+    echo html_writer::tag('th', 'SCHEDULE TITLE', ['class' => 'py-3']);
+    echo html_writer::tag('th', 'COURSES', ['class' => 'py-3']);
+    echo html_writer::tag('th', 'ROOMS', ['class' => 'py-3']);
+    echo html_writer::tag('th', 'SLOTS', ['class' => 'py-3']);
+    echo html_writer::tag('th', 'FITNESS', ['class' => 'py-3']);
+    echo html_writer::tag('th', 'CREATED DATE', ['class' => 'py-3']);
+    echo html_writer::tag('th', 'ACTIONS', ['class' => 'py-3 text-end px-3']);
+    echo html_writer::end_tag('tr');
+    echo html_writer::end_tag('thead');
+
+    echo html_writer::start_tag('tbody');
+    if (empty($savedschedules)) {
+        echo html_writer::start_tag('tr');
+        $nomsg = '<i class="fa fa-calendar-times-o fa-2x mb-2 d-block text-secondary"></i>' .
+            'No saved timetables found. Click <strong>Generate New Timetable</strong> above to create one.';
+        echo html_writer::tag('td', $nomsg, ['colspan' => '8', 'class' => 'text-center py-5 text-muted']);
+        echo html_writer::end_tag('tr');
+    } else {
+        foreach ($savedschedules as $sched) {
+            $gridtargeturl = new moodle_url('/local/schola_slots/schedules.php', [
+                'viewgrid' => 1,
+                'id' => $sched->id,
+                'type' => $sched->type,
+            ]);
+            $deltargeturl = new moodle_url('/local/schola_slots/schedules.php', [
+                'action' => 'clearall',
+                'type' => $sched->type,
+                'sesskey' => sesskey(),
+            ]);
+
+            echo html_writer::start_tag('tr');
+            echo html_writer::tag('td', '#' . $sched->id, ['class' => 'px-3 font-monospace text-muted small']);
+
+            echo html_writer::start_tag('td');
+            echo html_writer::tag('span', s($sched->title), ['class' => 'fw-bold text-dark me-2']);
+            echo html_writer::tag('span', strtoupper($sched->type), [
+                'class' => 'badge bg-success-subtle text-success border border-success-subtle rounded-pill font-monospace extra-small px-2 py-0.5',
+                'style' => 'background-color: #ecfdf5 !important; color: #047857 !important; border-color: #a7f3d0 !important;',
+            ]);
+            echo html_writer::end_tag('td');
+
+            echo html_writer::tag('td', $sched->course_count, ['class' => 'font-monospace small']);
+            echo html_writer::tag('td', $sched->room_count, ['class' => 'font-monospace small']);
+            echo html_writer::tag('td', $sched->slot_count, ['class' => 'font-monospace small']);
+
+            echo html_writer::start_tag('td');
+            echo html_writer::tag('span', '100 Score', [
+                'class' => 'badge rounded-pill bg-success-subtle text-success border border-success-subtle px-3 py-1 font-monospace extra-small',
+                'style' => 'background-color: #ecfdf5 !important; color: #047857 !important; border-color: #a7f3d0 !important;',
+            ]);
+            echo html_writer::end_tag('td');
+
+            echo html_writer::tag('td', $sched->created_date, ['class' => 'font-monospace text-muted small']);
+
+            echo html_writer::start_tag('td', ['class' => 'text-end px-3']);
+            echo html_writer::link($gridtargeturl, 'View Grid &rarr;', [
+                'class' => 'btn btn-sm btn-outline-dark rounded-pill px-3 py-1 me-1 extra-small font-weight-bold',
+                'style' => 'border: 1px solid #1e293b !important; color: #0f172a !important;',
+            ]);
+            echo html_writer::link($deltargeturl, 'Delete', [
+                'class' => 'btn btn-sm btn-outline-danger rounded-pill px-3 py-1 extra-small',
+                'onclick' => "return confirm('Are you sure you want to delete this generated timetable?');",
+            ]);
+            echo html_writer::end_tag('td');
+
+            echo html_writer::end_tag('tr');
+        }
+    }
+    echo html_writer::end_tag('tbody');
+    echo html_writer::end_tag('table');
+    echo html_writer::end_div();
+    echo html_writer::end_div();
 } else {
     // -------------------------------------------------------------------
     // Timetable Details View (Matrix Grid & Filter Toolbar)
@@ -427,112 +454,132 @@ if (!$show_details) {
         'action' => 'print', 'roomid' => $roomid, 'teacherid' => $teacherid, 'type' => $scheduletype, 'categoryid' => $categoryid, 'autoprint' => 1,
     ]);
 
-// -------------------------------------------------------------------
-// Active Timetable Details Header Card (Matrix View Anchor)
-// -------------------------------------------------------------------
-echo html_writer::start_div('card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white', ['id' => 'matrixGridContainer']);
-echo html_writer::start_div('d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3');
+    // -------------------------------------------------------------------
+    // Active Timetable Details Header Card (Matrix View Anchor)
+    // -------------------------------------------------------------------
+    echo html_writer::start_div('card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white', ['id' => 'matrixGridContainer']);
+    echo html_writer::start_div('d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3');
 
-echo html_writer::start_div();
-echo html_writer::start_div('d-flex align-items-center gap-2 mb-2');
-echo html_writer::tag('span', 'Fitness Score: 100', ['class' => 'badge-fitness-score']);
-echo html_writer::tag('span', 'ID #2', ['class' => 'badge-id-num']);
-echo html_writer::end_div();
+    echo html_writer::start_div();
+    echo html_writer::start_div('d-flex align-items-center gap-2 mb-2');
+    echo html_writer::tag('span', 'Fitness Score: 100', ['class' => 'badge-fitness-score']);
+    echo html_writer::tag('span', 'ID #2', ['class' => 'badge-id-num']);
+    echo html_writer::end_div();
 
-echo html_writer::start_div('d-flex align-items-center gap-3');
-echo html_writer::tag('h2', 'Master Class Timetable 2026', ['class' => 'fw-bold text-dark mb-0']);
-$typelabel = ($scheduletype === 'all') ? 'CLASS SCHEDULE' : strtoupper($scheduletype) . ' SCHEDULE';
-echo html_writer::tag('span', $typelabel, ['class' => 'badge-class-schedule']);
-echo html_writer::end_div();
-$subtext = 'Generated by Schola Slots Engine on 2026-08-19 13:27 via Off-Server Rust Constraint Satisfaction Service';
-echo html_writer::tag('p', $subtext, ['class' => 'text-muted small mb-0 mt-1']);
-echo html_writer::end_div();
+    echo html_writer::start_div('d-flex align-items-center gap-3');
+    echo html_writer::tag('h2', 'Master Class Timetable 2026', ['class' => 'fw-bold text-dark mb-0']);
+    $typelabel = ($scheduletype === 'all') ? 'CLASS SCHEDULE' : strtoupper($scheduletype) . ' SCHEDULE';
+    echo html_writer::tag('span', $typelabel, ['class' => 'badge-class-schedule']);
+    echo html_writer::end_div();
+    $subtext = 'Generated by Schola Slots Engine on 2026-08-19 13:27 via Off-Server Rust Constraint Satisfaction Service';
+    echo html_writer::tag('p', $subtext, ['class' => 'text-muted small mb-0 mt-1']);
+    echo html_writer::end_div();
 
-// Action buttons (Exact Schola Slots Rust brand colors & buttons)
-echo html_writer::start_div('d-flex flex-wrap align-items-center gap-2');
-echo html_writer::link($pdfexporturl, '<i class="fa fa-print me-1"></i> Save to PDF', ['class' => 'btn btn-emerald d-inline-flex align-items-center', 'target' => '_blank']);
-echo html_writer::link($csvexporturl, '<i class="fa fa-download me-1"></i> Export CSV', ['class' => 'btn btn-outline-slate d-inline-flex align-items-center']);
+    // Action buttons (Exact Schola Slots Rust brand colors & buttons)
+    echo html_writer::start_div('d-flex flex-wrap align-items-center gap-2');
+    echo html_writer::link($pdfexporturl, '<i class="fa fa-print me-1"></i> Save to PDF', ['class' => 'btn btn-emerald d-inline-flex align-items-center', 'target' => '_blank']);
+    echo html_writer::link($csvexporturl, '<i class="fa fa-download me-1"></i> Export CSV', ['class' => 'btn btn-outline-slate d-inline-flex align-items-center']);
 
-$toggleediturl = new moodle_url($url, ['editmode' => $editmode ? 0 : 1]);
-$editbtnlabel = $editmode ? '<i class="fa fa-check me-1"></i> Disable Edit Mode' : '<i class="fa fa-pencil me-1"></i> Enable Edit Mode';
-$editbtnclass = $editmode ? 'btn btn-emerald d-inline-flex align-items-center' : 'btn btn-outline-emerald d-inline-flex align-items-center';
+    $toggleediturl = new moodle_url($url, ['editmode' => $editmode ? 0 : 1]);
+    $editbtnlabel = $editmode ? '<i class="fa fa-check me-1"></i> Disable Edit Mode' : '<i class="fa fa-pencil me-1"></i> Enable Edit Mode';
+    $editbtnclass = $editmode ? 'btn btn-emerald d-inline-flex align-items-center' : 'btn btn-outline-emerald d-inline-flex align-items-center';
 
-echo html_writer::link($toggleediturl, $editbtnlabel, [
+    echo html_writer::link($toggleediturl, $editbtnlabel, [
     'class' => $editbtnclass,
     'id' => 'enableEditModeBtn',
     'onclick' => 'toggleEditMode(event);',
-]);
-echo html_writer::end_div();
+    ]);
+    echo html_writer::end_div();
 
-echo html_writer::end_div();
-echo html_writer::end_div();
+    echo html_writer::end_div();
+    echo html_writer::end_div();
 
-// -------------------------------------------------------------------
-// Unified Filter Toolbar Bar
-// -------------------------------------------------------------------
-echo html_writer::start_div('card border shadow-sm rounded-4 p-3 mb-4 bg-white');
-echo html_writer::start_tag('form', ['method' => 'get', 'action' => $url->out(false), 'class' => 'd-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3']);
+    // -------------------------------------------------------------------
+    // Unified Filter Toolbar Bar
+    // -------------------------------------------------------------------
+    echo html_writer::start_div('card border shadow-sm rounded-4 p-3 mb-4 bg-white');
+    echo html_writer::start_tag('form', [
+        'method' => 'get',
+        'action' => $url->out(false),
+        'class' => 'd-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3',
+    ]);
 
-echo html_writer::start_div('d-flex flex-wrap align-items-center gap-2');
-echo html_writer::tag('span', 'Filters:', ['class' => 'text-dark font-weight-bold small me-1']);
+    echo html_writer::start_div('d-flex flex-wrap align-items-center gap-2');
+    echo html_writer::tag('span', 'Filters:', ['class' => 'text-dark font-weight-bold small me-1']);
 
-// Strategy Selector
-echo html_writer::select($strategyoptions, 'strategy', $currentstrategy, false, [
+    // Strategy Selector
+    echo html_writer::select($strategyoptions, 'strategy', $currentstrategy, false, [
     'class' => 'form-select form-select-sm search-filter-input',
     'style' => 'max-width: 190px;',
-    'onchange' => 'this.form.action="schedules.php?action=setstrategy&sesskey=' . sesskey() . '"; this.form.submit();'
-]);
+    'onchange' => 'this.form.action="schedules.php?action=setstrategy&sesskey=' . sesskey() . '"; this.form.submit();',
+    ]);
 
-echo html_writer::select($typefilteroptions, 'type', $scheduletype, false, ['class' => 'form-select form-select-sm search-filter-input', 'style' => 'max-width: 170px;', 'onchange' => 'this.form.submit()']);
-echo html_writer::select($catoptions, 'categoryid', $categoryid, false, ['class' => 'form-select form-select-sm search-filter-input', 'style' => 'max-width: 190px;', 'onchange' => 'this.form.submit()']);
-echo html_writer::select($roomoptions, 'roomid', $roomid, false, ['class' => 'form-select form-select-sm search-filter-input', 'style' => 'max-width: 190px;', 'onchange' => 'this.form.submit()']);
-echo html_writer::select($teacheroptions, 'teacherid', $teacherid, false, ['class' => 'form-select form-select-sm search-filter-input', 'style' => 'max-width: 190px;', 'onchange' => 'this.form.submit()']);
-echo html_writer::end_div();
+    echo html_writer::select($typefilteroptions, 'type', $scheduletype, false, [
+        'class' => 'form-select form-select-sm search-filter-input',
+        'style' => 'max-width: 170px;',
+        'onchange' => 'this.form.submit()',
+    ]);
+    echo html_writer::select($catoptions, 'categoryid', $categoryid, false, [
+        'class' => 'form-select form-select-sm search-filter-input',
+        'style' => 'max-width: 190px;',
+        'onchange' => 'this.form.submit()',
+    ]);
+    echo html_writer::select($roomoptions, 'roomid', $roomid, false, [
+        'class' => 'form-select form-select-sm search-filter-input',
+        'style' => 'max-width: 190px;',
+        'onchange' => 'this.form.submit()',
+    ]);
+    echo html_writer::select($teacheroptions, 'teacherid', $teacherid, false, [
+        'class' => 'form-select form-select-sm search-filter-input',
+        'style' => 'max-width: 190px;',
+        'onchange' => 'this.form.submit()',
+    ]);
+    echo html_writer::end_div();
 
-echo html_writer::start_div('d-flex align-items-center gap-2');
-echo html_writer::empty_tag('input', [
+    echo html_writer::start_div('d-flex align-items-center gap-2');
+    echo html_writer::empty_tag('input', [
     'type' => 'text',
     'id' => 'scholaLiveSearch',
     'class' => 'form-control form-control-sm search-filter-input',
     'placeholder' => 'Search course/code...',
     'onkeyup' => 'filterTimetableEntries()',
-    'style' => 'max-width: 200px;'
-]);
+    'style' => 'max-width: 200px;',
+    ]);
 
-if ($roomid > 0 || $teacherid > 0 || $categoryid > 0 || $scheduletype !== 'all') {
-    $reseturl = new moodle_url($url, ['roomid' => 0, 'teacherid' => 0, 'categoryid' => 0, 'type' => 'all']);
-    echo html_writer::link($reseturl, 'Reset', ['class' => 'btn btn-sm btn-outline-secondary font-weight-bold px-3 py-1.5 rounded-3']);
-}
-echo html_writer::end_div();
+    if ($roomid > 0 || $teacherid > 0 || $categoryid > 0 || $scheduletype !== 'all') {
+        $reseturl = new moodle_url($url, ['roomid' => 0, 'teacherid' => 0, 'categoryid' => 0, 'type' => 'all']);
+        echo html_writer::link($reseturl, 'Reset', ['class' => 'btn btn-sm btn-outline-secondary font-weight-bold px-3 py-1.5 rounded-3']);
+    }
+    echo html_writer::end_div();
 
-echo html_writer::end_tag('form');
-echo html_writer::end_div();
+    echo html_writer::end_tag('form');
+    echo html_writer::end_div();
 
-// -------------------------------------------------------------------
-// Query Schedules
-// -------------------------------------------------------------------
-$where = [];
-$params = [];
+    // -------------------------------------------------------------------
+    // Query Schedules
+    // -------------------------------------------------------------------
+    $where = [];
+    $params = [];
 
-if ($scheduletype !== 'all') {
-    $where[] = 's.schedule_type = :stype';
-    $params['stype'] = $scheduletype;
-}
-if ($categoryid > 0) {
-    $where[] = 'c.category = :categoryid';
-    $params['categoryid'] = $categoryid;
-}
-if ($roomid > 0) {
-    $where[] = 's.roomid = :roomid';
-    $params['roomid'] = $roomid;
-}
-if ($teacherid > 0) {
-    $where[] = 's.teacherid = :teacherid';
-    $params['teacherid'] = $teacherid;
-}
-$wherestr = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+    if ($scheduletype !== 'all') {
+        $where[] = 's.schedule_type = :stype';
+        $params['stype'] = $scheduletype;
+    }
+    if ($categoryid > 0) {
+        $where[] = 'c.category = :categoryid';
+        $params['categoryid'] = $categoryid;
+    }
+    if ($roomid > 0) {
+        $where[] = 's.roomid = :roomid';
+        $params['roomid'] = $roomid;
+    }
+    if ($teacherid > 0) {
+        $where[] = 's.teacherid = :teacherid';
+        $params['teacherid'] = $teacherid;
+    }
+    $wherestr = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
 
-$sql = "SELECT s.id, s.schedule_type, c.shortname AS coursecode, c.fullname AS coursename,
+    $sql = "SELECT s.id, s.schedule_type, c.shortname AS coursecode, c.fullname AS coursename,
                r.name AS roomname, r.id AS room_id, sl.dayofweek, sl.starttime, sl.endtime,
                u.firstname, u.lastname
           FROM {local_schola_slots_schedules} s
@@ -543,163 +590,179 @@ $sql = "SELECT s.id, s.schedule_type, c.shortname AS coursecode, c.fullname AS c
           {$wherestr}
       ORDER BY sl.dayofweek ASC, sl.starttime ASC, r.name ASC";
 
-$schedules = $DB->get_records_sql($sql, $params);
+    $schedules = $DB->get_records_sql($sql, $params);
 
-if (empty($schedules)) {
-    echo html_writer::div(get_string('no_schedules', 'local_schola_slots'), 'alert alert-info rounded-3 p-4');
-} else {
-    // -------------------------------------------------------------------
-    // Schola Slots Rust Mirrored Institutional Grid Matrix View
-    // -------------------------------------------------------------------
-    $roomwhere = ($roomid > 0) ? ['id' => $roomid] : null;
-    $allrooms = $DB->get_records('local_schola_slots_rooms', $roomwhere, 'name ASC');
-    $roomslist = array_values($allrooms);
-    $numrooms = count($roomslist);
+    if (empty($schedules)) {
+        echo html_writer::div(get_string('no_schedules', 'local_schola_slots'), 'alert alert-info rounded-3 p-4');
+    } else {
+        // -------------------------------------------------------------------
+        // Schola Slots Rust Mirrored Institutional Grid Matrix View
+        // -------------------------------------------------------------------
+        $roomwhere = ($roomid > 0) ? ['id' => $roomid] : null;
+        $allrooms = $DB->get_records('local_schola_slots_rooms', $roomwhere, 'name ASC');
+        $roomslist = array_values($allrooms);
+        $numrooms = count($roomslist);
 
-    $allslots = $DB->get_records('local_schola_slots_slots', null, 'starttime ASC');
-    $timeblocks = [];
-    $breakwindows = [];
-    foreach ($allslots as $sl) {
-        $window = s($sl->starttime) . ' - ' . s($sl->endtime);
-        if (!in_array($window, $timeblocks)) {
-            $timeblocks[] = $window;
-        }
-        if ($sl->type === 'break') {
-            $breakwindows[$window] = true;
-        }
-    }
-    foreach ($schedules as $s) {
-        $window = s($s->starttime) . ' - ' . s($s->endtime);
-        if (!in_array($window, $timeblocks)) {
-            $timeblocks[] = $window;
-        }
-    }
-    sort($timeblocks);
-
-    // Group schedules by day, roomid, timeblock
-    $matrix = [];
-    foreach ($schedules as $s) {
-        $window = s($s->starttime) . ' - ' . s($s->endtime);
-        $matrix[$s->dayofweek][$s->room_id][$window][] = $s;
-    }
-
-    $maxday = ($currentstrategy === 'mon_to_sat') ? 6 : 5;
-    $matrixdays = array_slice($days, 0, $maxday, true);
-
-    $gridcontainercls = 'card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white' . ($editmode ? ' edit-mode-active' : '');
-    echo html_writer::start_div($gridcontainercls, ['id' => 'institutionalGridContainer']);
-    echo html_writer::start_div('d-flex justify-content-between align-items-center mb-3');
-    echo html_writer::start_div();
-    echo html_writer::tag('h5', 'Master Academic Timetable Matrix', ['class' => 'fw-bold text-dark mb-1']);
-    echo html_writer::tag('p', 'Official Institutional View — Sticky Venue Headers, Shaded Vertical Break Columns & Online Classes.', ['class' => 'text-muted small mb-0']);
-    echo html_writer::end_div();
-    echo html_writer::tag('span', 'online classes highlighted', ['class' => 'badge bg-success-subtle text-success border border-success-subtle px-3 py-1 font-monospace small rounded-pill']);
-    echo html_writer::end_div();
-
-    echo html_writer::start_div('table-responsive shadow-sm rounded-3 border', ['style' => 'max-height: 75vh; overflow-y: auto;']);
-    echo html_writer::start_tag('table', ['class' => 'table table-bordered align-middle mb-0 schola-slots-matrix-table', 'id' => 'institutionalGridTable', 'style' => 'min-width: 1100px;']);
-    
-    // Header Row
-    echo html_writer::start_tag('thead');
-    echo html_writer::start_tag('tr', ['class' => 'text-center font-monospace text-uppercase small bg-light']);
-    echo html_writer::tag('th', 'VENUE / ROOM', ['style' => 'width: 160px; min-width: 160px;', 'class' => 'py-3 px-3 text-start sticky-top-th']);
-    foreach ($timeblocks as $tb) {
-        if (isset($breakwindows[$tb])) {
-            echo html_writer::tag('th', '<div class="fw-bold">' . $tb . '</div>', ['class' => 'py-2.5 px-2 text-center break-column-strip sticky-top-th', 'style' => 'font-size: 11px; min-width: 110px;']);
-        } else {
-            echo html_writer::tag('th', '<strong>' . $tb . '</strong>', ['class' => 'py-3 px-2 text-center sticky-top-th', 'style' => 'font-size: 11px; min-width: 110px;']);
-        }
-    }
-    echo html_writer::end_tag('tr');
-    echo html_writer::end_tag('thead');
-
-    // Body
-    echo html_writer::start_tag('tbody');
-    foreach ($matrixdays as $daynum => $dayname) {
-        // Day Banner Row
-        echo html_writer::start_tag('tr', ['class' => 'day-banner-row']);
-        echo html_writer::tag('td', '🗓️ ' . strtoupper($dayname) . ' SCHEDULE', [
-            'colspan' => (count($timeblocks) + 1),
-            'class' => 'day-banner-cell font-monospace text-uppercase fw-bold py-2 px-3'
-        ]);
-        echo html_writer::end_tag('tr');
-
-        foreach ($roomslist as $ridx => $room) {
-            $isonlineroom = (stripos($room->name, 'online') !== false || stripos($room->name, 'virtual') !== false || stripos($room->name, 'zoom') !== false);
-            echo html_writer::start_tag('tr', ['class' => $isonlineroom ? 'table-success-subtle' : '']);
-
-            // Venue Header Cell
-            echo html_writer::start_tag('td', ['class' => 'font-monospace small px-3 py-2 fw-bold text-dark venue-sticky-td bg-light']);
-            echo html_writer::start_div('d-flex align-items-center justify-content-between');
-            echo html_writer::tag('span', s($room->name));
-            if ($isonlineroom) {
-                echo html_writer::tag('span', 'ONLINE', ['class' => 'badge online-room-badge ms-1', 'style' => 'font-size: 9px;']);
+        $allslots = $DB->get_records('local_schola_slots_slots', null, 'starttime ASC');
+        $timeblocks = [];
+        $breakwindows = [];
+        foreach ($allslots as $sl) {
+            $window = s($sl->starttime) . ' - ' . s($sl->endtime);
+            if (!in_array($window, $timeblocks)) {
+                $timeblocks[] = $window;
             }
-            echo html_writer::end_div();
-            echo html_writer::end_tag('td');
+            if ($sl->type === 'break') {
+                $breakwindows[$window] = true;
+            }
+        }
+        foreach ($schedules as $s) {
+            $window = s($s->starttime) . ' - ' . s($s->endtime);
+            if (!in_array($window, $timeblocks)) {
+                $timeblocks[] = $window;
+            }
+        }
+        sort($timeblocks);
 
-            // Time Slots Columns
-            foreach ($timeblocks as $tb) {
-                if (isset($breakwindows[$tb])) {
-                    if ($ridx === 0) {
-                        $tbstart = explode(' - ', $tb)[0];
-                        $startsec = strtotime("2026-01-01 " . $tbstart);
-                        $is_lunch = ($startsec && $startsec >= strtotime("2026-01-01 11:30"));
-                        $breaktext = $is_lunch ? "L U N C H   B R E A K" : "T E A   B R E A K";
+        // Group schedules by day, roomid, timeblock
+        $matrix = [];
+        foreach ($schedules as $s) {
+            $window = s($s->starttime) . ' - ' . s($s->endtime);
+            $matrix[$s->dayofweek][$s->room_id][$window][] = $s;
+        }
 
-                        echo html_writer::tag('td', '<div class="break-column-vertical">' . $breaktext . '</div>', [
+        $maxday = ($currentstrategy === 'mon_to_sat') ? 6 : 5;
+        $matrixdays = array_slice($days, 0, $maxday, true);
+
+        $gridcontainercls = 'card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white' . ($editmode ? ' edit-mode-active' : '');
+        echo html_writer::start_div($gridcontainercls, ['id' => 'institutionalGridContainer']);
+        echo html_writer::start_div('d-flex justify-content-between align-items-center mb-3');
+        echo html_writer::start_div();
+        echo html_writer::tag('h5', 'Master Academic Timetable Matrix', ['class' => 'fw-bold text-dark mb-1']);
+        echo html_writer::tag('p', 'Official Institutional View — Sticky Venue Headers, Shaded Vertical Break Columns & Online Classes.', ['class' => 'text-muted small mb-0']);
+        echo html_writer::end_div();
+        echo html_writer::tag('span', 'online classes highlighted', [
+            'class' => 'badge bg-success-subtle text-success border border-success-subtle px-3 py-1 font-monospace small rounded-pill',
+        ]);
+        echo html_writer::end_div();
+
+        echo html_writer::start_div('table-responsive shadow-sm rounded-3 border', ['style' => 'max-height: 75vh; overflow-y: auto;']);
+        echo html_writer::start_tag('table', [
+            'class' => 'table table-bordered align-middle mb-0 schola-slots-matrix-table',
+            'id' => 'institutionalGridTable',
+            'style' => 'min-width: 1100px;',
+        ]);
+
+        // Header Row
+        echo html_writer::start_tag('thead');
+        echo html_writer::start_tag('tr', ['class' => 'text-center font-monospace text-uppercase small bg-light']);
+        echo html_writer::tag('th', 'VENUE / ROOM', ['style' => 'width: 160px; min-width: 160px;', 'class' => 'py-3 px-3 text-start sticky-top-th']);
+        foreach ($timeblocks as $tb) {
+            if (isset($breakwindows[$tb])) {
+                echo html_writer::tag('th', '<div class="fw-bold">' . $tb . '</div>', [
+                    'class' => 'py-2.5 px-2 text-center break-column-strip sticky-top-th',
+                    'style' => 'font-size: 11px; min-width: 110px;',
+                ]);
+            } else {
+                echo html_writer::tag('th', '<strong>' . $tb . '</strong>', [
+                    'class' => 'py-3 px-2 text-center sticky-top-th',
+                    'style' => 'font-size: 11px; min-width: 110px;',
+                ]);
+            }
+        }
+        echo html_writer::end_tag('tr');
+        echo html_writer::end_tag('thead');
+
+        // Body
+        echo html_writer::start_tag('tbody');
+        foreach ($matrixdays as $daynum => $dayname) {
+            // Day Banner Row
+            echo html_writer::start_tag('tr', ['class' => 'day-banner-row']);
+            echo html_writer::tag('td', '🗓️ ' . strtoupper($dayname) . ' SCHEDULE', [
+            'colspan' => (count($timeblocks) + 1),
+            'class' => 'day-banner-cell font-monospace text-uppercase fw-bold py-2 px-3',
+            ]);
+            echo html_writer::end_tag('tr');
+
+            foreach ($roomslist as $ridx => $room) {
+                $isonlineroom = (stripos($room->name, 'online') !== false || stripos($room->name, 'virtual') !== false || stripos($room->name, 'zoom') !== false);
+                echo html_writer::start_tag('tr', ['class' => $isonlineroom ? 'table-success-subtle' : '']);
+
+                // Venue Header Cell
+                echo html_writer::start_tag('td', ['class' => 'font-monospace small px-3 py-2 fw-bold text-dark venue-sticky-td bg-light']);
+                echo html_writer::start_div('d-flex align-items-center justify-content-between');
+                echo html_writer::tag('span', s($room->name));
+                if ($isonlineroom) {
+                    echo html_writer::tag('span', 'ONLINE', ['class' => 'badge online-room-badge ms-1', 'style' => 'font-size: 9px;']);
+                }
+                echo html_writer::end_div();
+                echo html_writer::end_tag('td');
+
+                // Time Slots Columns
+                foreach ($timeblocks as $tb) {
+                    if (isset($breakwindows[$tb])) {
+                        if ($ridx === 0) {
+                            $tbstart = explode(' - ', $tb)[0];
+                            $startsec = strtotime("2026-01-01 " . $tbstart);
+                            $islunch = ($startsec && $startsec >= strtotime("2026-01-01 11:30"));
+                            $breaktext = $islunch ? "L U N C H   B R E A K" : "T E A   B R E A K";
+
+                            echo html_writer::tag('td', '<div class="break-column-vertical">' . $breaktext . '</div>', [
                             'rowspan' => $numrooms,
-                            'class' => 'break-column-strip text-center p-0 align-middle'
-                        ]);
-                    }
-                    // For $ridx > 0, break cell is covered by rowspan, do not render td!
-                } else {
-                    echo html_writer::start_tag('td', ['class' => 'p-2 align-middle text-center']);
-                    $entries = $matrix[$daynum][$room->id][$tb] ?? [];
-                    if (empty($entries)) {
-                        echo '<span class="text-muted small">&mdash;</span>';
+                            'class' => 'break-column-strip text-center p-0 align-middle',
+                            ]);
+                        }
+                        // For $ridx > 0, break cell is covered by rowspan, do not render td!
                     } else {
-                        foreach ($entries as $entry) {
-                            $teacher = (!empty($entry->firstname) || !empty($entry->lastname)) ? fullname($entry) : 'Unassigned';
-                            $editurl = new moodle_url($url, ['action' => 'edit', 'id' => $entry->id]);
-                            $delurl = new moodle_url($url, ['action' => 'delete', 'id' => $entry->id, 'sesskey' => sesskey()]);
-                            $typebadge = ($entry->schedule_type === 'exam')
-                                ? '<span class="badge att-badge-exam me-1">EXAM</span>'
-                                : '<span class="badge bg-secondary text-dark me-1" style="font-size:9px; background:#f1f5f9 !important; border:1px solid #cbd5e1 !important;">Lec</span>';
+                        echo html_writer::start_tag('td', ['class' => 'p-2 align-middle text-center']);
+                        $entries = $matrix[$daynum][$room->id][$tb] ?? [];
+                        if (empty($entries)) {
+                            echo '<span class="text-muted small">&mdash;</span>';
+                        } else {
+                            foreach ($entries as $entry) {
+                                $teacher = (!empty($entry->firstname) || !empty($entry->lastname)) ? fullname($entry) : 'Unassigned';
+                                $editurl = new moodle_url($url, ['action' => 'edit', 'id' => $entry->id]);
+                                $delurl = new moodle_url($url, ['action' => 'delete', 'id' => $entry->id, 'sesskey' => sesskey()]);
+                                $lecbadge = '<span class="badge bg-secondary text-dark me-1" ' .
+                                    'style="font-size:9px; background:#f1f5f9 !important; border:1px solid #cbd5e1 !important;">Lec</span>';
+                                $typebadge = ($entry->schedule_type === 'exam')
+                                    ? '<span class="badge att-badge-exam me-1">EXAM</span>'
+                                    : $lecbadge;
 
-                            echo html_writer::start_div('grid-cell-card schola-entry-card text-start mb-1');
-                            echo html_writer::start_div('d-flex justify-content-between align-items-center mb-1');
-                            echo html_writer::tag('span', s($entry->coursecode), ['class' => 'grid-cell-course']);
-                            echo $typebadge;
-                            echo html_writer::end_div();
-                            echo html_writer::tag('div', s($teacher), ['class' => 'grid-cell-lecturer mb-1']);
-                            echo html_writer::start_div('cell-action-buttons gap-1 border-top pt-1 mt-1');
-                            echo html_writer::link($editurl, 'Edit', ['class' => 'btn btn-sm btn-outline-primary py-0 px-1.5 extra-small']);
-                            echo html_writer::link($delurl, 'Delete', [
+                                echo html_writer::start_div('grid-cell-card schola-entry-card text-start mb-1');
+                                echo html_writer::start_div('d-flex justify-content-between align-items-center mb-1');
+                                echo html_writer::tag('span', s($entry->coursecode), ['class' => 'grid-cell-course']);
+                                echo $typebadge;
+                                echo html_writer::end_div();
+                                echo html_writer::tag('div', s($teacher), ['class' => 'grid-cell-lecturer mb-1']);
+                                echo html_writer::start_div('cell-action-buttons gap-1 border-top pt-1 mt-1');
+                                echo html_writer::link($editurl, 'Edit', ['class' => 'btn btn-sm btn-outline-primary py-0 px-1.5 extra-small']);
+                                echo html_writer::link($delurl, 'Delete', [
                                 'class' => 'btn btn-sm btn-outline-danger py-0 px-1.5 extra-small',
                                 'onclick' => 'return confirm("Delete allocation?");',
-                            ]);
-                            echo html_writer::end_div();
-                            echo html_writer::end_div();
+                                ]);
+                                echo html_writer::end_div();
+                                echo html_writer::end_div();
+                            }
                         }
+                        echo html_writer::end_tag('td');
                     }
-                    echo html_writer::end_tag('td');
                 }
+                echo html_writer::end_tag('tr');
             }
-            echo html_writer::end_tag('tr');
         }
+        echo html_writer::end_tag('tbody');
+        echo html_writer::end_tag('table');
+        echo html_writer::end_div();
+        echo html_writer::end_div();
     }
-    echo html_writer::end_tag('tbody');
-    echo html_writer::end_tag('table');
-    echo html_writer::end_div();
-    echo html_writer::end_div();
-}
 } // End if ($show_details) block
 
 // -------------------------------------------------------------------
+// -------------------------------------------------------------------
 // Manage Breaks Modal
 // -------------------------------------------------------------------
-?>
+$sesskeyval = sesskey();
+echo <<<HTML
 <div class="modal fade" id="manageBreaksModal" tabindex="-1" aria-labelledby="manageBreaksModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content rounded-4 border-0 shadow-lg">
@@ -711,10 +774,12 @@ if (empty($schedules)) {
       </div>
       <form method="post" action="slots.php">
         <input type="hidden" name="action" value="build_bell_schedule">
-        <input type="hidden" name="sesskey" value="<?php echo sesskey(); ?>">
+        <input type="hidden" name="sesskey" value="{$sesskeyval}">
         <input type="hidden" name="redirect_to" value="schedules.php">
         <div class="modal-body py-4">
-          <p class="text-muted small mb-4">Customize tea & lunch break windows for the matrix timetable. Time slots will be automatically recalculated.</p>
+          <p class="text-muted small mb-4">
+            Customize tea &amp; lunch break windows for the matrix timetable. Time slots will be automatically recalculated.
+          </p>
 
           <div class="card p-3 bg-light border-0 mb-3 rounded-3">
             <h6 class="fw-bold text-dark mb-2"><i class="fa fa-coffee text-warning me-1"></i> Morning Tea Break</h6>
@@ -763,48 +828,47 @@ if (empty($schedules)) {
     </div>
   </div>
 </div>
+HTML;
 
-<script>
-function filterTimetableEntries() {
-    var query = document.getElementById("scholaLiveSearch").value.toLowerCase().trim();
-    var cards = document.querySelectorAll(".schola-entry-card");
-    cards.forEach(function(card) {
-        var text = card.innerText.toLowerCase();
-        if (!query || text.indexOf(query) !== -1) {
-            card.style.display = "";
-        } else {
-            card.style.display = "none";
-        }
-    });
-}
+echo '<script>' . "\n";
+echo 'function filterTimetableEntries() {' . "\n";
+echo '    var query = document.getElementById("scholaLiveSearch").value.toLowerCase().trim();' . "\n";
+echo '    var cards = document.querySelectorAll(".schola-entry-card");' . "\n";
+echo '    cards.forEach(function(card) {' . "\n";
+echo '        var text = card.innerText.toLowerCase();' . "\n";
+echo '        if (!query || text.indexOf(query) !== -1) {' . "\n";
+echo '            card.style.display = "";' . "\n";
+echo '        } else {' . "\n";
+echo '            card.style.display = "none";' . "\n";
+echo '        }' . "\n";
+echo '    });' . "\n";
+echo '}' . "\n";
 
-function toggleEditMode(e) {
-    if (e) e.preventDefault();
-    var container = document.getElementById("institutionalGridContainer");
-    var btn = document.getElementById("enableEditModeBtn");
-    if (!container || !btn) return;
-    
-    if (container.classList.contains("edit-mode-active")) {
-        container.classList.remove("edit-mode-active");
-        btn.className = "btn btn-outline-emerald d-inline-flex align-items-center";
-        btn.innerHTML = '<i class="fa fa-pencil me-1"></i> Enable Edit Mode';
-    } else {
-        container.classList.add("edit-mode-active");
-        btn.className = "btn btn-emerald d-inline-flex align-items-center";
-        btn.innerHTML = '<i class="fa fa-check me-1"></i> Disable Edit Mode';
-    }
+echo 'function toggleEditMode(e) {' . "\n";
+echo '    if (e) e.preventDefault();' . "\n";
+echo '    var container = document.getElementById("institutionalGridContainer");' . "\n";
+echo '    var btn = document.getElementById("enableEditModeBtn");' . "\n";
+echo '    if (!container || !btn) return;' . "\n";
+echo '    if (container.classList.contains("edit-mode-active")) {' . "\n";
+echo '        container.classList.remove("edit-mode-active");' . "\n";
+echo '        btn.className = "btn btn-outline-emerald d-inline-flex align-items-center";' . "\n";
+echo '        btn.innerHTML = \'<i class="fa fa-pencil me-1"></i> Enable Edit Mode\';' . "\n";
+echo '    } else {' . "\n";
+echo '        container.classList.add("edit-mode-active");' . "\n";
+echo '        btn.className = "btn btn-emerald d-inline-flex align-items-center";' . "\n";
+echo '        btn.innerHTML = \'<i class="fa fa-check me-1"></i> Disable Edit Mode\';' . "\n";
+echo '    }' . "\n";
+echo '}' . "\n";
+
+if (!empty($openbreaks)) {
+    echo 'document.addEventListener("DOMContentLoaded", function() {' . "\n";
+    echo '    var modalElem = document.getElementById("manageBreaksModal");' . "\n";
+    echo '    if (modalElem && typeof bootstrap !== "undefined") {' . "\n";
+    echo '        var myModal = new bootstrap.Modal(modalElem);' . "\n";
+    echo '        myModal.show();' . "\n";
+    echo '    }' . "\n";
+    echo '});' . "\n";
 }
-<?php if (!empty($openbreaks)): ?>
-document.addEventListener("DOMContentLoaded", function() {
-    var modalElem = document.getElementById("manageBreaksModal");
-    if (modalElem && typeof bootstrap !== "undefined") {
-        var myModal = new bootstrap.Modal(modalElem);
-        myModal.show();
-    }
-});
-<?php endif; ?>
-</script>
-<?php
+echo '</script>' . "\n";
 
 echo $OUTPUT->footer();
-
