@@ -50,7 +50,7 @@ class license_manager {
      */
     public static function get_checkout_url(): string {
         $url = get_config('local_schola_slots', 'checkout_url');
-        if (!empty($url) && strpos($url, 'lemonsqueezy') === false) {
+        if (!empty($url)) {
             return trim((string)$url);
         }
         return 'https://scholaslots.com';
