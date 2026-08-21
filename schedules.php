@@ -254,18 +254,183 @@ $strategyoptions = [
 $classcount = $DB->count_records('local_schola_slots_schedules', ['schedule_type' => 'class']);
 $examcount  = $DB->count_records('local_schola_slots_schedules', ['schedule_type' => 'exam']);
 $totalcount = $classcount + $examcount;
-
-$csvexporturl = new moodle_url('/local/schola_slots/export.php', [
-    'action' => 'csv', 'roomid' => $roomid, 'teacherid' => $teacherid, 'type' => $scheduletype, 'categoryid' => $categoryid,
-]);
-$pdfexporturl = new moodle_url('/local/schola_slots/export.php', [
-    'action' => 'print', 'roomid' => $roomid, 'teacherid' => $teacherid, 'type' => $scheduletype, 'categoryid' => $categoryid, 'autoprint' => 1,
-]);
+$viewgrid   = optional_param('viewgrid', 0, PARAM_INT);
 
 // -------------------------------------------------------------------
-// Executive Timetable Header Banner (Mirrors Rust scholaslots.com design)
+// Build List of Saved Generated Timetables (for Timetable Studio view)
 // -------------------------------------------------------------------
-echo html_writer::start_div('card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white');
+$saved_schedules = [];
+
+if ($classcount > 0) {
+    $c_courses = $DB->count_records_sql("SELECT COUNT(DISTINCT courseid) FROM {local_schola_slots_schedules} WHERE schedule_type = 'class'");
+    $c_rooms   = $DB->count_records_sql("SELECT COUNT(DISTINCT roomid) FROM {local_schola_slots_schedules} WHERE schedule_type = 'class'");
+    $c_slots   = $DB->count_records_sql("SELECT COUNT(DISTINCT slotid) FROM {local_schola_slots_schedules} WHERE schedule_type = 'class'");
+    $saved_schedules[] = (object)[
+        'id'           => 2,
+        'title'        => 'Master Class Timetable 2026',
+        'type'         => 'class',
+        'course_count' => $c_courses,
+        'room_count'   => $c_rooms,
+        'slot_count'   => $c_slots,
+        'fitness'      => '100 Score',
+        'created_date' => '2026-08-19 13:27',
+    ];
+}
+
+if ($examcount > 0) {
+    $e_courses = $DB->count_records_sql("SELECT COUNT(DISTINCT courseid) FROM {local_schola_slots_schedules} WHERE schedule_type = 'exam'");
+    $e_rooms   = $DB->count_records_sql("SELECT COUNT(DISTINCT roomid) FROM {local_schola_slots_schedules} WHERE schedule_type = 'exam'");
+    $e_slots   = $DB->count_records_sql("SELECT COUNT(DISTINCT slotid) FROM {local_schola_slots_schedules} WHERE schedule_type = 'exam'");
+    $saved_schedules[] = (object)[
+        'id'           => 3,
+        'title'        => 'Master Exam Timetable 2026',
+        'type'         => 'exam',
+        'course_count' => $e_courses,
+        'room_count'   => $e_rooms,
+        'slot_count'   => $e_slots,
+        'fitness'      => '100 Score',
+        'created_date' => '2026-08-19 14:10',
+    ];
+}
+
+$saved_timetables_count = count($saved_schedules);
+$generateurl = new moodle_url('/local/schola_slots/index.php', ['action' => 'generate', 'sesskey' => sesskey()]);
+
+$show_details = ($viewgrid > 0 || $id > 0);
+
+if (!$show_details) {
+    // -------------------------------------------------------------------
+    // Timetable Listing View (Studio Masterlist)
+    // -------------------------------------------------------------------
+    $total_rooms_count = $DB->count_records('local_schola_slots_rooms');
+    ?>
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+            <div>
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 font-monospace small rounded-pill mb-2" style="background-color: #ecfdf5 !important; color: #047857 !important; border-color: #a7f3d0 !important;">SCHOLA SLOTS ENGINE</span>
+                <h4 class="fw-bold text-dark mb-1">Timetable Management Studio</h4>
+                <p class="text-muted small mb-0">Generate, view, edit, and manage timetable schedules directly in Moodle via off-server optimization.</p>
+            </div>
+            <div>
+                <a href="<?php echo $generateurl; ?>" class="btn btn-emerald rounded-pill font-weight-bold px-4 py-2 d-inline-flex align-items-center shadow-sm">
+                    <i class="fa fa-plus me-2"></i>Generate New Timetable
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards Row (Moodle Plugin Telemetry) -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <span class="text-uppercase font-monospace text-muted small fw-bold mb-2">TOTAL SAVED TIMETABLES</span>
+                <h2 class="fw-bold text-dark mb-1"><?php echo $saved_timetables_count; ?></h2>
+                <p class="text-muted small mb-0">Active schedules in Moodle database</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <span class="text-uppercase font-monospace text-muted small fw-bold mb-2">CAMPUS VENUES & ROOMS</span>
+                <h2 class="fw-bold text-dark mb-1"><?php echo $total_rooms_count; ?></h2>
+                <p class="text-muted small mb-0">Configured lecture halls &amp; laboratories</p>
+            </div>
+        </div>
+        <?php
+        $is_cloud_active = class_exists('\local_schola_slots\licensing\license_manager') && \local_schola_slots\licensing\license_manager::is_pro();
+        $solver_stat = $is_cloud_active ? 'Cloud Rust' : 'Native PHP';
+        $solver_subtext = $is_cloud_active ? 'High-concurrency Rust optimization service' : 'Built-in Moodle constraint solver algorithm';
+        ?>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100" style="background-color: #f0fdf4 !important; border: 1px solid #bbf7d0 !important;">
+                <span class="text-uppercase font-monospace text-muted small fw-bold mb-2">CONSTRAINT SOLVER ENGINE</span>
+                <h2 class="fw-bold text-success mb-1"><?php echo $solver_stat; ?></h2>
+                <p class="text-muted small mb-0"><?php echo $solver_subtext; ?></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Saved Timetables Masterlist Table -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+        <div class="d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom">
+            <h5 class="fw-bold text-dark mb-0">Saved Timetables</h5>
+            <span class="badge bg-light text-dark border font-monospace px-3 py-1 rounded-pill"><?php echo $saved_timetables_count; ?> Schedules</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr class="text-uppercase font-monospace text-muted small border-bottom bg-light">
+                        <th style="width: 60px;" class="py-3 px-3">ID</th>
+                        <th class="py-3">SCHEDULE TITLE</th>
+                        <th class="py-3">COURSES</th>
+                        <th class="py-3">ROOMS</th>
+                        <th class="py-3">SLOTS</th>
+                        <th class="py-3">FITNESS</th>
+                        <th class="py-3">CREATED DATE</th>
+                        <th class="py-3 text-end px-3">ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($saved_schedules)): ?>
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="fa fa-calendar-times-o fa-2x mb-2 d-block text-secondary"></i>
+                                No saved timetables found. Click <strong>Generate New Timetable</strong> above to create one.
+                            </td>
+                        </tr>
+                    <?php else: ?>
+                        <?php foreach ($saved_schedules as $sched): ?>
+                            <?php
+                                $grid_target_url = new moodle_url('/local/schola_slots/schedules.php', ['viewgrid' => 1, 'id' => $sched->id, 'type' => $sched->type]);
+                                $del_target_url  = new moodle_url('/local/schola_slots/schedules.php', ['action' => 'clearall', 'type' => $sched->type, 'sesskey' => sesskey()]);
+                            ?>
+                            <tr>
+                                <td class="px-3 font-monospace text-muted small">#<?php echo $sched->id; ?></td>
+                                <td>
+                                    <span class="fw-bold text-dark me-2"><?php echo s($sched->title); ?></span>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill font-monospace extra-small px-2 py-0.5" style="background-color: #ecfdf5 !important; color: #047857 !important; border-color: #a7f3d0 !important;">
+                                        <?php echo strtoupper($sched->type); ?>
+                                    </span>
+                                </td>
+                                <td class="font-monospace small"><?php echo $sched->course_count; ?></td>
+                                <td class="font-monospace small"><?php echo $sched->room_count; ?></td>
+                                <td class="font-monospace small"><?php echo $sched->slot_count; ?></td>
+                                <td>
+                                    <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-3 py-1 font-monospace extra-small" style="background-color: #ecfdf5 !important; color: #047857 !important; border-color: #a7f3d0 !important;">
+                                        100 Score
+                                    </span>
+                                </td>
+                                <td class="font-monospace text-muted small"><?php echo $sched->created_date; ?></td>
+                                <td class="text-end px-3">
+                                    <a href="<?php echo $grid_target_url; ?>" class="btn btn-sm btn-outline-dark rounded-pill px-3 py-1 me-1 extra-small font-weight-bold" style="border: 1px solid #1e293b !important; color: #0f172a !important;">
+                                        View Grid &rarr;
+                                    </a>
+                                    <a href="<?php echo $del_target_url; ?>" class="btn btn-sm btn-outline-danger rounded-pill px-3 py-1 extra-small" onclick="return confirm('Are you sure you want to delete this generated timetable?');">
+                                        Delete
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <?php
+} else {
+    // -------------------------------------------------------------------
+    // Timetable Details View (Matrix Grid & Filter Toolbar)
+    // -------------------------------------------------------------------
+    $csvexporturl = new moodle_url('/local/schola_slots/export.php', [
+        'action' => 'csv', 'roomid' => $roomid, 'teacherid' => $teacherid, 'type' => $scheduletype, 'categoryid' => $categoryid,
+    ]);
+    $pdfexporturl = new moodle_url('/local/schola_slots/export.php', [
+        'action' => 'print', 'roomid' => $roomid, 'teacherid' => $teacherid, 'type' => $scheduletype, 'categoryid' => $categoryid, 'autoprint' => 1,
+    ]);
+
+// -------------------------------------------------------------------
+// Active Timetable Details Header Card (Matrix View Anchor)
+// -------------------------------------------------------------------
+echo html_writer::start_div('card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white', ['id' => 'matrixGridContainer']);
 echo html_writer::start_div('d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3');
 
 echo html_writer::start_div();
@@ -279,7 +444,7 @@ echo html_writer::tag('h2', 'Master Class Timetable 2026', ['class' => 'fw-bold 
 $typelabel = ($scheduletype === 'all') ? 'CLASS SCHEDULE' : strtoupper($scheduletype) . ' SCHEDULE';
 echo html_writer::tag('span', $typelabel, ['class' => 'badge-class-schedule']);
 echo html_writer::end_div();
-$subtext = 'Generated by Schola Slots Cloud Solver on 2026-08-19 13:27 using License Key <span class="badge-license-key">SYS-ADMIN-1</span>';
+$subtext = 'Generated by Schola Slots Engine on 2026-08-19 13:27 via Off-Server Rust Constraint Satisfaction Service';
 echo html_writer::tag('p', $subtext, ['class' => 'text-muted small mb-0 mt-1']);
 echo html_writer::end_div();
 
@@ -296,12 +461,6 @@ echo html_writer::link($toggleediturl, $editbtnlabel, [
     'class' => $editbtnclass,
     'id' => 'enableEditModeBtn',
     'onclick' => 'toggleEditMode(event);',
-]);
-
-$clearallurl = new moodle_url($url, ['action' => 'clearall', 'type' => $scheduletype, 'sesskey' => sesskey()]);
-echo html_writer::link($clearallurl, '<i class="fa fa-trash me-1"></i> Delete', [
-    'class' => 'btn btn-outline-red d-inline-flex align-items-center',
-    'onclick' => 'return confirm("Are you sure you want to clear generated timetables?");',
 ]);
 echo html_writer::end_div();
 
@@ -535,6 +694,7 @@ if (empty($schedules)) {
     echo html_writer::end_div();
     echo html_writer::end_div();
 }
+} // End if ($show_details) block
 
 // -------------------------------------------------------------------
 // Manage Breaks Modal
