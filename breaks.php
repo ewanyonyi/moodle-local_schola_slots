@@ -1,8 +1,29 @@
 <?php
-// local/schola_slots/breaks.php
-// Institutional Breaks Masterlist Studio for Schola Slots
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-require_once('../../config.php');
+/**
+ * Institutional Breaks Masterlist Studio for Schola Slots.
+ *
+ * @package     local_schola_slots
+ * @copyright   2026 Emanuel Dickson Wanyonyi <wanyonyi.d.emanuel@gmail.com>
+ * @author      Emanuel Dickson Wanyonyi <wanyonyi.d.emanuel@gmail.com>
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 
 $context = context_system::instance();
@@ -111,9 +132,10 @@ if (empty($breaks)) {
 }
 
 // -------------------------------------------------------------------
+// -------------------------------------------------------------------
 // Executive Header Studio Banner
 // -------------------------------------------------------------------
-?>
+echo '
 <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
         <div>
@@ -132,7 +154,8 @@ if (empty($breaks)) {
             <p class="text-muted small mb-0">Configure devotion windows, lunch breaks, chapel services, and assemblies spanning all venue rows.</p>
         </div>
         <div>
-            <button type="button" class="btn btn-emerald rounded-pill font-weight-bold px-4 py-2 d-inline-flex align-items-center shadow-sm" data-bs-toggle="modal" data-bs-target="#addBreakModal">
+            <button type="button" class="btn btn-emerald rounded-pill font-weight-bold px-4 py-2 d-inline-flex align-items-center shadow-sm"
+                    data-bs-toggle="modal" data-bs-target="#addBreakModal">
                 <i class="fa fa-plus me-2"></i>Add Institutional Break
             </button>
         </div>
@@ -152,7 +175,7 @@ if (empty($breaks)) {
             </select>
         </div>
         <div class="d-flex align-items-center gap-3 text-muted small">
-            <span>Showing <strong><?php echo count($breaks); ?></strong> items</span>
+            <span>Showing <strong>' . count($breaks) . '</strong> items</span>
             <select class="form-select form-select-sm" style="width: auto;">
                 <option>15 per page</option>
                 <option>25 per page</option>
@@ -175,95 +198,104 @@ if (empty($breaks)) {
                     <th class="py-3 text-end px-3">ACTION</th>
                 </tr>
             </thead>
-            <tbody>
-                <?php if (empty($breaks)): ?>
-                    <tr>
-                        <td colspan="7" class="text-center py-5 text-muted">
-                            <i class="fa fa-coffee fa-2x mb-2 d-block text-secondary"></i>
-                            No institutional break windows configured yet. Click <strong>+ Add Institutional Break</strong> above.
-                        </td>
-                    </tr>
-                <?php else: ?>
-                    <?php $idx = 1; foreach ($breaks as $b): ?>
-                        <?php
-                            $title = !empty($b->name) ? s($b->name) : (($b->starttime >= '11:30') ? 'Lunch Break' : 'Tea Break');
-                            $daylabel = $daynames[$b->dayofweek] ?? 'All Days';
-                            $timeslot = s($b->starttime) . ' &mdash; ' . s($b->endtime);
-                        ?>
-                        <tr class="break-table-row">
-                            <td class="px-3"><input type="checkbox" class="form-check-input"></td>
-                            <td class="font-monospace text-muted small"><?php echo $idx++; ?></td>
-                            <td>
-                                <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-1.5 font-weight-bold" style="font-size: 12px; background-color: #fff7ed !important; color: #c2410c !important; border-color: #ffedd5 !important;">
-                                    ☕ <?php echo $title; ?>
-                                </span>
-                            </td>
-                            <td class="fw-bold text-dark font-monospace small"><?php echo $daylabel; ?></td>
-                            <td class="font-monospace text-muted small"><?php echo $timeslot; ?></td>
-                            <td>
-                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1 font-monospace extra-small rounded-pill" style="background-color: #ecfdf5 !important; color: #047857 !important; border-color: #a7f3d0 !important;">
-                                    CLASS
-                                </span>
-                            </td>
-                            <td class="text-end px-3">
-                                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 me-1 extra-small"
-                                        data-bs-toggle="modal" data-bs-target="#editBreakModal<?php echo $b->id; ?>">
-                                    Edit
-                                </button>
-                                <a href="<?php echo new moodle_url('/local/schola_slots/breaks.php', ['action' => 'delete', 'id' => $b->id, 'sesskey' => sesskey()]); ?>"
-                                   class="btn btn-sm btn-outline-danger rounded-pill px-3 py-1 extra-small"
-                                   onclick="return confirm('Are you sure you want to delete this break window?');">
-                                    Delete
-                                </a>
-                            </td>
-                        </tr>
+            <tbody>';
 
-                        <!-- Edit Break Modal for each record -->
-                        <div class="modal fade" id="editBreakModal<?php echo $b->id; ?>" tabindex="-1" aria-hidden="true">
-                          <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content rounded-4 border-0 shadow-lg">
-                              <div class="modal-header border-bottom-0 pb-0">
-                                <h5 class="modal-title fw-bold text-dark">Edit Institutional Break</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                              </div>
-                              <form method="post" action="breaks.php">
-                                <input type="hidden" name="action" value="edit">
-                                <input type="hidden" name="id" value="<?php echo $b->id; ?>">
-                                <input type="hidden" name="sesskey" value="<?php echo sesskey(); ?>">
-                                <div class="modal-body py-3">
-                                  <div class="mb-3">
-                                    <label class="form-label small fw-bold text-muted">Break Title (e.g. Devotion, Lunch Break, Chapel)</label>
-                                    <input type="text" name="title" value="<?php echo s($title); ?>" class="form-control rounded-3" required>
-                                  </div>
-                                  <div class="mb-3">
-                                    <label class="form-label small fw-bold text-muted">Day Window</label>
-                                    <select name="daywindow" class="form-select rounded-3">
-                                      <?php foreach ($daynames as $dval => $dname): ?>
-                                        <option value="<?php echo $dval; ?>" <?php echo ($b->dayofweek == $dval) ? 'selected' : ''; ?>><?php echo $dname; ?></option>
-                                      <?php endforeach; ?>
-                                    </select>
-                                  </div>
-                                  <div class="row g-2 mb-3">
-                                    <div class="col-6">
-                                      <label class="form-label small fw-bold text-muted">Start Time</label>
-                                      <input type="time" name="starttime" value="<?php echo s($b->starttime); ?>" class="form-control rounded-3" required>
-                                    </div>
-                                    <div class="col-6">
-                                      <label class="form-label small fw-bold text-muted">End Time</label>
-                                      <input type="time" name="endtime" value="<?php echo s($b->endtime); ?>" class="form-control rounded-3" required>
-                                    </div>
-                                  </div>
-                                </div>
-                                <div class="modal-footer border-top-0 pt-0">
-                                  <button type="button" class="btn btn-outline-secondary rounded-pill font-weight-bold px-4" data-bs-dismiss="modal">Cancel</button>
-                                  <button type="submit" class="btn btn-emerald rounded-pill font-weight-bold px-4">Save Changes</button>
-                                </div>
-                              </form>
+if (empty($breaks)) {
+    echo '
+                <tr>
+                    <td colspan="7" class="text-center py-5 text-muted">
+                        <i class="fa fa-coffee fa-2x mb-2 d-block text-secondary"></i>
+                        No institutional break windows configured yet. Click <strong>+ Add Institutional Break</strong> above.
+                    </td>
+                </tr>';
+} else {
+    $idx = 1;
+    foreach ($breaks as $b) {
+        $title = !empty($b->name) ? s($b->name) : (($b->starttime >= '11:30') ? 'Lunch Break' : 'Tea Break');
+        $daylabel = $daynames[$b->dayofweek] ?? 'All Days';
+        $timeslot = s($b->starttime) . ' &mdash; ' . s($b->endtime);
+        $editurl = new moodle_url('/local/schola_slots/breaks.php', ['action' => 'delete', 'id' => $b->id, 'sesskey' => sesskey()]);
+
+        echo '
+                <tr class="break-table-row">
+                    <td class="px-3"><input type="checkbox" class="form-check-input"></td>
+                    <td class="font-monospace text-muted small">' . $idx++ . '</td>
+                    <td>
+                        <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-1.5 font-weight-bold"
+                              style="font-size: 12px; background-color: #fff7ed !important; color: #c2410c !important; border-color: #ffedd5 !important;">
+                            ☕ ' . $title . '
+                        </span>
+                    </td>
+                    <td class="fw-bold text-dark font-monospace small">' . $daylabel . '</td>
+                    <td class="font-monospace text-muted small">' . $timeslot . '</td>
+                    <td>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1 font-monospace extra-small rounded-pill"
+                              style="background-color: #ecfdf5 !important; color: #047857 !important; border-color: #a7f3d0 !important;">
+                            CLASS
+                        </span>
+                    </td>
+                    <td class="text-end px-3">
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 me-1 extra-small"
+                                data-bs-toggle="modal" data-bs-target="#editBreakModal' . $b->id . '">
+                            Edit
+                        </button>
+                        <a href="' . $editurl . '" class="btn btn-sm btn-outline-danger rounded-pill px-3 py-1 extra-small"
+                           onclick="return confirm(\'Are you sure you want to delete this break window?\');">
+                            Delete
+                        </a>
+                    </td>
+                </tr>
+
+                <!-- Edit Break Modal for each record -->
+                <div class="modal fade" id="editBreakModal' . $b->id . '" tabindex="-1" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content rounded-4 border-0 shadow-lg">
+                      <div class="modal-header border-bottom-0 pb-0">
+                        <h5 class="modal-title fw-bold text-dark">Edit Institutional Break</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <form method="post" action="breaks.php">
+                        <input type="hidden" name="action" value="edit">
+                        <input type="hidden" name="id" value="' . $b->id . '">
+                        <input type="hidden" name="sesskey" value="' . sesskey() . '">
+                        <div class="modal-body py-3">
+                          <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Break Title (e.g. Devotion, Lunch Break, Chapel)</label>
+                            <input type="text" name="title" value="' . s($title) . '" class="form-control rounded-3" required>
+                          </div>
+                          <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Day Window</label>
+                            <select name="daywindow" class="form-select rounded-3">';
+        foreach ($daynames as $dval => $dname) {
+            $selected = ($b->dayofweek == $dval) ? 'selected' : '';
+            echo '<option value="' . $dval . '" ' . $selected . '>' . $dname . '</option>';
+        }
+        echo '
+                            </select>
+                          </div>
+                          <div class="row g-2 mb-3">
+                            <div class="col-6">
+                              <label class="form-label small fw-bold text-muted">Start Time</label>
+                              <input type="time" name="starttime" value="' . s($b->starttime) . '" class="form-control rounded-3" required>
+                            </div>
+                            <div class="col-6">
+                              <label class="form-label small fw-bold text-muted">End Time</label>
+                              <input type="time" name="endtime" value="' . s($b->endtime) . '" class="form-control rounded-3" required>
                             </div>
                           </div>
                         </div>
-                    <?php endforeach; ?>
-                <?php endif; ?>
+                        <div class="modal-footer border-top-0 pt-0">
+                          <button type="button" class="btn btn-outline-secondary rounded-pill font-weight-bold px-4" data-bs-dismiss="modal">Cancel</button>
+                          <button type="submit" class="btn btn-emerald rounded-pill font-weight-bold px-4">Save Changes</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>';
+    }
+}
+
+echo '
             </tbody>
         </table>
     </div>
@@ -279,7 +311,7 @@ if (empty($breaks)) {
       </div>
       <form method="post" action="breaks.php">
         <input type="hidden" name="action" value="add">
-        <input type="hidden" name="sesskey" value="<?php echo sesskey(); ?>">
+        <input type="hidden" name="sesskey" value="' . sesskey() . '">
         <div class="modal-body py-4">
           <div class="mb-3">
             <label class="form-label small fw-bold text-muted">Break Title (e.g. Devotion, Lunch Break, Chapel)</label>
@@ -341,7 +373,6 @@ function filterBreaks() {
         }
     });
 }
-</script>
+</script>';
 
-<?php
 echo $OUTPUT->footer();

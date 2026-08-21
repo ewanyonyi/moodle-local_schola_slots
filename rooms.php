@@ -325,7 +325,10 @@ if (empty($rooms)) {
             'onclick' => 'return confirm("Are you sure you want to delete this room?");',
         ]);
 
-        $isonline = (stripos($room->name, 'online') !== false || stripos($room->name, 'virtual') !== false || stripos($room->name, 'zoom') !== false || stripos($room->name, 'teams') !== false);
+        $isonline = (stripos($room->name, 'online') !== false
+            || stripos($room->name, 'virtual') !== false
+            || stripos($room->name, 'zoom') !== false
+            || stripos($room->name, 'teams') !== false);
         if ($isonline) {
             $typebadge = '<span class="badge online-room-badge"><i class="fa fa-globe me-1"></i> Virtual / Online Space</span>';
         } else {
