@@ -41,13 +41,13 @@ global $DB;
 $dbman = $DB->get_manager();
 $schedtable = new xmldb_table('local_schola_slots_schedules');
 if ($dbman->table_exists($schedtable)) {
-    $field_title = new xmldb_field('title', XMLDB_TYPE_CHAR, '100', null, false, false, null);
-    if (!$dbman->field_exists($schedtable, $field_title)) {
-        $dbman->add_field($schedtable, $field_title);
+    $fieldtitle = new xmldb_field('title', XMLDB_TYPE_CHAR, '100', null, false, false, null);
+    if (!$dbman->field_exists($schedtable, $fieldtitle)) {
+        $dbman->add_field($schedtable, $fieldtitle);
     }
-    $field_timecreated = new xmldb_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, false, false, '0');
-    if (!$dbman->field_exists($schedtable, $field_timecreated)) {
-        $dbman->add_field($schedtable, $field_timecreated);
+    $fieldtimecreated = new xmldb_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, false, false, '0');
+    if (!$dbman->field_exists($schedtable, $fieldtimecreated)) {
+        $dbman->add_field($schedtable, $fieldtimecreated);
     }
 }
 
@@ -160,8 +160,8 @@ if ($action === 'generate' && confirm_sesskey()) {
             $solver->load_existing_schedules($othersexisting);
         } else {
             // Version mode (default): Save as new named version or replace version with same title
-            $has_title_col = $DB->get_manager()->field_exists('local_schola_slots_schedules', 'title');
-            if ($has_title_col && !empty($rawtitle)) {
+            $hastitlecol = $DB->get_manager()->field_exists('local_schola_slots_schedules', 'title');
+            if ($hastitlecol && !empty($rawtitle)) {
                 if ($categoryid > 0) {
                     $catcourseids = array_keys($courses);
                     if (!empty($catcourseids)) {
@@ -256,6 +256,13 @@ echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', '
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'generate']);
 
 if (!function_exists('schola_get_string')) {
+    /**
+     * Helper function to retrieve a string safely with fallback.
+     *
+     * @param string $identifier String key identifier.
+     * @param string $fallback Default fallback text.
+     * @return string Localized or fallback text.
+     */
     function schola_get_string(string $identifier, string $fallback): string {
         $str = get_string($identifier, 'local_schola_slots');
         if (strpos($str, '[[') === 0 || strpos($str, 'a_slots:') !== false) {
@@ -280,38 +287,38 @@ $modeoptions = [
     'append'        => schola_get_string('append_existing_mode', 'Append Mode (Preserve Existing Timetables & Schedule Around Them)'),
 ];
 
-$title_label  = schola_get_string('timetable_title', 'Timetable Name / Title');
-$title_help   = schola_get_string('timetable_title_help', 'Optional. e.g. Semester III 2026, Midterm Exam Matrix');
-$type_label   = schola_get_string('timetable_profile_type', 'Timetable Profile / Type');
-$dept_label   = schola_get_string('department_scope', 'Department / Course Category Scope');
-$mode_label   = schola_get_string('generation_conflict_mode', 'Generation & Conflict Mode');
+$titlelabel = schola_get_string('timetable_title', 'Timetable Name / Title');
+$titlehelp  = schola_get_string('timetable_title_help', 'Optional. e.g. Semester III 2026, Midterm Exam Matrix');
+$typelabel  = schola_get_string('timetable_profile_type', 'Timetable Profile / Type');
+$deptlabel  = schola_get_string('department_scope', 'Department / Course Category Scope');
+$modelabel  = schola_get_string('generation_conflict_mode', 'Generation & Conflict Mode');
 
 echo html_writer::start_div('row g-3 mb-3');
 echo html_writer::start_div('col-md-6');
-echo html_writer::tag('label', $title_label, ['class' => 'form-label font-weight-bold text-dark']);
+echo html_writer::tag('label', $titlelabel, ['class' => 'form-label font-weight-bold text-dark']);
 echo html_writer::empty_tag('input', [
     'type' => 'text',
     'name' => 'title',
     'class' => 'form-control p-2',
     'placeholder' => 'e.g. Semester III 2026 Schedule',
 ]);
-echo html_writer::tag('div', $title_help, ['class' => 'form-text extra-small text-muted']);
+echo html_writer::tag('div', $titlehelp, ['class' => 'form-text extra-small text-muted']);
 echo html_writer::end_div();
 
 echo html_writer::start_div('col-md-6');
-echo html_writer::tag('label', $type_label, ['class' => 'form-label font-weight-bold text-dark']);
+echo html_writer::tag('label', $typelabel, ['class' => 'form-label font-weight-bold text-dark']);
 echo html_writer::select($typeoptions, 'scheduletype', 'class', false, ['class' => 'form-select p-2']);
 echo html_writer::end_div();
 echo html_writer::end_div();
 
 echo html_writer::start_div('row g-3');
 echo html_writer::start_div('col-md-6');
-echo html_writer::tag('label', $dept_label, ['class' => 'form-label font-weight-bold text-dark']);
+echo html_writer::tag('label', $deptlabel, ['class' => 'form-label font-weight-bold text-dark']);
 echo html_writer::select($catoptions, 'categoryid', 0, false, ['class' => 'form-select p-2']);
 echo html_writer::end_div();
 
 echo html_writer::start_div('col-md-6');
-echo html_writer::tag('label', $mode_label, ['class' => 'form-label font-weight-bold text-dark']);
+echo html_writer::tag('label', $modelabel, ['class' => 'form-label font-weight-bold text-dark']);
 echo html_writer::select($modeoptions, 'mode', 'version', false, ['class' => 'form-select p-2']);
 echo html_writer::end_div();
 echo html_writer::end_div();

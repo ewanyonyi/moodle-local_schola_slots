@@ -56,13 +56,15 @@ echo '
 <div class="row g-4 mb-4">
     <!-- Hero Banner Card -->
     <div class="col-12">
-        <div class="card border-0 shadow-sm rounded-4 bg-dark text-white p-4 overflow-hidden position-relative" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;">
+        <div class="card border-0 shadow-sm rounded-4 bg-dark text-white p-4 overflow-hidden position-relative"
+             style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;">
             <div class="row align-items-center position-relative" style="z-index: 2;">
                 <div class="col-lg-8">
                     <span class="badge bg-success text-white font-monospace text-uppercase px-3 py-1 rounded-pill mb-2">SCHOLA SLOTS ENGINE</span>
                     <h2 class="fw-bold text-white mb-2">Schola Slots Administrator User Guide</h2>
                     <p class="text-light opacity-75 lead mb-3">
-                        Learn how to configure campus venues, set up bell schedule time profiles, batch-import slots via CSV, generate conflict-free timetables, and manage versioned schedules.
+                        Learn how to configure campus venues, set up bell schedule time profiles, batch-import slots via CSV,
+                        generate conflict-free timetables, and manage versioned schedules.
                     </p>
                     <div class="d-flex gap-2 flex-wrap">
                         <a href="#quickstart" class="btn btn-success font-weight-bold px-4 py-2 rounded-pill shadow-sm">
@@ -100,7 +102,10 @@ echo '
                         <i class="fa fa-building-columns text-primary fs-4"></i>
                     </div>
                     <h6 class="fw-bold text-dark mb-2">Configure Campus Venues</h6>
-                    <p class="text-muted small mb-3">Add lecture halls, classrooms, laboratories, and virtual spaces. Set seating capacities and lab types, or batch-import venues in bulk via CSV.</p>
+                    <p class="text-muted small mb-3">
+                        Add lecture halls, classrooms, laboratories, and virtual spaces. Set seating capacities
+                        and lab types, or batch-import venues in bulk via CSV.
+                    </p>
                 </div>
                 <a href="' . $roomsurl->out(false) . '" class="btn btn-sm btn-outline-primary font-weight-bold rounded-pill w-100">
                     Manage Rooms &rarr;
@@ -117,7 +122,10 @@ echo '
                         <i class="fa fa-clock text-success fs-4"></i>
                     </div>
                     <h6 class="fw-bold text-dark mb-2">Profiles & Time Slots</h6>
-                    <p class="text-muted small mb-3">Apply institutional schedule profiles (University Standard, 3-Hour Block, High School) or batch-import custom period slots via CSV.</p>
+                    <p class="text-muted small mb-3">
+                        Apply institutional schedule profiles (University Standard, 3-Hour Block, High School)
+                        or batch-import custom period slots via CSV.
+                    </p>
                 </div>
                 <div class="d-flex gap-2">
                     <a href="' . $profilesurl->out(false) . '" class="btn btn-sm btn-outline-success font-weight-bold rounded-pill flex-fill text-center">
@@ -156,7 +164,10 @@ echo '
                         <i class="fa fa-cogs text-info fs-4"></i>
                     </div>
                     <h6 class="fw-bold text-dark mb-2">Generate Named Timetables</h6>
-                    <p class="text-muted small mb-3">Choose schedule type (<strong>Class</strong> or <strong>Exam</strong>), enter a custom title (e.g., "Semester III 2026 Schedule"), and select your conflict mode.</p>
+                    <p class="text-muted small mb-3">
+                        Choose schedule type (<strong>Class</strong> or <strong>Exam</strong>), enter a custom title
+                        (e.g., "Semester III 2026 Schedule"), and select your conflict mode.
+                    </p>
                 </div>
                 <a href="' . $schedurl->out(false) . '?open_modal=1" class="btn btn-sm btn-outline-info text-dark font-weight-bold rounded-pill w-100">
                     Run Timetable Generator &rarr;
@@ -173,7 +184,10 @@ echo '
                         <i class="fa fa-table text-purple fs-4" style="color:#7e22ce;"></i>
                     </div>
                     <h6 class="fw-bold text-dark mb-2">View, Export & Print Studio</h6>
-                    <p class="text-muted small mb-3">Inspect weekly matrix grids by department, venue, or lecturer. Filter timetable views, export assignments to CSV, or print clean PDF schedules.</p>
+                    <p class="text-muted small mb-3">
+                        Inspect weekly matrix grids by department, venue, or lecturer. Filter timetable views,
+                        export assignments to CSV, or print clean PDF schedules.
+                    </p>
                 </div>
                 <a href="' . $schedurl->out(false) . '" class="btn btn-sm btn-outline-dark font-weight-bold rounded-pill w-100">
                     View Timetable Studio &rarr;
@@ -182,31 +196,48 @@ echo '
         </div>
     </div>
 </div>
-
 <!-- FAQ & Troubleshooting Accordion -->
 <div id="faq" class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
     <div class="pb-3 mb-4 border-bottom">
         <h4 class="fw-bold text-dark mb-1"><i class="fa fa-circle-question text-success me-2"></i>Frequently Asked Questions (FAQ)</h4>
-        <p class="text-muted small mb-0">Find quick solutions to common administrator questions regarding timetabling, venue setup, solver rules, CSV imports, and cloud solver setup.</p>
+        <p class="text-muted small mb-0">
+            Find quick solutions to common administrator questions regarding timetabling, venue setup, solver rules,
+            CSV imports, and cloud solver setup.
+        </p>
     </div>
 
     <div class="accordion accordion-flush" id="faqAccordion">
         <!-- Q1: Rooms & Campus Venues -->
         <div class="accordion-item border rounded-3 mb-3 overflow-hidden">
             <h2 class="accordion-header" id="headingRooms">
-                <button class="accordion-button font-weight-bold text-dark bg-light" type="button" data-bs-toggle="collapse" data-target="#collapseRooms" data-bs-target="#collapseRooms" aria-expanded="true" aria-controls="collapseRooms">
+                <button class="accordion-button font-weight-bold text-dark bg-light" type="button"
+                        data-bs-toggle="collapse" data-target="#collapseRooms" data-bs-target="#collapseRooms"
+                        aria-expanded="true" aria-controls="collapseRooms">
                     <i class="fa fa-building text-primary me-2"></i>How do I configure Campus Venues & Batch-Import Rooms via CSV?
                 </button>
             </h2>
             <div id="collapseRooms" class="accordion-collapse collapse show" aria-labelledby="headingRooms" data-bs-parent="#faqAccordion">
                 <div class="accordion-body text-muted small">
-                    <p class="mb-2">Navigate to <a href="' . $roomsurl->out(false) . '" class="fw-bold">Rooms</a> to add or edit campus venues. Every room requires a <strong>Name</strong> and <strong>Seating Capacity</strong>.</p>
+                    <p class="mb-2">
+                        Navigate to <a href="' . $roomsurl->out(false) . '" class="fw-bold">Rooms</a> to add or edit campus venues.
+                        Every room requires a <strong>Name</strong> and <strong>Seating Capacity</strong>.
+                    </p>
                     <ul class="mb-2">
                         <li><strong>Lecture Halls & Classrooms:</strong> Standard spaces used for general lectures.</li>
-                        <li><strong>Laboratories & Specialized Studios:</strong> Check the <em>"Laboratory / Computer Studio"</em> toggle for rooms requiring specialized equipment or software.</li>
-                        <li><strong>Virtual / Online Spaces:</strong> Rooms with names containing <em>"Online"</em>, <em>"Virtual"</em>, or <em>"Zoom"</em> are automatically identified as virtual spaces.</li>
+                        <li>
+                            <strong>Laboratories & Specialized Studios:</strong> Check the <em>"Laboratory / Computer Studio"</em>
+                            toggle for rooms requiring specialized equipment or software.
+                        </li>
+                        <li>
+                            <strong>Virtual / Online Spaces:</strong> Rooms with names containing <em>"Online"</em>, <em>"Virtual"</em>,
+                            or <em>"Zoom"</em> are automatically identified as virtual spaces.
+                        </li>
                     </ul>
-                    <p class="mb-0"><strong>Batch CSV Import:</strong> You can bulk-import rooms by uploading a CSV with headers: <code>Name, Capacity, Is Lab</code> (e.g. <code>Computer Science Lab 2, 45, 1</code>). A sample CSV download is available directly on the Rooms page.</p>
+                    <p class="mb-0">
+                        <strong>Batch CSV Import:</strong> You can bulk-import rooms by uploading a CSV with headers:
+                        <code>Name, Capacity, Is Lab</code> (e.g. <code>Computer Science Lab 2, 45, 1</code>).
+                        A sample CSV download is available directly on the Rooms page.
+                    </p>
                 </div>
             </div>
         </div>
@@ -214,7 +245,9 @@ echo '
         <!-- Q2: Versioning & Conflict Modes -->
         <div class="accordion-item border rounded-3 mb-3 overflow-hidden">
             <h2 class="accordion-header" id="headingOne">
-                <button class="accordion-button collapsed font-weight-bold text-dark bg-light" type="button" data-bs-toggle="collapse" data-target="#collapseOne" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                <button class="accordion-button collapsed font-weight-bold text-dark bg-light" type="button"
+                        data-bs-toggle="collapse" data-target="#collapseOne" data-bs-target="#collapseOne"
+                        aria-expanded="false" aria-controls="collapseOne">
                     <i class="fa fa-layer-group text-primary me-2"></i>How does Timetable Versioning & Conflict Modes work?
                 </button>
             </h2>
@@ -222,7 +255,10 @@ echo '
                 <div class="accordion-body text-muted small">
                     <p class="mb-2">When generating a timetable, you can select one of three conflict modes:</p>
                     <ul class="mb-0">
-                        <li><strong>Save as Named Version:</strong> Assign a title (e.g. <em>Semester III 2026 Schedule</em> vs <em>Draft Option B</em>). Generates side-by-side versions without overwriting existing timetables.</li>
+                        <li>
+                            <strong>Save as Named Version:</strong> Assign a title (e.g. <em>Semester III 2026 Schedule</em> vs <em>Draft Option B</em>).
+                            Generates side-by-side versions without overwriting existing timetables.
+                        </li>
                         <li><strong>Overwrite ALL Timetables:</strong> Replaces existing timetables of the selected type (Class or Exam) with the new generated solution.</li>
                         <li><strong>Append Mode:</strong> Keeps existing schedules active as occupied blockouts and schedules new sessions around them to prevent conflicts.</li>
                     </ul>
@@ -230,10 +266,12 @@ echo '
             </div>
         </div>
 
-        <!-- Q2 -->
+        <!-- Q3 -->
         <div class="accordion-item border rounded-3 mb-3 overflow-hidden">
             <h2 class="accordion-header" id="headingTwo">
-                <button class="accordion-button collapsed font-weight-bold text-dark bg-light" type="button" data-bs-toggle="collapse" data-target="#collapseTwo" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                <button class="accordion-button collapsed font-weight-bold text-dark bg-light" type="button"
+                        data-bs-toggle="collapse" data-target="#collapseTwo" data-bs-target="#collapseTwo"
+                        aria-expanded="false" aria-controls="collapseTwo">
                     <i class="fa fa-file-csv text-success me-2"></i>How do I batch-import Time Slots via CSV?
                 </button>
             </h2>
@@ -241,40 +279,52 @@ echo '
                 <div class="accordion-body text-muted small">
                     <p class="mb-2">Navigate to <a href="' . $slotsurl->out(false) . '" class="fw-bold">Slots</a> and upload a CSV file with these column headers:</p>
                     <code>dayofweek, starttime, endtime, type</code>
-                    <p class="mt-2 mb-0">Values for <code>dayofweek</code> can be numbers (1=Monday to 7=Sunday) or day names (e.g. <em>Mon</em>, <em>Tuesday</em>). Supported <code>type</code> categories are <code>class</code>, <code>lab</code>, <code>break</code>, or <code>exam</code>. You can also download a sample CSV directly from the page.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Q3 -->
-        <div class="accordion-item border rounded-3 mb-3 overflow-hidden">
-            <h2 class="accordion-header" id="headingThree">
-                <button class="accordion-button collapsed font-weight-bold text-dark bg-light" type="button" data-bs-toggle="collapse" data-target="#collapseThree" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                    <i class="fa fa-file-signature text-warning me-2"></i>What is the difference between Class and Exam Timetables?
-                </button>
-            </h2>
-            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#faqAccordion">
-                <div class="accordion-body text-muted small">
-                    <strong>Class Timetables</strong> schedule recurring weekly course lectures across period windows. <strong>Exam Timetables</strong> organize course examinations into dedicated assessment windows (e.g. 3-hour exam blocks) while enforcing student conflict avoidance and room capacity constraints.
+                    <p class="mt-2 mb-0">
+                        Values for <code>dayofweek</code> can be numbers (1=Monday to 7=Sunday) or day names (e.g. <em>Mon</em>, <em>Tuesday</em>).
+                        Supported <code>type</code> categories are <code>class</code>, <code>lab</code>, <code>break</code>, or <code>exam</code>.
+                        You can also download a sample CSV directly from the page.
+                    </p>
                 </div>
             </div>
         </div>
 
         <!-- Q4 -->
         <div class="accordion-item border rounded-3 mb-3 overflow-hidden">
+            <h2 class="accordion-header" id="headingThree">
+                <button class="accordion-button collapsed font-weight-bold text-dark bg-light" type="button"
+                        data-bs-toggle="collapse" data-target="#collapseThree" data-bs-target="#collapseThree"
+                        aria-expanded="false" aria-controls="collapseThree">
+                    <i class="fa fa-file-signature text-warning me-2"></i>What is the difference between Class and Exam Timetables?
+                </button>
+            </h2>
+            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#faqAccordion">
+                <div class="accordion-body text-muted small">
+                    <strong>Class Timetables</strong> schedule recurring weekly course lectures across period windows.
+                    <strong>Exam Timetables</strong> organize course examinations into dedicated assessment windows (e.g. 3-hour exam blocks)
+                    while enforcing student conflict avoidance and room capacity constraints.
+                </div>
+            </div>
+        </div>
+
+        <!-- Q5 -->
+        <div class="accordion-item border rounded-3 mb-3 overflow-hidden">
             <h2 class="accordion-header" id="headingFour">
-                <button class="accordion-button collapsed font-weight-bold text-dark bg-light" type="button" data-bs-toggle="collapse" data-target="#collapseFour" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                <button class="accordion-button collapsed font-weight-bold text-dark bg-light" type="button"
+                        data-bs-toggle="collapse" data-target="#collapseFour" data-bs-target="#collapseFour"
+                        aria-expanded="false" aria-controls="collapseFour">
                     <i class="fa fa-bolt text-info me-2"></i>How do I connect the Pro Rust Cloud Solver Acceleration Engine?
                 </button>
             </h2>
             <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#faqAccordion">
                 <div class="accordion-body text-muted small">
-                    Navigate to <a href="' . $setturl->out(false) . '" class="fw-bold">Site Administration &rarr; Schola Slots Settings</a> and enter your commercial Pro License Key. Once validated, solver requests are routed off-server to the high-performance Rust Cloud Microservice, processing multi-thousand course matrices in under 50ms.
+                    Navigate to <a href="' . $setturl->out(false) . '" class="fw-bold">Site Administration &rarr; Schola Slots Settings</a>
+                    and enter your commercial Pro License Key. Once validated, solver requests are routed off-server to the high-performance
+                    Rust Cloud Microservice, processing multi-thousand course matrices in under 50ms.
                 </div>
             </div>
         </div>
     </div>
-</div>
+</div>v>
 
 <!-- System Status & Licensing Info Card -->
 <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">

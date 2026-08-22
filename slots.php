@@ -90,18 +90,18 @@ if ($action === 'import_csv' && confirm_sesskey() && data_submitted()) {
             $header = fgetcsv($handle, 1000, ',');
             if ($header !== false) {
                 // Normalize header keys
-                $header_map = [];
+                $headermap = [];
                 foreach ($header as $idx => $col) {
                     $clean = strtolower(trim(str_replace([' ', '_'], '', $col)));
-                    $header_map[$clean] = $idx;
+                    $headermap[$clean] = $idx;
                 }
 
-                $day_idx   = $header_map['dayofweek'] ?? ($header_map['day'] ?? null);
-                $start_idx = $header_map['starttime'] ?? ($header_map['start'] ?? null);
-                $end_idx   = $header_map['endtime'] ?? ($header_map['end'] ?? null);
-                $type_idx  = $header_map['type'] ?? ($header_map['category'] ?? null);
+                $dayidx   = $headermap['dayofweek'] ?? ($headermap['day'] ?? null);
+                $startidx = $headermap['starttime'] ?? ($headermap['start'] ?? null);
+                $endidx   = $headermap['endtime'] ?? ($headermap['end'] ?? null);
+                $typeidx  = $headermap['type'] ?? ($headermap['category'] ?? null);
 
-                if ($day_idx !== null && $start_idx !== null && $end_idx !== null) {
+                if ($dayidx !== null && $startidx !== null && $endidx !== null) {
                     if ($wipeexisting) {
                         $DB->delete_records('local_schola_slots_slots');
                     }
@@ -118,10 +118,10 @@ if ($action === 'import_csv' && confirm_sesskey() && data_submitted()) {
                     ];
 
                     while (($row = fgetcsv($handle, 1000, ',')) !== false) {
-                        $rawday   = strtolower(trim($row[$day_idx] ?? ''));
-                        $rawstart = trim($row[$start_idx] ?? '');
-                        $rawend   = trim($row[$end_idx] ?? '');
-                        $rawtype  = strtolower(trim($row[$type_idx ?? -1] ?? 'class'));
+                        $rawday   = strtolower(trim($row[$dayidx] ?? ''));
+                        $rawstart = trim($row[$startidx] ?? '');
+                        $rawend   = trim($row[$endidx] ?? '');
+                        $rawtype  = strtolower(trim($row[$typeidx ?? -1] ?? 'class'));
 
                         if (empty($rawstart) || empty($rawend)) {
                             continue;
@@ -312,7 +312,9 @@ echo html_writer::empty_tag('input', [
     'accept'   => '.csv,text/csv',
     'required' => 'required',
 ]);
-echo html_writer::tag('div', 'Supported columns: <code>dayofweek</code> (1-7 or Mon-Sun), <code>starttime</code> (08:00), <code>endtime</code> (09:00), <code>type</code> (class, lab, break, exam).', ['class' => 'form-text text-muted small mt-1']);
+$colinfo = 'Supported columns: <code>dayofweek</code> (1-7 or Mon-Sun), ' .
+    '<code>starttime</code> (08:00), <code>endtime</code> (09:00), <code>type</code> (class, lab, break, exam).';
+echo html_writer::tag('div', $colinfo, ['class' => 'form-text text-muted small mt-1']);
 echo html_writer::end_div();
 
 echo html_writer::start_div('col-md-5 d-flex flex-column align-items-start gap-2 pt-3');

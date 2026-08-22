@@ -58,8 +58,8 @@ $PAGE->set_heading(get_string('manage_schedules', 'local_schola_slots'));
 // Action: Clear Timetable Group or All
 // -------------------------------------------------------------------
 if (($action === 'cleargroup' || $action === 'clearall') && confirm_sesskey()) {
-    $has_title_col = $DB->get_manager()->field_exists('local_schola_slots_schedules', 'title');
-    if (!empty($titleparam) && $scheduletype !== 'all' && $has_title_col) {
+    $hastitlecol = $DB->get_manager()->field_exists('local_schola_slots_schedules', 'title');
+    if (!empty($titleparam) && $scheduletype !== 'all' && $hastitlecol) {
         $DB->delete_records('local_schola_slots_schedules', ['schedule_type' => $scheduletype, 'title' => $titleparam]);
         redirect(new moodle_url('/local/schola_slots/schedules.php'), "Timetable '{$titleparam}' cleared successfully.");
     } else if ($scheduletype !== 'all') {
@@ -265,11 +265,11 @@ $viewgrid   = optional_param('viewgrid', 0, PARAM_INT);
 // -------------------------------------------------------------------
 // Build List of Saved Generated Timetables (for Timetable Studio view)
 // -------------------------------------------------------------------
-$has_title_col = $DB->get_manager()->field_exists('local_schola_slots_schedules', 'title');
-$has_time_col  = $DB->get_manager()->field_exists('local_schola_slots_schedules', 'timecreated');
+$hastitlecol = $DB->get_manager()->field_exists('local_schola_slots_schedules', 'title');
+$hastimecol  = $DB->get_manager()->field_exists('local_schola_slots_schedules', 'timecreated');
 
-$groupsql = $has_title_col
-    ? "SELECT MIN(id) AS id, schedule_type, COALESCE(title, '') AS title, " . ($has_time_col ? "MAX(timecreated)" : "0") . " AS timecreated
+$groupsql = $hastitlecol
+    ? "SELECT MIN(id) AS id, schedule_type, COALESCE(title, '') AS title, " . ($hastimecol ? "MAX(timecreated)" : "0") . " AS timecreated
        FROM {local_schola_slots_schedules}
        GROUP BY schedule_type, COALESCE(title, '')
        ORDER BY MIN(id) ASC"
@@ -289,7 +289,7 @@ foreach ($groups as $g) {
         $rawtitle = "Master {$typecaps} Timetable 2026";
     }
 
-    if ($has_title_col && !empty($g->title)) {
+    if ($hastitlecol && !empty($g->title)) {
         $wherestr = "schedule_type = :stype AND title = :stitle";
         $wparams  = ['stype' => $stype, 'stitle' => $g->title];
     } else {
@@ -879,6 +879,13 @@ HTML;
 // Render Generate Timetable Modal
 // -------------------------------------------------------------------
 if (!function_exists('schola_get_string')) {
+    /**
+     * Helper function to retrieve a string safely with fallback.
+     *
+     * @param string $identifier String key identifier.
+     * @param string $fallback Default fallback text.
+     * @return string Localized or fallback text.
+     */
     function schola_get_string(string $identifier, string $fallback): string {
         $str = get_string($identifier, 'local_schola_slots');
         if (strpos($str, '[[') === 0 || strpos($str, 'a_slots:') !== false) {
@@ -900,12 +907,12 @@ $modeoptions = [
     'append'        => schola_get_string('append_existing_mode', 'Append Mode (Preserve Existing Timetables & Schedule Around Them)'),
 ];
 
-$title_label  = schola_get_string('timetable_title', 'Timetable Name / Title');
-$title_help   = schola_get_string('timetable_title_help', 'Optional. e.g. Semester III 2026, Midterm Exam Matrix');
-$type_label   = schola_get_string('timetable_profile_type', 'Timetable Profile / Type');
-$dept_label   = schola_get_string('department_scope', 'Department / Course Category Scope');
-$mode_label   = schola_get_string('generation_conflict_mode', 'Generation & Conflict Mode');
-$notice_text  = schola_get_string('conflict_prevention_notice', 'Cross-schedule conflict prevention will automatically protect active venue and instructor bookings.');
+$titlelabel = schola_get_string('timetable_title', 'Timetable Name / Title');
+$titlehelp  = schola_get_string('timetable_title_help', 'Optional. e.g. Semester III 2026, Midterm Exam Matrix');
+$typelabel  = schola_get_string('timetable_profile_type', 'Timetable Profile / Type');
+$deptlabel  = schola_get_string('department_scope', 'Department / Course Category Scope');
+$modelabel  = schola_get_string('generation_conflict_mode', 'Generation & Conflict Mode');
+$noticetext = schola_get_string('conflict_prevention_notice', 'Cross-schedule conflict prevention will automatically protect active venue and instructor bookings.');
 
 echo '
 <div class="modal fade" id="generateTimetableModal" tabindex="-1" aria-labelledby="generateTimetableModalLabel" aria-hidden="true">
@@ -923,28 +930,28 @@ echo '
         <div class="modal-body p-4 bg-light">
           <div class="row g-3 mb-3">
             <div class="col-md-6">
-              <label class="form-label font-weight-bold text-dark">' . $title_label . '</label>
+              <label class="form-label font-weight-bold text-dark">' . $titlelabel . '</label>
               <input type="text" name="title" class="form-control p-2" placeholder="e.g. Semester III 2026 Schedule">
-              <div class="form-text extra-small text-muted">' . $title_help . '</div>
+              <div class="form-text extra-small text-muted">' . $titlehelp . '</div>
             </div>
             <div class="col-md-6">
-              <label class="form-label font-weight-bold text-dark">' . $type_label . '</label>
+              <label class="form-label font-weight-bold text-dark">' . $typelabel . '</label>
               ' . html_writer::select($typeoptions, 'scheduletype', 'class', false, ['class' => 'form-select p-2']) . '
             </div>
           </div>
           <div class="row g-3">
             <div class="col-md-6">
-              <label class="form-label font-weight-bold text-dark">' . $dept_label . '</label>
+              <label class="form-label font-weight-bold text-dark">' . $deptlabel . '</label>
               ' . html_writer::select($catoptions, 'categoryid', 0, false, ['class' => 'form-select p-2']) . '
             </div>
             <div class="col-md-6">
-              <label class="form-label font-weight-bold text-dark">' . $mode_label . '</label>
+              <label class="form-label font-weight-bold text-dark">' . $modelabel . '</label>
               ' . html_writer::select($modeoptions, 'mode', 'version', false, ['class' => 'form-select p-2']) . '
             </div>
           </div>
         </div>
         <div class="modal-footer bg-white p-3 border-top d-flex justify-content-between">
-          <span class="text-muted small">' . $notice_text . '</span>
+          <span class="text-muted small">' . $noticetext . '</span>
           <button type="submit" class="btn btn-success font-weight-bold px-4 py-2 shadow-sm rounded-pill">
             <i class="fa fa-cogs me-2"></i>Run Solver Engine
           </button>
