@@ -51,14 +51,21 @@ local/schola_slots/
    - Never use raw SQL string concatenation; always use parameter binding with Moodle `$DB`.
    - Sanitize all parameters using `required_param()` or `optional_param()` with explicit types (`PARAM_INT`, `PARAM_ALPHA`, `PARAM_TEXT`).
 
-2. **Moodle Plugin Versioning Policy**:
+2. **CodeSniffer (`phpcs`) Linting & Compliance**:
+   - Verify all modified PHP files against Moodle coding standards by running:
+     `/home/ewanyonyi/.config/composer/vendor/bin/phpcs -n --standard=moodle <filepath>`
+   - **Variable Naming Rule**: Variable names in procedural/script files must be alphanumeric without underscores (e.g. `$hastitlecol` instead of `$has_title_col`, `$headermap` instead of `$header_map`).
+   - **Line Length**: Ensure line lengths do not exceed 180 characters.
+   - **Docblocks**: Provide full PHPDoc docblocks for functions, methods, classes, and file headers.
+
+3. **Moodle Plugin Versioning Policy**:
    - **Only update the Moodle plugin version (`version.php`) when generating or packaging a `.zip` release file for distribution.**
    - Do NOT bump `version.php` version numbers during routine code edits, UI polish, or feature development.
 
-3. **REST API & Cloud Data Contract**:
+4. **REST API & Cloud Data Contract**:
    - Data structures sent to the Rust Cloud Engine (`classes/algorithm/solver.php`) must maintain exact JSON field name compatibility with `SolveRequest`.
    - Supported timetable types are strictly limited to `class` (Regular Semester Class Schedule) and `exam` (Examination Schedule).
 
-4. **UI & Navigation Consistency**:
+5. **UI & Navigation Consistency**:
    - The top navigation bar is generated via `\local_schola_slots\output\renderer::render_nav_header($activepage)`.
    - The header **`Generate Timetable`** action button should ONLY be displayed when the active page is `schedules.php` or `index.php`.
