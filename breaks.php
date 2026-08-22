@@ -36,8 +36,8 @@ $id     = optional_param('id', 0, PARAM_INT);
 $url = new moodle_url('/local/schola_slots/breaks.php');
 $PAGE->set_url($url);
 $PAGE->set_context($context);
-$PAGE->set_title('Institutional Breaks Masterlist');
-$PAGE->set_heading('Institutional Breaks Masterlist');
+$PAGE->set_title(get_string('breaks_masterlist_title', 'local_schola_slots'));
+$PAGE->set_heading(get_string('breaks_masterlist_title', 'local_schola_slots'));
 
 // -------------------------------------------------------------------
 // Ensure Table Schema Support (name field on local_schola_slots_slots)
@@ -67,7 +67,7 @@ if ($action === 'add' && data_submitted() && confirm_sesskey()) {
         'endtime'   => s($endtime),
     ];
     $DB->insert_record('local_schola_slots_slots', $record);
-    redirect($url, 'Institutional break window added successfully.', null, \core\output\notification::NOTIFY_SUCCESS);
+    redirect($url, get_string('break_added_success', 'local_schola_slots'), null, \core\output\notification::NOTIFY_SUCCESS);
 }
 
 if ($action === 'edit' && data_submitted() && confirm_sesskey()) {
@@ -86,12 +86,12 @@ if ($action === 'edit' && data_submitted() && confirm_sesskey()) {
         'endtime'   => s($endtime),
     ];
     $DB->update_record('local_schola_slots_slots', $record);
-    redirect($url, 'Institutional break updated successfully.', null, \core\output\notification::NOTIFY_SUCCESS);
+    redirect($url, get_string('break_updated_success', 'local_schola_slots'), null, \core\output\notification::NOTIFY_SUCCESS);
 }
 
 if ($action === 'delete' && $id > 0 && confirm_sesskey()) {
     $DB->delete_records('local_schola_slots_slots', ['id' => $id, 'type' => 'break']);
-    redirect($url, 'Institutional break removed.', null, \core\output\notification::NOTIFY_SUCCESS);
+    redirect($url, get_string('break_deleted_success', 'local_schola_slots'), null, \core\output\notification::NOTIFY_SUCCESS);
 }
 
 echo $OUTPUT->header();
@@ -101,14 +101,14 @@ echo local_schola_slots\output\renderer::render_nav_header('breaks');
 
 // Days Mapping
 $daynames = [
-    0 => 'All Days',
-    1 => 'Monday Only',
-    2 => 'Tuesday Only',
-    3 => 'Wednesday Only',
-    4 => 'Thursday Only',
-    5 => 'Friday Only',
-    6 => 'Saturday Only',
-    7 => 'Sunday Only',
+    0 => get_string('all_days', 'local_schola_slots'),
+    1 => get_string('monday_only', 'local_schola_slots'),
+    2 => get_string('tuesday_only', 'local_schola_slots'),
+    3 => get_string('wednesday_only', 'local_schola_slots'),
+    4 => get_string('thursday_only', 'local_schola_slots'),
+    5 => get_string('friday_only', 'local_schola_slots'),
+    6 => get_string('saturday_only', 'local_schola_slots'),
+    7 => get_string('sunday_only', 'local_schola_slots'),
 ];
 
 // Fetch all break slots
@@ -116,14 +116,14 @@ $breaks = $DB->get_records('local_schola_slots_slots', ['type' => 'break'], 'sta
 if (empty($breaks)) {
     $DB->insert_record('local_schola_slots_slots', (object)[
         'type'      => 'break',
-        'name'      => 'Tea Break',
+        'name'      => get_string('tea_break', 'local_schola_slots'),
         'dayofweek' => 0,
         'starttime' => '08:00',
         'endtime'   => '09:00',
     ]);
     $DB->insert_record('local_schola_slots_slots', (object)[
         'type'      => 'break',
-        'name'      => 'Lunch Break',
+        'name'      => get_string('lunch_break', 'local_schola_slots'),
         'dayofweek' => 0,
         'starttime' => '13:00',
         'endtime'   => '14:00',
@@ -132,16 +132,16 @@ if (empty($breaks)) {
 }
 
 // -------------------------------------------------------------------
-// -------------------------------------------------------------------
 // Executive Header Studio Banner
 // -------------------------------------------------------------------
 echo '
 <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
         <div>
-            <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 font-monospace small rounded-pill mb-2">INSTITUTIONAL RESOURCE HUB</span>
-            <h4 class="fw-bold text-dark mb-1">Institutional Master Data Studio</h4>
-            <p class="text-muted small mb-0">Manage course catalogs, campus venues, bell time slots, and faculty members for cloud schedule generation.</p>
+            <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 font-monospace small rounded-pill mb-2">'
+                . get_string('institutional_resource_hub', 'local_schola_slots') . '</span>
+            <h4 class="fw-bold text-dark mb-1">' . get_string('institutional_master_data_studio', 'local_schola_slots') . '</h4>
+            <p class="text-muted small mb-0">' . get_string('institutional_master_data_desc', 'local_schola_slots') . '</p>
         </div>
     </div>
 </div>
@@ -150,13 +150,13 @@ echo '
 <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
     <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between pb-3 mb-3 border-bottom gap-3">
         <div>
-            <h5 class="fw-bold text-dark mb-1">Institutional Breaks Masterlist</h5>
-            <p class="text-muted small mb-0">Configure devotion windows, lunch breaks, chapel services, and assemblies spanning all venue rows.</p>
+            <h5 class="fw-bold text-dark mb-1">' . get_string('breaks_masterlist_title', 'local_schola_slots') . '</h5>
+            <p class="text-muted small mb-0">' . get_string('breaks_masterlist_desc', 'local_schola_slots') . '</p>
         </div>
         <div>
             <button type="button" class="btn btn-emerald rounded-pill font-weight-bold px-4 py-2 d-inline-flex align-items-center shadow-sm"
                     data-bs-toggle="modal" data-bs-target="#addBreakModal">
-                <i class="fa fa-plus me-2"></i>Add Institutional Break
+                <i class="fa fa-plus me-2"></i>' . get_string('add_break', 'local_schola_slots') . '
             </button>
         </div>
     </div>
@@ -166,20 +166,21 @@ echo '
         <div class="d-flex align-items-center gap-2 flex-grow-1" style="max-width: 450px;">
             <div class="input-group input-group-sm">
                 <span class="input-group-text bg-white border-end-0"><i class="fa fa-search text-muted"></i></span>
-                <input type="text" id="breakSearchInput" class="form-control border-start-0" placeholder="Search break title or day..." onkeyup="filterBreaks()">
+                <input type="text" id="breakSearchInput" class="form-control border-start-0" placeholder="'
+                    . s(get_string('search_break_placeholder', 'local_schola_slots')) . '" onkeyup="filterBreaks()">
             </div>
             <select class="form-select form-select-sm" style="max-width: 170px;">
-                <option value="all">ALL Schedules</option>
-                <option value="class">Class Schedules</option>
-                <option value="exam">Exam Schedules</option>
+                <option value="all">' . get_string('all_schedules', 'local_schola_slots') . '</option>
+                <option value="class">' . get_string('class_schedules', 'local_schola_slots') . '</option>
+                <option value="exam">' . get_string('exam_schedules', 'local_schola_slots') . '</option>
             </select>
         </div>
         <div class="d-flex align-items-center gap-3 text-muted small">
-            <span>Showing <strong>' . count($breaks) . '</strong> items</span>
+            <span>' . get_string('showing_items', 'local_schola_slots', '<strong>' . count($breaks) . '</strong>') . '</span>
             <select class="form-select form-select-sm" style="width: auto;">
-                <option>15 per page</option>
-                <option>25 per page</option>
-                <option>50 per page</option>
+                <option>' . get_string('items_per_page', 'local_schola_slots', 15) . '</option>
+                <option>' . get_string('items_per_page', 'local_schola_slots', 25) . '</option>
+                <option>' . get_string('items_per_page', 'local_schola_slots', 50) . '</option>
             </select>
         </div>
     </div>
@@ -191,28 +192,30 @@ echo '
                 <tr class="text-uppercase font-monospace text-muted small border-bottom bg-light">
                     <th style="width: 40px;" class="py-3 px-3"><input type="checkbox" class="form-check-input"></th>
                     <th style="width: 50px;" class="py-3">#</th>
-                    <th class="py-3">BREAK TITLE</th>
-                    <th class="py-3">DAY WINDOW</th>
-                    <th class="py-3">TIME SLOT</th>
-                    <th class="py-3">SCHEDULE</th>
-                    <th class="py-3 text-end px-3">ACTION</th>
+                    <th class="py-3">' . get_string('col_break_title', 'local_schola_slots') . '</th>
+                    <th class="py-3">' . get_string('col_day_window', 'local_schola_slots') . '</th>
+                    <th class="py-3">' . get_string('col_time_slot', 'local_schola_slots') . '</th>
+                    <th class="py-3">' . get_string('col_schedule', 'local_schola_slots') . '</th>
+                    <th class="py-3 text-end px-3">' . get_string('col_action', 'local_schola_slots') . '</th>
                 </tr>
             </thead>
             <tbody>';
 
 if (empty($breaks)) {
+    $addbreakbtn = '<strong>+ ' . get_string('add_break', 'local_schola_slots') . '</strong>';
     echo '
                 <tr>
                     <td colspan="7" class="text-center py-5 text-muted">
                         <i class="fa fa-coffee fa-2x mb-2 d-block text-secondary"></i>
-                        No institutional break windows configured yet. Click <strong>+ Add Institutional Break</strong> above.
+                        ' . get_string('no_breaks_configured', 'local_schola_slots', $addbreakbtn) . '
                     </td>
                 </tr>';
 } else {
     $idx = 1;
     foreach ($breaks as $b) {
-        $title = !empty($b->name) ? s($b->name) : (($b->starttime >= '11:30') ? 'Lunch Break' : 'Tea Break');
-        $daylabel = $daynames[$b->dayofweek] ?? 'All Days';
+        $title = !empty($b->name) ? s($b->name) : (($b->starttime >= '11:30') ?
+            get_string('lunch_break', 'local_schola_slots') : get_string('tea_break', 'local_schola_slots'));
+        $daylabel = $daynames[$b->dayofweek] ?? get_string('all_days', 'local_schola_slots');
         $timeslot = s($b->starttime) . ' &mdash; ' . s($b->endtime);
         $editurl = new moodle_url('/local/schola_slots/breaks.php', ['action' => 'delete', 'id' => $b->id, 'sesskey' => sesskey()]);
 
@@ -231,17 +234,17 @@ if (empty($breaks)) {
                     <td>
                         <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1 font-monospace extra-small rounded-pill"
                               style="background-color: #ecfdf5 !important; color: #047857 !important; border-color: #a7f3d0 !important;">
-                            CLASS
+                            ' . get_string('schedule_class_badge', 'local_schola_slots') . '
                         </span>
                     </td>
                     <td class="text-end px-3">
                         <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 me-1 extra-small"
                                 data-bs-toggle="modal" data-bs-target="#editBreakModal' . $b->id . '">
-                            Edit
+                            ' . get_string('edit', 'local_schola_slots') . '
                         </button>
                         <a href="' . $editurl . '" class="btn btn-sm btn-outline-danger rounded-pill px-3 py-1 extra-small"
-                           onclick="return confirm(\'Are you sure you want to delete this break window?\');">
-                            Delete
+                           onclick="return confirm(\'' . s(get_string('confirm_delete_break', 'local_schola_slots')) . '\');">
+                            ' . get_string('delete', 'local_schola_slots') . '
                         </a>
                     </td>
                 </tr>
@@ -251,7 +254,7 @@ if (empty($breaks)) {
                   <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content rounded-4 border-0 shadow-lg">
                       <div class="modal-header border-bottom-0 pb-0">
-                        <h5 class="modal-title fw-bold text-dark">Edit Institutional Break</h5>
+                        <h5 class="modal-title fw-bold text-dark">' . get_string('edit_break', 'local_schola_slots') . '</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                       </div>
                       <form method="post" action="breaks.php">
@@ -260,11 +263,11 @@ if (empty($breaks)) {
                         <input type="hidden" name="sesskey" value="' . sesskey() . '">
                         <div class="modal-body py-3">
                           <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted">Break Title (e.g. Devotion, Lunch Break, Chapel)</label>
+                            <label class="form-label small fw-bold text-muted">' . get_string('break_title_label', 'local_schola_slots') . '</label>
                             <input type="text" name="title" value="' . s($title) . '" class="form-control rounded-3" required>
                           </div>
                           <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted">Day Window</label>
+                            <label class="form-label small fw-bold text-muted">' . get_string('day_window', 'local_schola_slots') . '</label>
                             <select name="daywindow" class="form-select rounded-3">';
         foreach ($daynames as $dval => $dname) {
             $selected = ($b->dayofweek == $dval) ? 'selected' : '';
@@ -275,18 +278,20 @@ if (empty($breaks)) {
                           </div>
                           <div class="row g-2 mb-3">
                             <div class="col-6">
-                              <label class="form-label small fw-bold text-muted">Start Time</label>
+                              <label class="form-label small fw-bold text-muted">' . get_string('start_time', 'local_schola_slots') . '</label>
                               <input type="time" name="starttime" value="' . s($b->starttime) . '" class="form-control rounded-3" required>
                             </div>
                             <div class="col-6">
-                              <label class="form-label small fw-bold text-muted">End Time</label>
+                              <label class="form-label small fw-bold text-muted">' . get_string('end_time', 'local_schola_slots') . '</label>
                               <input type="time" name="endtime" value="' . s($b->endtime) . '" class="form-control rounded-3" required>
                             </div>
                           </div>
                         </div>
                         <div class="modal-footer border-top-0 pt-0">
-                          <button type="button" class="btn btn-outline-secondary rounded-pill font-weight-bold px-4" data-bs-dismiss="modal">Cancel</button>
-                          <button type="submit" class="btn btn-emerald rounded-pill font-weight-bold px-4">Save Changes</button>
+                          <button type="button" class="btn btn-outline-secondary rounded-pill font-weight-bold px-4"
+                                  data-bs-dismiss="modal">' . get_string('cancel', 'local_schola_slots') . '</button>
+                          <button type="submit" class="btn btn-emerald rounded-pill font-weight-bold px-4">'
+                              . get_string('save_changes', 'local_schola_slots') . '</button>
                         </div>
                       </form>
                     </div>
@@ -306,7 +311,7 @@ echo '
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content rounded-4 border-0 shadow-lg">
       <div class="modal-header border-bottom-0 pb-0">
-        <h5 class="modal-title fw-bold text-dark" id="addBreakModalLabel">+ Add Institutional Break</h5>
+        <h5 class="modal-title fw-bold text-dark" id="addBreakModalLabel">' . get_string('add_institutional_break', 'local_schola_slots') . '</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form method="post" action="breaks.php">
@@ -314,46 +319,50 @@ echo '
         <input type="hidden" name="sesskey" value="' . sesskey() . '">
         <div class="modal-body py-4">
           <div class="mb-3">
-            <label class="form-label small fw-bold text-muted">Break Title (e.g. Devotion, Lunch Break, Chapel)</label>
-            <input type="text" name="title" class="form-control rounded-3" placeholder="Devotion" required>
+            <label class="form-label small fw-bold text-muted">' . get_string('break_title_label', 'local_schola_slots') . '</label>
+            <input type="text" name="title" class="form-control rounded-3" placeholder="'
+                . s(get_string('break_title_placeholder', 'local_schola_slots')) . '" required>
           </div>
 
           <div class="mb-3">
-            <label class="form-label small fw-bold text-muted">Day Window</label>
+            <label class="form-label small fw-bold text-muted">' . get_string('day_window', 'local_schola_slots') . '</label>
             <select name="daywindow" class="form-select rounded-3">
-              <option value="0">All Days</option>
-              <option value="1">Monday Only</option>
-              <option value="2">Tuesday Only</option>
-              <option value="3">Wednesday Only</option>
-              <option value="4">Thursday Only</option>
-              <option value="5">Friday Only</option>
-              <option value="6">Saturday Only</option>
+              <option value="0">' . get_string('all_days', 'local_schola_slots') . '</option>
+              <option value="1">' . get_string('monday_only', 'local_schola_slots') . '</option>
+              <option value="2">' . get_string('tuesday_only', 'local_schola_slots') . '</option>
+              <option value="3">' . get_string('wednesday_only', 'local_schola_slots') . '</option>
+              <option value="4">' . get_string('thursday_only', 'local_schola_slots') . '</option>
+              <option value="5">' . get_string('friday_only', 'local_schola_slots') . '</option>
+              <option value="6">' . get_string('saturday_only', 'local_schola_slots') . '</option>
+              <option value="7">' . get_string('sunday_only', 'local_schola_slots') . '</option>
             </select>
           </div>
 
           <div class="row g-2 mb-3">
             <div class="col-6">
-              <label class="form-label small fw-bold text-muted">Start Time</label>
+              <label class="form-label small fw-bold text-muted">' . get_string('start_time', 'local_schola_slots') . '</label>
               <input type="time" name="starttime" value="08:00" class="form-control rounded-3" required>
             </div>
             <div class="col-6">
-              <label class="form-label small fw-bold text-muted">End Time</label>
+              <label class="form-label small fw-bold text-muted">' . get_string('end_time', 'local_schola_slots') . '</label>
               <input type="time" name="endtime" value="09:00" class="form-control rounded-3" required>
             </div>
           </div>
 
           <div class="mb-3">
-            <label class="form-label small fw-bold text-muted">Applicable Schedule</label>
+            <label class="form-label small fw-bold text-muted">' . get_string('applicable_schedule', 'local_schola_slots') . '</label>
             <select name="scheduletype" class="form-select rounded-3">
-              <option value="class">All Timetables</option>
-              <option value="class">Class Schedules Only</option>
-              <option value="exam">Exam Schedules Only</option>
+              <option value="class">' . get_string('all_timetables', 'local_schola_slots') . '</option>
+              <option value="class">' . get_string('class_schedules_only', 'local_schola_slots') . '</option>
+              <option value="exam">' . get_string('exam_schedules_only', 'local_schola_slots') . '</option>
             </select>
           </div>
         </div>
         <div class="modal-footer border-top-0 pt-0">
-          <button type="button" class="btn btn-outline-secondary rounded-pill font-weight-bold px-4" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-emerald rounded-pill font-weight-bold px-4">Add Break</button>
+          <button type="button" class="btn btn-outline-secondary rounded-pill font-weight-bold px-4"
+                  data-bs-dismiss="modal">' . get_string('cancel', 'local_schola_slots') . '</button>
+          <button type="submit" class="btn btn-emerald rounded-pill font-weight-bold px-4">'
+              . get_string('add_break_button', 'local_schola_slots') . '</button>
         </div>
       </form>
     </div>
