@@ -11,7 +11,7 @@ This plugin is available on the **Moodle Marketplace** under dual licensing:
 ## 🎧 Support & Contact Channels
 
 * **Official Website**: [https://scholaslots.com](https://scholaslots.com)
-* **Customer Support Email**: [support@scholaslots.com](mailto:support@scholaslots.com)
+* **Customer Support Email**: [wanyonyi.d.emanuel@gmail.com](mailto:wanyonyi.d.emanuel@gmail.com)
 * **Repository**: [https://github.com/ewanyonyi/moodle-local_schola_slots](https://github.com/ewanyonyi/moodle-local_schola_slots)
 
 ---
