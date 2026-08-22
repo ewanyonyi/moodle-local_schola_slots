@@ -186,6 +186,8 @@ class solver {
             ];
         }
 
+        $licensekey = license_manager::get_license_key();
+
         $payload = [
             'courses' => $coursespayload,
             'rooms' => $roomspayload,
@@ -193,12 +195,16 @@ class solver {
             'options' => [
                 'day_distribution' => get_config('local_schola_slots', 'day_distribution') ?: 'balanced',
                 'max_iterations' => 100000,
+                'license_key' => $licensekey,
             ],
         ];
 
         require_once($CFG->libdir . '/filelib.php');
         $curl = new \curl(['CURLOPT_TIMEOUT' => 5, 'CURLOPT_CONNECTTIMEOUT' => 3]);
         $curl->setHeader('Content-Type: application/json');
+        if (!empty($licensekey)) {
+            $curl->setHeader('X-License-Key: ' . $licensekey);
+        }
         $configuredhost = get_config('local_schola_slots', 'solver_url');
         $cloudurl = !empty($configuredhost) ? trim((string)$configuredhost) : 'https://scholaslots.com/api/v1/solve';
 

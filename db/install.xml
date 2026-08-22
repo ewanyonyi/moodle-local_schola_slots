@@ -34,12 +34,14 @@
     <TABLE NAME="local_schola_slots_schedules" COMMENT="Generated master schedule">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="schedule_type" TYPE="char" LENGTH="20" NOTNULL="true" COMMENT="class or exam"/>
+        <FIELD NAME="schedule_type" TYPE="char" LENGTH="50" NOTNULL="true" COMMENT="class, exam, spring, fall, summer, custom"/>
+        <FIELD NAME="title" TYPE="char" LENGTH="100" NOTNULL="false" COMMENT="Schedule profile title/name"/>
         <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true"/>
         <FIELD NAME="quizid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Null for class sessions"/>
         <FIELD NAME="roomid" TYPE="int" LENGTH="10" NOTNULL="true"/>
         <FIELD NAME="slotid" TYPE="int" LENGTH="10" NOTNULL="true"/>
         <FIELD NAME="teacherid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" COMMENT="Timestamp when schedule was generated"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>

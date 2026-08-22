@@ -34,31 +34,40 @@ $action       = optional_param('action', '', PARAM_ALPHA);
 $id           = optional_param('id', 0, PARAM_INT);
 $roomid       = optional_param('roomid', 0, PARAM_INT);
 $teacherid    = optional_param('teacherid', 0, PARAM_INT);
-$scheduletype = optional_param('type', 'all', PARAM_ALPHA); // 'all', 'class', 'exam'
+$scheduletype = optional_param('type', 'all', PARAM_ALPHA);
 $categoryid   = optional_param('categoryid', 0, PARAM_INT);
 $editmode     = optional_param('editmode', 0, PARAM_INT);
 $openbreaks   = optional_param('openbreaks', 0, PARAM_INT);
+$titleparam   = trim(optional_param('title', '', PARAM_TEXT));
 
-$url = new moodle_url('/local/schola_slots/schedules.php', [
+$urlparams = [
     'roomid' => $roomid, 'teacherid' => $teacherid,
     'type' => $scheduletype, 'categoryid' => $categoryid,
     'editmode' => $editmode,
-]);
+];
+if (!empty($titleparam)) {
+    $urlparams['title'] = $titleparam;
+}
+$url = new moodle_url('/local/schola_slots/schedules.php', $urlparams);
 $PAGE->set_url($url);
 $PAGE->set_context($context);
 $PAGE->set_title(get_string('manage_schedules', 'local_schola_slots'));
 $PAGE->set_heading(get_string('manage_schedules', 'local_schola_slots'));
 
 // -------------------------------------------------------------------
-// Action: Clear All Timetables
+// Action: Clear Timetable Group or All
 // -------------------------------------------------------------------
-if ($action === 'clearall' && confirm_sesskey()) {
-    if ($scheduletype !== 'all') {
+if (($action === 'cleargroup' || $action === 'clearall') && confirm_sesskey()) {
+    $has_title_col = $DB->get_manager()->field_exists('local_schola_slots_schedules', 'title');
+    if (!empty($titleparam) && $scheduletype !== 'all' && $has_title_col) {
+        $DB->delete_records('local_schola_slots_schedules', ['schedule_type' => $scheduletype, 'title' => $titleparam]);
+        redirect(new moodle_url('/local/schola_slots/schedules.php'), "Timetable '{$titleparam}' cleared successfully.");
+    } else if ($scheduletype !== 'all') {
         $DB->delete_records('local_schola_slots_schedules', ['schedule_type' => $scheduletype]);
-        redirect($url, strtoupper($scheduletype) . ' timetables cleared successfully.');
+        redirect(new moodle_url('/local/schola_slots/schedules.php'), strtoupper($scheduletype) . ' timetables cleared successfully.');
     } else {
         $DB->delete_records('local_schola_slots_schedules');
-        redirect($url, 'All generated timetables cleared successfully.');
+        redirect(new moodle_url('/local/schola_slots/schedules.php'), 'All generated timetables cleared successfully.');
     }
 }
 
@@ -256,37 +265,56 @@ $viewgrid   = optional_param('viewgrid', 0, PARAM_INT);
 // -------------------------------------------------------------------
 // Build List of Saved Generated Timetables (for Timetable Studio view)
 // -------------------------------------------------------------------
-$savedschedules = [];
+$has_title_col = $DB->get_manager()->field_exists('local_schola_slots_schedules', 'title');
+$has_time_col  = $DB->get_manager()->field_exists('local_schola_slots_schedules', 'timecreated');
 
-if ($classcount > 0) {
-    $ccourses = $DB->count_records_sql("SELECT COUNT(DISTINCT courseid) FROM {local_schola_slots_schedules} WHERE schedule_type = 'class'");
-    $crooms   = $DB->count_records_sql("SELECT COUNT(DISTINCT roomid) FROM {local_schola_slots_schedules} WHERE schedule_type = 'class'");
-    $cslots   = $DB->count_records_sql("SELECT COUNT(DISTINCT slotid) FROM {local_schola_slots_schedules} WHERE schedule_type = 'class'");
+$groupsql = $has_title_col
+    ? "SELECT MIN(id) AS id, schedule_type, COALESCE(title, '') AS title, " . ($has_time_col ? "MAX(timecreated)" : "0") . " AS timecreated
+       FROM {local_schola_slots_schedules}
+       GROUP BY schedule_type, COALESCE(title, '')
+       ORDER BY MIN(id) ASC"
+    : "SELECT MIN(id) AS id, schedule_type, '' AS title, 0 AS timecreated
+       FROM {local_schola_slots_schedules}
+       GROUP BY schedule_type
+       ORDER BY MIN(id) ASC";
+
+$groups = $DB->get_records_sql($groupsql);
+
+$savedschedules = [];
+foreach ($groups as $g) {
+    $stype = $g->schedule_type;
+    $rawtitle = trim((string)$g->title);
+    if (empty($rawtitle)) {
+        $typecaps = ucfirst($stype);
+        $rawtitle = "Master {$typecaps} Timetable 2026";
+    }
+
+    if ($has_title_col && !empty($g->title)) {
+        $wherestr = "schedule_type = :stype AND title = :stitle";
+        $wparams  = ['stype' => $stype, 'stitle' => $g->title];
+    } else {
+        $wherestr = "schedule_type = :stype";
+        $wparams  = ['stype' => $stype];
+    }
+
+    $ccourses = $DB->count_records_sql("SELECT COUNT(DISTINCT courseid) FROM {local_schola_slots_schedules} WHERE {$wherestr}", $wparams);
+    $crooms   = $DB->count_records_sql("SELECT COUNT(DISTINCT roomid) FROM {local_schola_slots_schedules} WHERE {$wherestr}", $wparams);
+    $cslots   = $DB->count_records_sql("SELECT COUNT(DISTINCT slotid) FROM {local_schola_slots_schedules} WHERE {$wherestr}", $wparams);
+
+    $dateformatted = (!empty($g->timecreated) && $g->timecreated > 0)
+        ? userdate($g->timecreated, '%Y-%m-%d %H:%M')
+        : date('Y-m-d H:i');
+
     $savedschedules[] = (object)[
-        'id'           => 2,
-        'title'        => 'Master Class Timetable 2026',
-        'type'         => 'class',
+        'id'           => $g->id,
+        'title'        => $rawtitle,
+        'type'         => $stype,
+        'raw_title'    => $g->title,
         'course_count' => $ccourses,
         'room_count'   => $crooms,
         'slot_count'   => $cslots,
         'fitness'      => '100 Score',
-        'created_date' => '2026-08-19 13:27',
-    ];
-}
-
-if ($examcount > 0) {
-    $ecourses = $DB->count_records_sql("SELECT COUNT(DISTINCT courseid) FROM {local_schola_slots_schedules} WHERE schedule_type = 'exam'");
-    $erooms   = $DB->count_records_sql("SELECT COUNT(DISTINCT roomid) FROM {local_schola_slots_schedules} WHERE schedule_type = 'exam'");
-    $eslots   = $DB->count_records_sql("SELECT COUNT(DISTINCT slotid) FROM {local_schola_slots_schedules} WHERE schedule_type = 'exam'");
-    $savedschedules[] = (object)[
-        'id'           => 3,
-        'title'        => 'Master Exam Timetable 2026',
-        'type'         => 'exam',
-        'course_count' => $ecourses,
-        'room_count'   => $erooms,
-        'slot_count'   => $eslots,
-        'fitness'      => '100 Score',
-        'created_date' => '2026-08-19 14:10',
+        'created_date' => $dateformatted,
     ];
 }
 
@@ -316,11 +344,6 @@ if (!$showdetails) {
     ]);
     echo html_writer::tag('h4', 'Timetable Management Studio', ['class' => 'fw-bold text-dark mb-1']);
     echo html_writer::tag('p', 'Generate, view, edit, and manage timetable schedules directly in Moodle via off-server optimization.', ['class' => 'text-muted small mb-0']);
-    echo html_writer::end_div();
-    echo html_writer::start_div();
-    echo html_writer::link($generateurl, '<i class="fa fa-plus me-2"></i>Generate New Timetable', [
-        'class' => 'btn btn-emerald rounded-pill font-weight-bold px-4 py-2 d-inline-flex align-items-center shadow-sm',
-    ]);
     echo html_writer::end_div();
     echo html_writer::end_div();
     echo html_writer::end_div();
@@ -367,7 +390,7 @@ if (!$showdetails) {
     echo html_writer::start_tag('table', ['class' => 'table table-hover align-middle mb-0']);
     echo html_writer::start_tag('thead');
     echo html_writer::start_tag('tr', ['class' => 'text-uppercase font-monospace text-muted small border-bottom bg-light']);
-    echo html_writer::tag('th', 'ID', ['style' => 'width: 60px;', 'class' => 'py-3 px-3']);
+    echo html_writer::tag('th', '#', ['style' => 'width: 60px;', 'class' => 'py-3 px-3']);
     echo html_writer::tag('th', 'SCHEDULE TITLE', ['class' => 'py-3']);
     echo html_writer::tag('th', 'COURSES', ['class' => 'py-3']);
     echo html_writer::tag('th', 'ROOMS', ['class' => 'py-3']);
@@ -386,26 +409,47 @@ if (!$showdetails) {
         echo html_writer::tag('td', $nomsg, ['colspan' => '8', 'class' => 'text-center py-5 text-muted']);
         echo html_writer::end_tag('tr');
     } else {
+        $typestyles = [
+            'class'  => 'background-color: #ecfdf5 !important; color: #047857 !important; border-color: #a7f3d0 !important;',
+            'exam'   => 'background-color: #f3e8ff !important; color: #7e22ce !important; border-color: #d8b4fe !important;',
+            'spring' => 'background-color: #e0f2fe !important; color: #0369a1 !important; border-color: #7dd3fc !important;',
+            'fall'   => 'background-color: #fff7ed !important; color: #c2410c !important; border-color: #ffedd5 !important;',
+            'summer' => 'background-color: #fef2f2 !important; color: #b91c1c !important; border-color: #fecaca !important;',
+            'custom' => 'background-color: #f1f5f9 !important; color: #334155 !important; border-color: #cbd5e1 !important;',
+        ];
+
+        $serial = 1;
         foreach ($savedschedules as $sched) {
-            $gridtargeturl = new moodle_url('/local/schola_slots/schedules.php', [
+            $gridtargetparams = [
                 'viewgrid' => 1,
-                'id' => $sched->id,
-                'type' => $sched->type,
-            ]);
-            $deltargeturl = new moodle_url('/local/schola_slots/schedules.php', [
-                'action' => 'clearall',
-                'type' => $sched->type,
+                'id'       => $sched->id,
+                'type'     => $sched->type,
+            ];
+            if (!empty($sched->raw_title)) {
+                $gridtargetparams['title'] = $sched->raw_title;
+            }
+            $gridtargeturl = new moodle_url('/local/schola_slots/schedules.php', $gridtargetparams);
+
+            $deltargetparams = [
+                'action'  => 'cleargroup',
+                'type'    => $sched->type,
                 'sesskey' => sesskey(),
-            ]);
+            ];
+            if (!empty($sched->raw_title)) {
+                $deltargetparams['title'] = $sched->raw_title;
+            }
+            $deltargeturl = new moodle_url('/local/schola_slots/schedules.php', $deltargetparams);
+
+            $badgestyle = $typestyles[$sched->type] ?? $typestyles['custom'];
 
             echo html_writer::start_tag('tr');
-            echo html_writer::tag('td', '#' . $sched->id, ['class' => 'px-3 font-monospace text-muted small']);
+            echo html_writer::tag('td', '#' . $serial++, ['class' => 'px-3 font-monospace text-muted small']);
 
             echo html_writer::start_tag('td');
             echo html_writer::tag('span', s($sched->title), ['class' => 'fw-bold text-dark me-2']);
             echo html_writer::tag('span', strtoupper($sched->type), [
-                'class' => 'badge bg-success-subtle text-success border border-success-subtle rounded-pill font-monospace extra-small px-2 py-0.5',
-                'style' => 'background-color: #ecfdf5 !important; color: #047857 !important; border-color: #a7f3d0 !important;',
+                'class' => 'badge border rounded-pill font-monospace extra-small px-2 py-0.5',
+                'style' => $badgestyle,
             ]);
             echo html_writer::end_tag('td');
 
@@ -561,6 +605,10 @@ if (!$showdetails) {
     if ($scheduletype !== 'all') {
         $where[] = 's.schedule_type = :stype';
         $params['stype'] = $scheduletype;
+    }
+    if (!empty($titleparam) && $DB->get_manager()->field_exists('local_schola_slots_schedules', 'title')) {
+        $where[] = 's.title = :stitle';
+        $params['stitle'] = $titleparam;
     }
     if ($categoryid > 0) {
         $where[] = 'c.category = :categoryid';
@@ -827,6 +875,86 @@ echo <<<HTML
 </div>
 HTML;
 
+// -------------------------------------------------------------------
+// Render Generate Timetable Modal
+// -------------------------------------------------------------------
+if (!function_exists('schola_get_string')) {
+    function schola_get_string(string $identifier, string $fallback): string {
+        $str = get_string($identifier, 'local_schola_slots');
+        if (strpos($str, '[[') === 0 || strpos($str, 'a_slots:') !== false) {
+            return $fallback;
+        }
+        return $str;
+    }
+}
+
+$categories = $DB->get_records_menu('course_categories', null, 'name ASC', 'id, name');
+$catoptions = [0 => schola_get_string('all_departments', '-- Entire Institution (All Departments) --')] + $categories;
+$typeoptions = [
+    'class' => schola_get_string('regular_class_schedule', 'Regular Semester Class Schedule'),
+    'exam'  => schola_get_string('examination_schedule', 'Examination Schedule'),
+];
+$modeoptions = [
+    'version'       => schola_get_string('version_mode', 'Save as Named Version (Keep Other Timetables Intact)'),
+    'overwrite_all' => schola_get_string('overwrite_all_mode', 'Overwrite ALL Timetables of Selected Type'),
+    'append'        => schola_get_string('append_existing_mode', 'Append Mode (Preserve Existing Timetables & Schedule Around Them)'),
+];
+
+$title_label  = schola_get_string('timetable_title', 'Timetable Name / Title');
+$title_help   = schola_get_string('timetable_title_help', 'Optional. e.g. Semester III 2026, Midterm Exam Matrix');
+$type_label   = schola_get_string('timetable_profile_type', 'Timetable Profile / Type');
+$dept_label   = schola_get_string('department_scope', 'Department / Course Category Scope');
+$mode_label   = schola_get_string('generation_conflict_mode', 'Generation & Conflict Mode');
+$notice_text  = schola_get_string('conflict_prevention_notice', 'Cross-schedule conflict prevention will automatically protect active venue and instructor bookings.');
+
+echo '
+<div class="modal fade" id="generateTimetableModal" tabindex="-1" aria-labelledby="generateTimetableModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header bg-dark text-white p-3 rounded-top-4">
+        <h5 class="modal-title fw-bold" id="generateTimetableModalLabel">
+          <i class="fa fa-magic me-2 text-success"></i>Generate New Custom Timetable
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="post" action="' . (new moodle_url('/local/schola_slots/index.php'))->out(false) . '">
+        <input type="hidden" name="sesskey" value="' . sesskey() . '">
+        <input type="hidden" name="action" value="generate">
+        <div class="modal-body p-4 bg-light">
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label font-weight-bold text-dark">' . $title_label . '</label>
+              <input type="text" name="title" class="form-control p-2" placeholder="e.g. Semester III 2026 Schedule">
+              <div class="form-text extra-small text-muted">' . $title_help . '</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label font-weight-bold text-dark">' . $type_label . '</label>
+              ' . html_writer::select($typeoptions, 'scheduletype', 'class', false, ['class' => 'form-select p-2']) . '
+            </div>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label font-weight-bold text-dark">' . $dept_label . '</label>
+              ' . html_writer::select($catoptions, 'categoryid', 0, false, ['class' => 'form-select p-2']) . '
+            </div>
+            <div class="col-md-6">
+              <label class="form-label font-weight-bold text-dark">' . $mode_label . '</label>
+              ' . html_writer::select($modeoptions, 'mode', 'version', false, ['class' => 'form-select p-2']) . '
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer bg-white p-3 border-top d-flex justify-content-between">
+          <span class="text-muted small">' . $notice_text . '</span>
+          <button type="submit" class="btn btn-success font-weight-bold px-4 py-2 shadow-sm rounded-pill">
+            <i class="fa fa-cogs me-2"></i>Run Solver Engine
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+';
+
 echo '<script>' . "\n";
 echo 'function filterTimetableEntries() {' . "\n";
 echo '    var query = document.getElementById("scholaLiveSearch").value.toLowerCase().trim();' . "\n";
@@ -857,13 +985,23 @@ echo '        btn.innerHTML = \'<i class="fa fa-check me-1"></i> Disable Edit Mo
 echo '    }' . "\n";
 echo '}' . "\n";
 
-if (!empty($openbreaks)) {
+$openmodal = optional_param('open_modal', 0, PARAM_INT);
+if ($openmodal || !empty($openbreaks)) {
     echo 'document.addEventListener("DOMContentLoaded", function() {' . "\n";
-    echo '    var modalElem = document.getElementById("manageBreaksModal");' . "\n";
-    echo '    if (modalElem && typeof bootstrap !== "undefined") {' . "\n";
-    echo '        var myModal = new bootstrap.Modal(modalElem);' . "\n";
-    echo '        myModal.show();' . "\n";
-    echo '    }' . "\n";
+    if ($openmodal) {
+        echo '    var genModalElem = document.getElementById("generateTimetableModal");' . "\n";
+        echo '    if (genModalElem && typeof bootstrap !== "undefined") {' . "\n";
+        echo '        var myGenModal = new bootstrap.Modal(genModalElem);' . "\n";
+        echo '        myGenModal.show();' . "\n";
+        echo '    }' . "\n";
+    }
+    if (!empty($openbreaks)) {
+        echo '    var modalElem = document.getElementById("manageBreaksModal");' . "\n";
+        echo '    if (modalElem && typeof bootstrap !== "undefined") {' . "\n";
+        echo '        var myModal = new bootstrap.Modal(modalElem);' . "\n";
+        echo '        myModal.show();' . "\n";
+        echo '    }' . "\n";
+    }
     echo '});' . "\n";
 }
 echo '</script>' . "\n";

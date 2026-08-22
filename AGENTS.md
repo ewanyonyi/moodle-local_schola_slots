@@ -1,0 +1,64 @@
+# AGENTS.md — Guidelines for AI Agents (Moodle Plugin)
+
+This document defines architectural conventions, Moodle coding standards, and development practices for AI coding assistants (including Antigravity, Claude, Copilot) operating on the `local_schola_slots` Moodle plugin codebase.
+
+---
+
+## 🎯 1. Project Purpose
+
+`local_schola_slots` is an administrative Moodle plugin that manages institutional timetabling for courses, campus venues, time slots, and break windows. It features dual constraint satisfaction engines:
+- **Native PHP Engine**: Built-in local constraint solver algorithm for standard timetables.
+- **Pro Rust Cloud Engine**: High-concurrency, off-server Rust solver service accessible via REST API.
+
+---
+
+## 🛠️ 2. Tech Stack Specification
+
+- **Platform**: Moodle LMS (PHP 8.1+, MySQL / PostgreSQL / MariaDB)
+- **UI Framework**: Bootstrap 5 + Moodle `html_writer` & class renderers
+- **Architecture**: PSR-4 autoloading (`local_schola_slots\...`), Moodle DB Abstraction Layer (`$DB`)
+
+---
+
+## 📐 3. Key Directory Structure
+
+```
+local/schola_slots/
+├── index.php         <-- Admin overview & solver execution handler
+├── rooms.php         <-- Campus venue, laboratory & room capacity management
+├── profiles.php      <-- Institutional weekly schedule profile presets
+├── slots.php         <-- Active time slots listing, guided wizard & CSV batch import
+├── breaks.php        <-- Tea, lunch, and blockout window settings
+├── schedules.php     <-- Timetable management studio & grid matrix view
+├── export.php        <-- PDF printing & CSV matrix exporter
+├── help.php          <-- Integrated documentation & administrator guide
+├── version.php       <-- Plugin release version metadata
+├── classes/          <-- Core OOP classes & business logic
+│   ├── algorithm/    <-- Native PHP solver & Rust Cloud REST client
+│   ├── licensing/    <-- Commercial license key validator & tier manager
+│   ├── output/       <-- Navigation header & UI renderers
+│   └── profile_manager.php <-- Institutional schedule profile logic
+├── db/               <-- Database schema (install.xml), upgrade script, and access capabilities
+└── lang/en/          <-- Localization language strings
+```
+
+---
+
+## ⚠️ 4. Rules for AI Agents
+
+1. **Moodle Coding Standards & Security**:
+   - Always enforce capability checks: `require_capability('local/schola_slots:manage', $context)`.
+   - Never use raw SQL string concatenation; always use parameter binding with Moodle `$DB`.
+   - Sanitize all parameters using `required_param()` or `optional_param()` with explicit types (`PARAM_INT`, `PARAM_ALPHA`, `PARAM_TEXT`).
+
+2. **Moodle Plugin Versioning Policy**:
+   - **Only update the Moodle plugin version (`version.php`) when generating or packaging a `.zip` release file for distribution.**
+   - Do NOT bump `version.php` version numbers during routine code edits, UI polish, or feature development.
+
+3. **REST API & Cloud Data Contract**:
+   - Data structures sent to the Rust Cloud Engine (`classes/algorithm/solver.php`) must maintain exact JSON field name compatibility with `SolveRequest`.
+   - Supported timetable types are strictly limited to `class` (Regular Semester Class Schedule) and `exam` (Examination Schedule).
+
+4. **UI & Navigation Consistency**:
+   - The top navigation bar is generated via `\local_schola_slots\output\renderer::render_nav_header($activepage)`.
+   - The header **`Generate Timetable`** action button should ONLY be displayed when the active page is `schedules.php` or `index.php`.

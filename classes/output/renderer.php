@@ -39,20 +39,37 @@ class renderer extends plugin_renderer_base {
     public static function render_nav_header(string $activepage = 'index', bool $showclearall = false, string $scheduletype = 'all'): string {
         $indexurl = new \moodle_url('/local/schola_slots/index.php');
         $roomsurl = new \moodle_url('/local/schola_slots/rooms.php');
+        $profilesurl = new \moodle_url('/local/schola_slots/profiles.php');
         $slotsurl = new \moodle_url('/local/schola_slots/slots.php');
         $breaksurl = new \moodle_url('/local/schola_slots/breaks.php');
         $schedulesurl = new \moodle_url('/local/schola_slots/schedules.php');
-        $generateurl = new \moodle_url('/local/schola_slots/index.php', [
-            'action' => 'generate',
-            'sesskey' => sesskey(),
-        ]);
+        $helpurl = new \moodle_url('/local/schola_slots/help.php');
+        $generateurl = new \moodle_url('/local/schola_slots/schedules.php', ['open_modal' => 1]);
+
+        $helplabel = get_string_manager()->string_exists('nav_help', 'local_schola_slots')
+            ? get_string('nav_help', 'local_schola_slots')
+            : 'Help & Guide';
+        if (str_starts_with($helplabel, '[[') && str_ends_with($helplabel, ']]')) {
+            $helplabel = 'Help & Guide';
+        }
+
+        $profileslabel = get_string_manager()->string_exists('nav_profiles', 'local_schola_slots')
+            ? get_string('nav_profiles', 'local_schola_slots')
+            : 'Profiles';
+        if (str_starts_with($profileslabel, '[[') && str_ends_with($profileslabel, ']]')) {
+            $profileslabel = 'Profiles';
+        }
+
+        $slotslabel = 'Slots';
 
         $navitems = [
             'index'     => ['label' => get_string('nav_overview', 'local_schola_slots'), 'url' => $indexurl],
             'rooms'     => ['label' => get_string('nav_rooms', 'local_schola_slots'), 'url' => $roomsurl],
-            'slots'     => ['label' => get_string('nav_slots', 'local_schola_slots'), 'url' => $slotsurl],
+            'profiles'  => ['label' => $profileslabel, 'url' => $profilesurl],
+            'slots'     => ['label' => $slotslabel, 'url' => $slotsurl],
             'breaks'    => ['label' => get_string('nav_breaks', 'local_schola_slots'), 'url' => $breaksurl],
             'schedules' => ['label' => get_string('nav_schedules', 'local_schola_slots'), 'url' => $schedulesurl],
+            'help'      => ['label' => $helplabel, 'url' => $helpurl],
         ];
 
         $html = \html_writer::start_div('bg-white border rounded shadow-sm p-3 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-3');
@@ -68,11 +85,17 @@ class renderer extends plugin_renderer_base {
         }
         $html .= \html_writer::end_div();
 
-        // Action Buttons Group
+        // Action Buttons Group (Only show Generate Timetable button when on schedules or index page)
         $html .= \html_writer::start_div('d-flex align-items-center gap-2 flex-wrap');
-        $html .= \html_writer::link($generateurl, get_string('generate_timetable', 'local_schola_slots'), [
-            'class' => 'btn btn-success font-weight-bold px-3 py-2 shadow-sm',
-        ]);
+        if ($activepage === 'schedules' || $activepage === 'index') {
+            $html .= \html_writer::link($generateurl, get_string('generate_timetable', 'local_schola_slots'), [
+                'class'          => 'btn btn-success font-weight-bold px-3 py-2 shadow-sm',
+                'data-bs-toggle' => 'modal',
+                'data-bs-target' => '#generateTimetableModal',
+                'data-toggle'    => 'modal',
+                'data-target'    => '#generateTimetableModal',
+            ]);
+        }
 
         if ($showclearall) {
             $clearurl = new \moodle_url($schedulesurl, ['action' => 'clearall', 'type' => $scheduletype, 'sesskey' => sesskey()]);
