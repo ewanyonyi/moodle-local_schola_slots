@@ -1,140 +1,131 @@
-# Schola Slots Moodle Plugin — Official Documentation
+# Schola Slots Moodle Plugin — Administrator & User Guide
 
-Welcome to the official documentation for **Schola Slots** (`local_schola_slots`), an enterprise-grade timetabling and constraint-satisfaction solver plugin for Moodle LMS.
+Welcome to the **Schola Slots** administrator user guide. This document provides step-by-step instructions for Moodle Administrators, Academic Schedulers, and Department Heads to set up campus venues, configure time slots, protect break windows, and generate conflict-free weekly timetables.
 
 ---
 
 ## 📌 Table of Contents
 
-1. [Overview & Architecture](#overview--architecture)
-2. [Key Features](#key-features)
-3. [Installation & Requirements](#installation--requirements)
-4. [Step-by-Step Administrative Workflow](#step-by-step-administrative-workflow)
-   - [Step 1: Campus Venues & Room Setup](#step-1-campus-venues--room-setup)
-   - [Step 2: Bell Schedule Profiles & Time Slots](#step-2-bell-schedule-profiles--time-slots)
-   - [Step 3: Breaks & Blockout Windows](#step-3-breaks--blockout-windows)
-   - [Step 4: Generating Conflict-Free Timetables](#step-4-generating-conflict-free-timetables)
-   - [Step 5: View, Filter, Export & Print Studio](#step-5-view-filter-export--print-studio)
-5. [CSV Batch Import Specifications](#csv-batch-import-specifications)
-6. [Pro Rust Cloud Acceleration Engine](#pro-rust-cloud-acceleration-engine)
-7. [CLI Data Generator](#cli-data-generator)
-8. [Support & Contact](#support--contact)
+1. [Introduction](#introduction)
+2. [Quickstart Checklist](#quickstart-checklist)
+3. [5-Step Timetabling Workflow](#5-step-timetabling-workflow)
+   - [Step 1: Campus Venues & Room Management](#step-1-campus-venues--room-management)
+   - [Step 2: Profiles & Time Slot Configuration](#step-2-profiles--time-slot-configuration)
+   - [Step 3: Tea Break & Lunch Window Protection](#step-3-tea-break--lunch-window-protection)
+   - [Step 4: Generating Timetables (Class vs Exam)](#step-4-generating-timetables-class-vs-exam)
+   - [Step 5: Timetable Studio (View, Filter, Export & Print)](#step-5-timetable-studio-view-filter-export--print)
+4. [CSV Batch Import Specifications](#csv-batch-import-specifications)
+5. [Pro Cloud Acceleration Setup](#pro-cloud-acceleration-setup)
+6. [Frequently Asked Questions (FAQ) & Troubleshooting](#frequently-asked-questions-faq--troubleshooting)
+7. [Support & Assistance](#support--assistance)
 
 ---
 
-## 🏛️ Overview & Architecture
+## 🌟 Introduction
 
-Schola Slots solves the NP-hard Course Timetabling Problem (CTP) directly within Moodle. It operates using dual constraint engines:
-
-* **Native PHP Constraint Solver**: Built-in algorithm running directly on your Moodle web server under GPLv3.
-* **Pro Rust Cloud Microservice**: High-speed, off-server constraint satisfaction solver capable of solving multi-thousand course matrices in under 50 milliseconds.
-
----
-
-## ✨ Key Features
-
-- **Dual Timetable Profiles**: Separate generation workflows for **Weekly Class Schedules** (recurring lectures/labs) and **Examination Windows** (midterm/final assessment blocks).
-- **Versioned Schedules**: Save multiple timetable options (e.g. *Semester I 2026*, *Draft Option B*) side-by-side without overwriting existing data.
-- **Append & Overwrite Modes**: Protect existing active schedules while generating new departmental matrices.
-- **Automatic Venue Classification**: Auto-detection for virtual spaces (*Online*, *Zoom*, *Teams*) and laboratory-specific equipment constraints.
-- **CSV Batch Import Wizard**: Bulk-upload hundreds of rooms and time slots in seconds.
+**Schola Slots** is an automated scheduling solution integrated directly into Moodle. It eliminates manual scheduling conflicts for:
+* **Weekly Class Schedules**: Recurring lectures, laboratory practicals, and tutorial sessions.
+* **Examination Windows**: Midterm and final exam matrix scheduling with room capacity enforcement.
 
 ---
 
-## ⚙️ Installation & Requirements
+## 📋 Quickstart Checklist
 
-### System Requirements
-* **Moodle Version**: Moodle 4.1 or higher (including Moodle 4.4+ and 5.x)
-* **PHP**: PHP 8.1+ with `json` and `curl` extensions
-* **Database**: MariaDB 10.6+, MySQL 8.0+, or PostgreSQL 13+
-
-### Manual Plugin Installation
-1. Download `local_schola_slots_v1.0.8.zip` from the release downloads.
-2. Log into your Moodle site as an Administrator.
-3. Navigate to **Site Administration ➔ Plugins ➔ Install plugins**.
-4. Upload the ZIP file and click **Install plugin from the ZIP file**.
-5. Complete the database schema upgrade.
+Before generating your first timetable, ensure the following steps are completed:
+- [x] **Rooms**: Define at least 3 campus venues with seating capacities.
+- [x] **Slots**: Set up weekly time period slots (or apply a preset profile).
+- [x] **Breaks**: Configure morning tea breaks and lunch windows.
+- [x] **Courses**: Ensure courses are assigned to categories/departments in Moodle.
 
 ---
 
-## 🛠️ Step-by-Step Administrative Workflow
+## 🚀 5-Step Timetabling Workflow
 
-### Step 1: Campus Venues & Room Setup
+### Step 1: Campus Venues & Room Management
 Navigate to **Schola Slots ➔ Rooms**.
-- Add lecture halls, auditoriums, classrooms, laboratories, and virtual spaces.
-- Specify **Seating Capacity** to ensure class enrollments do not exceed room limits.
-- Toggle **Laboratory / Computer Studio** for courses requiring specialized software or equipment.
-- Virtual spaces containing "Online", "Virtual", or "Zoom" are automatically flagged for remote delivery.
+1. **Add Rooms**: Click **Add New Room** and enter a **Room Name** (e.g. *Lecture Hall 101*, *Science Lab B*) and **Seating Capacity**.
+2. **Laboratory Toggle**: Check the *Laboratory / Computer Studio* toggle for rooms requiring specialized equipment or computers.
+3. **Virtual Spaces**: Rooms named with *Online*, *Virtual*, or *Zoom* are automatically flagged for remote delivery.
 
-### Step 2: Bell Schedule Profiles & Time Slots
+### Step 2: Profiles & Time Slot Configuration
 Navigate to **Schola Slots ➔ Profiles & Slots**.
-- Apply institutional presets (e.g., *University Standard*, *3-Hour Block*, *High School 45-min*).
-- Custom slots can be added individually or batch-imported via CSV.
+1. **Apply Presets**: Choose a schedule profile (*University Standard*, *3-Hour Block*, *High School 45-min*) to auto-populate period slots.
+2. **Custom Slots**: Manually add specific day and time combinations (e.g., *Monday 08:00–09:30*).
+3. **Batch Import**: Upload a CSV file to import all institutional time slots at once.
 
-### Step 3: Breaks & Blockout Windows
+### Step 3: Tea Break & Lunch Window Protection
 Navigate to **Schola Slots ➔ Breaks**.
-- Define campus-wide morning tea breaks and lunch break windows.
-- The solver automatically treats break windows as occupied blockouts to prevent scheduling conflicts during lunch or campus events.
+1. **Define Break Windows**: Set institutional morning tea breaks (e.g., *10:30–11:00*) and lunch break windows (e.g., *13:00–14:00*).
+2. **Conflict Avoidance**: The solver automatically locks these period slots as occupied blockouts so no lectures or exams are assigned during break times.
 
-### Step 4: Generating Conflict-Free Timetables
+### Step 4: Generating Timetables (Class vs Exam)
 Navigate to **Schola Slots ➔ Timetables** and click **Generate Timetable**.
-- **Timetable Title**: Give your schedule a descriptive name (e.g., *Semester I 2026 Matrix*).
-- **Timetable Type**: Select **Class Schedule** or **Exam Schedule**.
-- **Scope**: Choose an individual Department/Category or schedule the entire institution.
-- **Conflict Mode**: Choose between *Version Mode*, *Overwrite Mode*, or *Append Mode*.
+1. **Title**: Enter a descriptive name (e.g., *Semester I 2026 Schedule*, *Final Exam Matrix*).
+2. **Profile / Type**:
+   - **Regular Class Schedule**: For weekly recurring course lectures and labs.
+   - **Examination Schedule**: For midterm and final exam assessment blocks.
+3. **Scope**: Select **Entire Institution** or filter by a specific **Department / Course Category**.
+4. **Generation & Conflict Mode**:
+   - **Save as Named Version**: Creates a new side-by-side timetable version without overwriting existing schedules.
+   - **Overwrite ALL Timetables**: Replaces existing timetables of the selected type with the newly generated solution.
+   - **Append Mode**: Keeps active schedules locked and schedules new courses around them.
 
-### Step 5: View, Filter, Export & Print Studio
+### Step 5: Timetable Studio (View, Filter, Export & Print)
 Navigate to **Schola Slots ➔ Timetables**.
-- Filter matrix grids by Department, Room, or Instructor.
-- Export schedule assignments to CSV.
-- Generate printer-friendly PDF timetables for campus notice boards.
+- **Filter Grids**: Switch view perspectives by **Department**, **Campus Venue**, or **Instructor**.
+- **CSV Export**: Download full schedule assignments for institutional record-keeping.
+- **Print PDF**: Generate clean, printable schedule grids for posting on campus notice boards.
 
 ---
 
-## 📄 CSV Batch Import Specifications
+## 📊 CSV Batch Import Specifications
 
-### 1. Rooms CSV Format (`rooms.php`)
+### 1. Rooms CSV Import (`Rooms ➔ Import CSV`)
+Prepare a CSV file with the following column headers:
 ```csv
 Name, Capacity, Is Lab
-Main Auditorium, 300, 0
-Computer Lab 1, 40, 1
-Virtual Zoom Room A, 500, 0
+Auditorium A, 300, 0
+Physics Computer Lab, 35, 1
+Virtual Zoom Room 1, 500, 0
 ```
 
-### 2. Time Slots CSV Format (`slots.php`)
+### 2. Time Slots CSV Import (`Slots ➔ Import CSV`)
+Prepare a CSV file with the following column headers:
 ```csv
 dayofweek, starttime, endtime, type
 1, 08:00, 09:30, class
-1, 10:00, 11:30, class
+1, 09:30, 11:00, class
 2, 09:00, 12:00, exam
 ```
-*Note: `dayofweek` can be numbers (1=Monday .. 7=Sunday) or day names (e.g. `Mon`, `Tuesday`). `type` options are `class`, `lab`, `break`, or `exam`.*
+*Note: `dayofweek` can be numbers (1=Monday .. 7=Sunday) or day names (e.g. `Mon`, `Tuesday`). Supported `type` values are `class`, `lab`, `break`, or `exam`.*
 
 ---
 
-## 🚀 Pro Rust Cloud Acceleration Engine
+## ⚡ Pro Cloud Acceleration Setup
 
-For institutions with massive course matrices (> 100 courses, > 50 rooms), connect to the Pro Rust Cloud Microservice:
-1. Navigate to **Site Administration ➔ Plugins ➔ Local plugins ➔ Schola Slots Settings**.
-2. Enter your Pro License Key.
-3. Once validated, solver computations execute off-server in < 50ms with zero memory overhead on your Moodle server.
-
----
-
-## 💻 CLI Data Generator
-
-Seed test academic data (Faculties, Courses, Faculty Accounts, Student Accounts, Rooms, and Slots) using the built-in CLI tool:
-
-```bash
-cd /path/to/moodle
-php local/schola_slots/cli/populate_academic_data.php --courses=60 --teachers=35 --students=300
-```
+For institutions with large course matrices (> 50 courses, > 25 rooms):
+1. Go to **Site Administration ➔ Plugins ➔ Local plugins ➔ Schola Slots Settings**.
+2. Enter your commercial **Pro License Key** from [scholaslots.com](https://scholaslots.com).
+3. Click **Save Changes**.
+4. Once active, solver requests route to the off-server high-speed Cloud Engine, processing complex timetables in under 50ms.
 
 ---
 
-## 📞 Support & Contact
+## ❓ Frequently Asked Questions (FAQ) & Troubleshooting
+
+#### Q1: What happens if there are not enough rooms for all courses?
+*The solver will report an error notice asking you to add more rooms or extend time period slots.*
+
+#### Q2: How does the solver prevent teacher double-booking?
+*The solver tracks teacher assignments across all schedules and ensures no teacher is scheduled in two places at the same time.*
+
+#### Q3: Can I maintain draft timetables alongside active ones?
+*Yes! Select **Save as Named Version** when generating timetables to compare different options side-by-side.*
+
+---
+
+## 📞 Support & Assistance
 
 - **Support Email**: [wanyonyi.d.emanuel@gmail.com](mailto:wanyonyi.d.emanuel@gmail.com)
-- **Website**: [https://scholaslots.com](https://scholaslots.com)
-- **GitHub Repository**: [https://github.com/ewanyonyi/moodle-local_schola_slots](https://github.com/ewanyonyi/moodle-local_schola_slots)
+- **Official Website**: [https://scholaslots.com](https://scholaslots.com)
 - **Issue Tracker**: [https://github.com/ewanyonyi/moodle-local_schola_slots/issues](https://github.com/ewanyonyi/moodle-local_schola_slots/issues)
